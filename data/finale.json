@@ -1,0 +1,16 @@
+{
+  "title": "You found them all Suzy!",
+  "lines": [
+    "Happy 3 year anniversary, my love.",
+    "I'm so grateful for every moment we've shared.",
+    "Here's to many more years of memories."
+  ],
+  "signature": "Love, Ryan ♥",
+  "music": "audio/music-box.wav",
+  "layers": [
+    { "src": "memories/finale/sky.png" },
+    { "src": "memories/finale/stars.png", "anim": "twinkle" },
+    { "src": "memories/finale/hearts.png", "anim": "drift", "speed": -0.6 },
+    { "src": "memories/finale/heart.png", "anim": "pulse", "amount": 0.3, "speed": 0.7 }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "our-memories",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A cosy little pixel-art anniversary game.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "placeholders": "node tools/make-placeholders.js",
+    "pixelate": "node tools/pixelate-photo.js",
+    "scene:formal": "node tools/scenes/school-formal.js"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "pngjs": "^7.0.0",
+    "sharp": "^0.35.5",
+    "vite": "^8.3.2"
+  }
+}

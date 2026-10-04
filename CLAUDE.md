@@ -1,0 +1,241 @@
+# Our Memories — project brief for Claude
+
+A small web game made as a **3-year anniversary gift**. She plays a pixel-art
+version of herself, walking around a cosy top-down map made of places from the
+relationship. Walking onto a memory spot plays a short looping pixel-art
+cutscene (layered images, gently animated) with a title, date and caption, until
+she presses Continue. Some memories are hidden. Finding them all plays a finale.
+
+**Tone:** cosy, soft, charming — Stardew Valley / Animal Crossing. Gentle motion,
+warm palette, no fail states, nothing stressful. The person who maintains this
+is not a game developer: keep code readable, commented, and simple.
+
+## The golden rule: new content is data, not code
+
+Adding a memory = **images + a JSON entry + a trigger rectangle in the map**.
+Never hard-code memory ids, text, or art paths in `src/`. If a request seems to
+need a code change for one specific memory, add a general, data-driven option
+instead (and document it here and in the README).
+
+Do not add features that weren't asked for (no combat, inventory, NPC dialogue,
+quests, etc.). Obvious extension points are marked with `// TODO` comments.
+
+## Tech
+
+- **Phaser 4.2.1** + **Vite 8**, plain JavaScript ES modules, no TypeScript, no backend.
+- Static build → GitHub Pages (`.github/workflows/deploy.yml`, Vite `base: './'`).
+- Tools (Node): `pngjs` (placeholder art), `sharp` (photo pixelation).
+- Commands: `npm run dev`, `npm run build`, `npm run preview`,
+  `npm run placeholders [-- --force]`, `npm run pixelate -- <photo> [out] [opts]`.
+- In dev, `window.game` is the Phaser game (e.g. `game.scene.getScene('World')`).
+- Data problems are `console.warn`ed with friendly messages; in dev the title
+  screen shows "! N data warnings".
+
+### Phaser 4 gotchas (things that differ from Phaser 3 examples online)
+- `Key.onUp` clears `_justDown`, so `Phaser.Input.Keyboard.JustDown` misses quick
+  taps. Use `keyboard.on('keydown')` events for one-shot actions (World does this).
+- `roundPixels` defaults to false (we set it true). `setTintFill` is gone
+  (use `setTint().setTintMode(Phaser.TintModes.FILL)`). `Geom.Point` → `Vector2`.
+- `Scale.FIT` ignores `zoom`; we use `Scale.NONE` + our own integer zoom in `main.js`.
+- Tiled tile animations play automatically. Tilesets must be **embedded** in the map.
+- Phaser reuses Scene instances: reset per-visit state in `init()`/`create()`.
+- `node_modules/phaser/skills/` has official Phaser 4 notes (v3-to-v4-migration etc.).
+
+## Folder structure
+
+```
+our-memories/
+├── CLAUDE.md / README.md
+├── index.html                 # full-window container, dark letterbox
+├── vite.config.js             # base './', host true (phone testing), assetsDir 'bundle'
+├── .github/workflows/deploy.yml
+├── public/assets/             # served as-is; every data path is relative to here
+│   ├── tiles/tileset.png      # 16x16 tiles, 8 columns
+│   ├── sprites/player.png     # 4x4 frames of 16x24
+│   ├── memories/<id>/*.png    # one folder per memory (+ memories/finale/)
+│   ├── ui/                    # font.png+font.xml, heart, panel, sparkle, touch controls
+│   └── audio/                 # music (wav/mp3/ogg)
+├── maps/world.json            # the Tiled map (JSON, embedded tileset)
+├── maps/cosy.tsx              # same tileset as a Tiled file, for starting new maps
+├── data/memories.json         # every memory
+├── data/finale.json           # finale text + layers
+├── data/game.json             # her name, title text, optional world music
+├── tools/
+│   ├── make-placeholders.js   # generates all placeholder art/audio/map (never overwrites without --force)
+│   ├── pixelate-photo.js      # photo -> 320x180 limited-palette PNG
+│   ├── lib/                   # generator pieces: canvas, palette, font, tileset, test-map, sprites, cutscenes, audio
+│   ├── scenes/<id>.js         # one script per hand-crafted memory scene (named PAL palette at the top),
+│   │                          #   writes its layers, any map building, and tools/previews/<id>.png
+│   ├── previews/              # flattened 3x previews written by scene scripts
+│   └── palettes/cosy.hex      # the placeholder palette (Lospec .hex format)
+└── src/
+    ├── main.js                # Phaser config + integer zoom fitting
+    ├── config.js              # ALL tunable constants (sizes, speeds, timings, colours, depths)
+    ├── scenes/  Boot, Title, World, HUD, Memory, Finale
+    ├── objects/ Player, TouchControls, Typewriter (pixel text + typing), ContinueHeart
+    └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades)
+```
+
+Additions beyond the original brief, and why: `data/game.json` (title text and
+her name are content, so they live in data), `systems/Music.js` (crossfades
+must survive scene changes), `objects/Typewriter.js` + `ContinueHeart.js`
+(shared by Memory and Finale), `tools/lib/` (keeps the generator readable),
+`maps/cosy.tsx` (reusable tileset with collision properties for new maps).
+
+## Scene flow
+
+`Boot` (loads shared assets, validates data) → `Title` (Start / Continue; hold R
+3 s or press-and-hold her name to wipe the save) → `World` (+ `HUD` on top) →
+walking into a trigger pauses World and launches `Memory` → Continue stops
+Memory and resumes World (`events.on('resume', …, data)`) → after the last
+memory's toast, World launches `Finale` the same way (once; `finaleSeen`).
+
+Memory/Finale load their own layer images and music on open (lazy), so adding
+memories never slows startup.
+
+## data/memories.json schema
+
+```json
+{
+  "memories": [
+    {
+      "id": "apollo-bay",              // required, unique; must match a trigger's memoryId
+      "title": "Night on the beach",   // shown briefly at the top
+      "date": "March 2026",            // shown under the title (optional)
+      "caption": "Apollo Bay — ...",   // typed out in the bottom box; wraps automatically
+      "hidden": false,                 // true = no sparkle marker in the world until found
+      "requiresAction": false,         // true = only opens when she presses E / taps ♥ in the zone
+      "unlockAfter": 0,                // stays inactive until N other memories are found
+      "music": "audio/waves.wav",      // optional; crossfades in, back out on Continue
+      "layers": [ { "src": "memories/apollo-bay/sky.png" }, ... ]   // back to front
+    }
+  ]
+}
+```
+Defaults: `hidden`/`requiresAction` false, `unlockAfter` 0, no music. All paths
+are relative to `public/assets/`. Unknown keys produce "typo?" warnings.
+Hidden memories count toward the HUD total but nothing reveals which are hidden.
+Behaviour: unseen + no action → starts on entering the zone; seen → "Press E to
+revisit" prompt (touch: "Tap ♥ to revisit"); unseen + requiresAction → "Press E
+to look closer".
+
+### Layer options and animation presets (src/systems/LayerAnimator.js)
+
+Every layer: `{ "src": "...", "anim": "<preset>", "amount": n, "speed": n }`.
+`speed` is always a multiplier (1 = default, 0.5 = half). `anim` defaults to `none`.
+
+| preset    | what it does                                              | `amount` means (default)        | extra options |
+|-----------|-----------------------------------------------------------|---------------------------------|---------------|
+| `none`    | static image                                              | —                               | — |
+| `slide`   | gentle horizontal back-and-forth, wraps at edges (4 s cycle) | pixels each way (4)          | — |
+| `drift`   | continuous horizontal scroll, seamless wrap (6 px/s)      | — (use `speed`; negative = right) | — |
+| `bob`     | vertical up-and-down (3 s cycle)                          | pixels (1)                      | — |
+| `sway`    | leans around the bottom of the drawing; pixel-perfect shear via 1-px strips (4 s cycle) | pixels the top moves (2) | — |
+| `flicker` | quick random dimming; each separate light flickers on its own | how much it dims 0–1 (0.6)  | `groups` (3) |
+| `twinkle` | slow soft fade per star                                   | how faint 0–1 (0.75)            | `groups` (5) |
+| `pulse`   | slow breathing fade + slight grow around the drawing's centre (4 s) | fade 0–1 (0.3)        | `scale` (0.03) |
+| `frames`  | spritesheet flip-book loop                                | —                               | `frameWidth` (320), `frameHeight` (180), `fps` (6) |
+
+`flicker`/`twinkle` split the image into separate blobs (flood fill) and assign
+each to one of `groups` independent patterns; big blobs (>24 px) are split by
+12 px cells. `sway`/`pulse` measure the opaque bounding box. Results are cached.
+To add a preset: add an entry to `PRESETS` (`defaults` + `create(scene, key, opts, src)`
+returning `{ objects, update(t) }`), add its options to `LAYER_FIELDS` in
+MemoryRegistry.js, and document it here + README. Missing images / unknown
+presets warn and are skipped / shown static — never crash.
+
+## data/finale.json / data/game.json
+
+- finale: `title`, `lines` (array, typed one after another, centred), `signature`,
+  `music` (optional), `layers` (same format as memory layers).
+- game: `herName`, `titleLine` ("Happy 3 years,"), `subtitle`, `worldMusic` (path or null).
+
+## Map conventions (Tiled, maps/world.json)
+
+- Orthogonal, **16×16 tiles**, not infinite, tile layer format **CSV** (or
+  uncompressed Base64 — Phaser can't read compressed layers). Saved as JSON.
+- Tilesets must be **embedded** (Tileset → "Embed Tileset"). The game finds the
+  image by *file name* in `public/assets/tiles/` (the path inside the JSON only
+  matters to Tiled). Tileset texture key: `tileset:<name in Tiled>`.
+- Layers (names are case-sensitive):
+  - `Ground`, `Decor` — tile layers under her.
+  - `Above` — tile layer drawn over her (treetops, lamp tops). Tiles near her
+    fade to 40% when she's underneath so she's never lost.
+  - `Collision` — tile layer, hidden in game. Paint the red-X blocker tile (id 44).
+  - **Collision rule:** any tile whose tileset property `collides` (bool) is true
+    blocks her on `Ground`, `Decor` or `Collision`. Water, walls, trunks etc.
+    already have it, so most collision comes for free.
+  - `Triggers` — object layer of rectangles, each with custom string property
+    `memoryId`. A trigger fires when her **feet** (centre of her 10×6 collision
+    box) are inside the rectangle.
+  - `Spawn` — object layer with a point named `player` (her feet position).
+- Boot cross-checks: every memory needs a trigger and every trigger a memory.
+- **Buildings as their own tileset:** a one-off building can be a separate
+  embedded tileset whose image is the whole facade cut into 16×16 tiles (e.g.
+  `hall` → `tiles/hall.png`, 10×7 tiles, every tile `collides`), stamped into
+  `Decor`. Boot/World load every tileset in the map, so no code is needed.
+  The ballroom ("SAN REMO", for the school formal) sits at tiles x 33–42,
+  y 12–18, doors facing the main path, trigger at x 37–38, y 19.
+- `npm run placeholders -- --force` regenerates `world.json` *without* such
+  additions; re-run the scene scripts (`npm run scene:formal`) to re-add them.
+
+Placeholder tile ids (tools/lib/tileset.js `T`): row 0 grass/flowers/path/cobble/
+plaza/hedge, row 1 sand/shore/water(animated)/pier, row 2 walls/door/awning/roof
+tops/café window, row 3 roof bottoms/fence/bench/lamp, row 4 tree (2×3: canopy
+32–35 go in Above, trunks 36–37 in Decor)/rock/sign, row 5 blanket/pot/towel/
+blocker(44)/grass edge.
+
+## Sprite sheet layout (sprites/player.png)
+
+- Frame **16×24**; sheet **64×96** = 4 columns × 4 rows.
+- **Rows = directions**, top to bottom: `down`, `left`, `right`, `up`
+  (`PLAYER_ROWS` in config.js). **Columns = walk frames** 0–3; column 0 is also
+  the standing pose. Animations: `walk-<dir>` (8 fps), `idle-<dir>`.
+- Feet sit around y = 20–23 of the frame; the collision box is
+  `PLAYER.body` = 10×6 at offset (3, 17). Change config if the art changes size.
+- `sprites/` also has room for a partner sheet — not used yet (TODO: follower).
+
+## The characters (keep art consistent with these)
+
+- **Her:** Nepali, olive to light-brown skin. Deep-pink **bob** (ends at the
+  jaw; a little neck shows from behind), grown out so the black roots show;
+  side-swept fringe that's dark at the root and pink at the ends. Eyebrow
+  piercing (one silver pixel). No nose ring. Short **light-pink** dress, white
+  shoes. In side views the back of her hair sticks out 1 px past the dress so
+  head and body don't merge.
+- **Him (the partner):** tall, white with a warm (not pale) skin tone, **short**
+  black hair with a fringe (neck visible from back and side), open **brown
+  jacket** (shoulder highlights, lapels, pockets, cuffs) over a white shirt, jeans.
+- Colours live in `tools/lib/palette.js` (`her*`, `him*`, `jeans`, `silver`).
+  Walking sprite: `tools/lib/sprites.js`. Cutscene figures: `HER` / `HIM` presets
+  plus `figure()` in `tools/lib/cutscenes.js` (`dim` darkens them for night scenes).
+
+## Art specs
+
+- Everything is crisp pixel art: no anti-aliasing, no blur, PNG with alpha.
+- Cutscene layers: **320×180** each, transparent where nothing is drawn,
+  stacked in list order. `frames` sheets: frames left-to-right (e.g. 3 frames =
+  960×180). `drift` layers should wrap seamlessly left↔right.
+- **Safe areas:** the caption box covers roughly the bottom 30–50 px (taller for
+  longer captions); the title band covers the top ~32 px for the first few
+  seconds. Keep faces and key details between y ≈ 35 and y ≈ 130.
+- Palette: soft and warm (see `tools/palettes/cosy.hex`): plums and navies for
+  night, roses/peach/butter accents, sage greens, cream highlights. Avoid pure
+  black outlines on big shapes; use dark plum `#2a1f2a`.
+- UI: `ui/font.png` + `font.xml` (BMFont XML, white glyphs, size 9, line height
+  10). Any BMFont works; add `♥`, `—`, `é` etc. if captions use them (Boot warns
+  about unsupported characters). `ui/panel.png` is a 16×16 nine-slice (4 px corners).
+
+## Saves
+
+localStorage key `our-memories-save-v1` (`SAVE_KEY`):
+`{ found: [ids], position: {x, y, facing}, finaleSeen }`. All access is
+try/catch'd; the game runs without storage. Unknown ids in a save are ignored
+in counts. A saved position inside a wall (map edited) falls back to Spawn.
+
+## Testing checklist for changes
+
+`npm run dev` → title → Start → walk (keys + touch) → each memory triggers →
+Continue returns to the same spot → revisit prompt works → refresh keeps
+progress → all found plays finale. Test phone landscape (dev server prints a
+Network URL). Check the browser console for `[memories.json]` warnings.

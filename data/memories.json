@@ -1,0 +1,99 @@
+{
+  "memories": [
+    {
+      "id": "apollo-bay",
+      "title": "Night on the beach",
+      "date": "March 2026",
+      "caption": "Apollo Bay — waves, stars, and you.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "music": "audio/waves.wav",
+      "layers": [
+        { "src": "memories/apollo-bay/sky.png" },
+        { "src": "memories/apollo-bay/stars.png", "anim": "twinkle" },
+        { "src": "memories/apollo-bay/glow.png", "anim": "pulse", "amount": 0.4, "speed": 0.6 },
+        { "src": "memories/apollo-bay/lights.png", "anim": "flicker" },
+        { "src": "memories/apollo-bay/sea.png", "anim": "slide", "amount": 3, "speed": 0.6 },
+        { "src": "memories/apollo-bay/sand.png" },
+        { "src": "memories/apollo-bay/foam.png", "anim": "frames", "frameWidth": 320, "frameHeight": 180, "fps": 3 },
+        { "src": "memories/apollo-bay/us.png", "anim": "bob", "amount": 1, "speed": 0.4 }
+      ]
+    },
+    {
+      "id": "cafe",
+      "title": "Our little café",
+      "date": "June 2024",
+      "caption": "Placeholder caption — write about the café here. Long captions wrap onto extra lines by themselves, just like this one does.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/cafe/sky.png" },
+        { "src": "memories/cafe/clouds.png", "anim": "drift", "speed": 1 },
+        { "src": "memories/cafe/interior.png" },
+        { "src": "memories/cafe/fairy-lights.png", "anim": "flicker", "amount": 0.5, "speed": 0.5 },
+        { "src": "memories/cafe/plant.png", "anim": "sway", "amount": 2, "speed": 0.6 },
+        { "src": "memories/cafe/us.png", "anim": "bob", "amount": 1, "speed": 0.3 },
+        { "src": "memories/cafe/table.png" },
+        { "src": "memories/cafe/steam.png", "anim": "frames", "fps": 4 }
+      ]
+    },
+    {
+      "id": "park-picnic",
+      "title": "Picnic in the park",
+      "date": "January 2025",
+      "caption": "Placeholder caption — strawberries, sunshine, and a very long afternoon.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/park-picnic/sky.png" },
+        { "src": "memories/park-picnic/sun.png", "anim": "pulse", "amount": 0.25, "speed": 0.5 },
+        { "src": "memories/park-picnic/clouds.png", "anim": "drift", "speed": 0.5 },
+        { "src": "memories/park-picnic/ground.png" },
+        { "src": "memories/park-picnic/trees.png", "anim": "sway", "amount": 2, "speed": 0.5 },
+        { "src": "memories/park-picnic/us.png", "anim": "bob", "amount": 1, "speed": 0.5 },
+        { "src": "memories/park-picnic/butterflies.png", "anim": "frames", "fps": 5 }
+      ]
+    },
+    {
+      "id": "first-date",
+      "title": "Where it all began",
+      "date": "October 2023",
+      "caption": "Placeholder caption — this one is hidden behind the trees, and only opens once two other memories have been found.",
+      "hidden": true,
+      "requiresAction": true,
+      "unlockAfter": 2,
+      "music": "audio/music-box.wav",
+      "layers": [
+        { "src": "memories/first-date/sky.png" },
+        { "src": "memories/first-date/stars.png", "anim": "twinkle", "amount": 0.8, "speed": 0.7 },
+        { "src": "memories/first-date/street.png" },
+        { "src": "memories/first-date/windows.png", "anim": "flicker", "amount": 0.3, "speed": 0.3 },
+        { "src": "memories/first-date/glow.png", "anim": "pulse", "amount": 0.3, "speed": 0.4 },
+        { "src": "memories/first-date/us.png", "anim": "sway", "amount": 1, "speed": 0.35 }
+      ]
+    },
+    {
+      "id": "school-formal",
+      "title": "Our school formal",
+      "date": "[MONTH YEAR]",
+      "caption": "Our first slow dance.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "music": "audio/formal.mp3",
+      "layers": [
+        { "src": "memories/school-formal/bg.png" },
+        { "src": "memories/school-formal/chandeliers.png", "anim": "pulse", "amount": 0.08, "speed": 0.4, "scale": 0 },
+        { "src": "memories/school-formal/sparkles.png", "anim": "twinkle", "amount": 0.8, "speed": 0.8, "groups": 6 },
+        { "src": "memories/school-formal/dancers-back.png", "anim": "sway", "amount": 1, "speed": 0.25 },
+        { "src": "memories/school-formal/dancers-mid.png", "anim": "sway", "amount": 1, "speed": 0.33 },
+        { "src": "memories/school-formal/spotlight.png", "anim": "pulse", "amount": 0.15, "speed": 0.35, "scale": 0 },
+        { "src": "memories/school-formal/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/school-formal/vignette.png" }
+      ]
+    }
+  ]
+}
