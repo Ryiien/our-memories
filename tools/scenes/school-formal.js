@@ -19,11 +19,9 @@
 // -----------------------------------------------------------------------------
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
 
 import { Canvas, rng, bayer } from '../lib/canvas.js';
-import { GLYPHS } from '../lib/font.js';
+import { ROOT, makeSaver, ring, thickLine, rimLight, softEllipse, text, textWidth, writePreview, stampBuilding } from '../lib/scene-kit.js';
 
 // ---- Palette: change colours here -----------------------------------------------
 const PAL = {
@@ -113,81 +111,8 @@ const SIGN_TEXT = 'SAN REMO';
 const W = 320;
 const H = 180;
 const PI = Math.PI;
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = path.join(ROOT, 'public', 'assets', 'memories', 'school-formal');
-const { values: args } = parseArgs({ options: { keep: { type: 'string', default: '' } } });
-const keep = new Set(args.keep.split(',').map((s) => s.trim().replace(/\.png$/, '')).filter(Boolean));
-
-function save(file, canvas) {
-  const name = path.basename(file, '.png');
-  if (keep.has(name) && fs.existsSync(file)) {
-    console.log(`  kept     ${path.relative(ROOT, file)}`);
-    return;
-  }
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, canvas.toPNG());
-  console.log(`  wrote    ${path.relative(ROOT, file)}`);
-}
-
-// ---- Drawing helpers ------------------------------------------------------------------
-function ring(c, cx, cy, rx, ry, color, alpha = 1) {
-  const steps = Math.ceil(Math.max(rx, ry) * 8);
-  const done = new Set();
-  for (let i = 0; i < steps; i++) {
-    const a = (i / steps) * PI * 2;
-    const x = Math.round(cx + Math.cos(a) * rx);
-    const y = Math.round(cy + Math.sin(a) * ry);
-    if (done.has(x * 1000 + y)) continue;
-    done.add(x * 1000 + y);
-    c.px(x, y, color, alpha);
-  }
-}
-
-function thickLine(c, x0, y0, x1, y1, size, color) {
-  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2 + 1;
-  for (let i = 0; i <= n; i++) {
-    const t = i / n;
-    c.rect(Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t), size, size, color);
-  }
-}
-
-/** Light from above: brighten every pixel whose top neighbour is empty. */
-function rimLight(c, color, amount) {
-  const copy = new Canvas(c.width, c.height);
-  copy.data.set(c.data);
-  for (let y = 1; y < c.height; y++)
-    for (let x = 0; x < c.width; x++) {
-      if (!copy.get(x, y)[3] || copy.get(x, y - 1)[3]) continue;
-      c.px(x, y, color, amount);
-    }
-}
-
-/** Soft light in dithered bands (pixel-art "glow"), clipped to an ellipse. */
-function softEllipse(c, cx, cy, rx, ry, color, alpha) {
-  for (let y = Math.floor(cy - ry); y <= cy + ry; y++)
-    for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
-      const d = Math.hypot((x - cx) / rx, (y - cy) / ry);
-      if (d > 1) continue;
-      const level = (1 - d) * 3;
-      const band = Math.floor(level) + (level % 1 > bayer(x, y) ? 1 : 0);
-      if (band > 0) c.px(x, y, color, (alpha * band) / 3);
-    }
-}
-
-function text(c, str, x, y, color) {
-  let cx = x;
-  for (const ch of str) {
-    const g = GLYPHS[ch] ?? GLYPHS['?'];
-    g.forEach((row, ry) => [...row].forEach((p, rx) => p === '#' && c.px(cx + rx, y + ry, color)));
-    cx += ch === ' ' ? 3 : g[0].length + 1;
-  }
-  return cx - x - 1;
-}
-const textWidth = (str) => {
-  let w = 0;
-  for (const ch of str) w += ch === ' ' ? 3 : (GLYPHS[ch] ?? GLYPHS['?'])[0].length + 1;
-  return w - 1;
-};
+const save = makeSaver();
 
 // ---- 1. bg.png — ceiling, walls, drapes, floor, tables ---------------------------------
 const FLOOR_TOP = 112;
@@ -667,28 +592,11 @@ function addToMap() {
     console.log('  map      already has the ballroom — left untouched');
     return;
   }
-  const firstgid = Math.max(...map.tilesets.map((t) => t.firstgid + t.tilecount));
-  const tilecount = HALL_COLS * HALL_ROWS;
-  map.tilesets.push({
-    firstgid,
-    name: 'hall',
-    image: '../public/assets/tiles/hall.png',
-    imagewidth: HALL_COLS * 16,
-    imageheight: HALL_ROWS * 16,
-    tilewidth: 16,
-    tileheight: 16,
-    columns: HALL_COLS,
-    tilecount,
-    margin: 0,
-    spacing: 0,
-    tiles: Array.from({ length: tilecount }, (_, id) => ({ id, properties: [{ name: 'collides', type: 'bool', value: true }] })),
-  });
+  stampBuilding(map, { name: 'hall', image: '../public/assets/tiles/hall.png', cols: HALL_COLS, rows: HALL_ROWS, at: HALL_AT });
   const layer = (name) => map.layers.find((l) => l.name === name);
   const set = (name, x, y, gid) => (layer(name).data[y * map.width + x] = gid);
-  // the building (Decor), clearing the fence that ran behind it
+  // clear the fence that ran behind the building
   for (let x = HALL_AT.x; x < HALL_AT.x + HALL_COLS; x++) set('Decor', x, HALL_AT.y - 1, 0);
-  for (let ty = 0; ty < HALL_ROWS; ty++)
-    for (let tx = 0; tx < HALL_COLS; tx++) set('Decor', HALL_AT.x + tx, HALL_AT.y + ty, firstgid + ty * HALL_COLS + tx);
   // a short path from the main path up to the doors (cosy tile 4 = path, gid 5)
   const doorY = HALL_AT.y + HALL_ROWS;
   for (let x = HALL_AT.x + 3; x <= HALL_AT.x + 6; x++) set('Ground', x, doorY, 5);
@@ -736,27 +644,16 @@ const hall = drawHall();
 save(path.join(ROOT, 'public', 'assets', 'tiles', 'hall.png'), hall);
 addToMap();
 
-// ---- Previews (3x, nearest-neighbour) -----------------------------------------------------------
-function upscale(src, k) {
-  const out = new Canvas(src.width * k, src.height * k);
-  for (let y = 0; y < out.height; y++)
-    for (let x = 0; x < out.width; x++) {
-      const i = (Math.floor(y / k) * src.width + Math.floor(x / k)) * 4;
-      out.data.set(src.data.subarray(i, i + 4), (y * out.width + x) * 4);
-    }
-  return out;
-}
+// ---- Previews (3x) ----------------------------------------------------------------------------
 const flat = new Canvas(W, H);
 flat.rect(0, 0, W, H, '#000000');
 for (const name of ['bg', 'chandeliers', 'sparkles', 'dancers-back', 'dancers-mid', 'spotlight']) flat.blit(layers[name], 0, 0);
 flat.blit(usFrames(usBase), 0, 0); // frame 1 sits at x 0..319
 flat.blit(vignette, 0, 0);
-const previews = path.join(ROOT, 'tools', 'previews');
-fs.mkdirSync(previews, { recursive: true });
-fs.writeFileSync(path.join(previews, 'school-formal.png'), upscale(flat, 3).toPNG());
+writePreview('school-formal.png', flat);
 const hallPreview = new Canvas(hall.width + 32, hall.height + 32);
 hallPreview.rect(0, 0, hallPreview.width, hallPreview.height, '#8cc269');
 hallPreview.rect(16 + 48, hall.height + 16, 64, 16, '#dcc08a');
 hallPreview.blit(hall, 16, 16);
-fs.writeFileSync(path.join(previews, 'school-hall.png'), upscale(hallPreview, 3).toPNG());
+writePreview('school-hall.png', hallPreview);
 console.log('  preview  tools/previews/school-formal.png, tools/previews/school-hall.png');

@@ -3,7 +3,7 @@
     {
       "id": "apollo-bay",
       "title": "Night on the beach",
-      "date": "March 2026",
+      "date": "19th September 2026",
       "caption": "Apollo Bay — waves, stars, and you.",
       "hidden": false,
       "requiresAction": false,
@@ -21,22 +21,23 @@
       ]
     },
     {
-      "id": "cafe",
-      "title": "Our little café",
-      "date": "June 2024",
-      "caption": "Placeholder caption — write about the café here. Long captions wrap onto extra lines by themselves, just like this one does.",
+      "id": "oxford-scholar",
+      "title": "The Oxford Scholar",
+      "date": "Any Evening 2026",
+      "caption": "A Long Island for you, a pint for me, and fries to share.",
       "hidden": false,
       "requiresAction": false,
       "unlockAfter": 0,
       "layers": [
-        { "src": "memories/cafe/sky.png" },
-        { "src": "memories/cafe/clouds.png", "anim": "drift", "speed": 1 },
-        { "src": "memories/cafe/interior.png" },
-        { "src": "memories/cafe/fairy-lights.png", "anim": "flicker", "amount": 0.5, "speed": 0.5 },
-        { "src": "memories/cafe/plant.png", "anim": "sway", "amount": 2, "speed": 0.6 },
-        { "src": "memories/cafe/us.png", "anim": "bob", "amount": 1, "speed": 0.3 },
-        { "src": "memories/cafe/table.png" },
-        { "src": "memories/cafe/steam.png", "anim": "frames", "fps": 4 }
+        { "src": "memories/oxford-scholar/street.png" },
+        { "src": "memories/oxford-scholar/street-lights.png", "anim": "flicker", "amount": 0.35, "speed": 0.3 },
+        { "src": "memories/oxford-scholar/tram.png", "anim": "drift", "speed": 4 },
+        { "src": "memories/oxford-scholar/interior.png" },
+        { "src": "memories/oxford-scholar/lamps.png", "anim": "pulse", "amount": 0.12, "speed": 0.35, "scale": 0 },
+        { "src": "memories/oxford-scholar/table.png" },
+        { "src": "memories/oxford-scholar/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/oxford-scholar/steam.png", "anim": "frames", "fps": 4 },
+        { "src": "memories/oxford-scholar/vignette.png" }
       ]
     },
     {
@@ -78,7 +79,7 @@
     {
       "id": "school-formal",
       "title": "Our school formal",
-      "date": "[MONTH YEAR]",
+      "date": "27th June 2024",
       "caption": "Our first slow dance.",
       "hidden": false,
       "requiresAction": false,

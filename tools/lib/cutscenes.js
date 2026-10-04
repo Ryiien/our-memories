@@ -17,10 +17,6 @@ const C = {
   nightSand3: '#574a66',
   headland: '#2a2547',
   seaLight: '#3d4682',
-  cafeWall: '#ebcfa8',
-  cafeWallShade: '#d9b88e',
-  hazeBuilding: '#bcd3dc',
-  hazeBuilding2: '#a9c4cf',
   farHill: '#b9dca0',
   nearHill: '#9cc98a',
   sunCore: '#fffbe6',
@@ -427,128 +423,6 @@ export function apolloBay() {
   return {
     'sky.png': sky, 'stars.png': stars, 'glow.png': glow, 'lights.png': lights,
     'sea.png': sea, 'sand.png': sand, 'foam.png': foam, 'us.png': us,
-  };
-}
-
-// ---- 2. The café -------------------------------------------------------------
-export function cafe() {
-  const r = rng(22);
-  const win = { x: 40, y: 22, w: 120, h: 74 };
-
-  const sky = new Canvas(W, H);
-  sky.gradientV(0, 0, W, 110, [P.sky, P.skyLight, P.skyPale]);
-  sky.rect(0, 110, W, 70, P.skyPale);
-  for (const [x, w, h, col] of [[38, 30, 26, C.hazeBuilding], [66, 22, 34, C.hazeBuilding2], [88, 40, 22, C.hazeBuilding], [126, 36, 30, C.hazeBuilding2]]) {
-    sky.rect(x, 96 - h, w, h, col);
-    for (let wy = 96 - h + 4; wy < 92; wy += 7) for (let wx = x + 3; wx < x + w - 3; wx += 6) sky.rect(wx, wy, 3, 3, P.skyLight);
-  }
-
-  const clouds = new Canvas(W, H);
-  cloud(clouds, 40, 34, 46, P.white, '#dfeef3');
-  cloud(clouds, 150, 50, 38, P.white, '#dfeef3');
-  cloud(clouds, 250, 28, 54, P.white, '#dfeef3');
-
-  const interior = new Canvas(W, H);
-  interior.rect(0, 0, W, H, C.cafeWall);
-  for (let x = 4; x < W; x += 8) interior.rect(x, 0, 1, 118, C.cafeWallShade, 0.45);
-  // cut the window out so the sky shows through
-  for (let y = win.y; y < win.y + win.h; y++) for (let x = win.x; x < win.x + win.w; x++) interior.clear(x, y);
-  const frame = (x, y, w, h) => interior.rect(x, y, w, h, P.woodDark);
-  frame(win.x - 3, win.y - 3, win.w + 6, 3);
-  frame(win.x - 3, win.y + win.h, win.w + 6, 3);
-  frame(win.x - 3, win.y, 3, win.h);
-  frame(win.x + win.w, win.y, 3, win.h);
-  frame(win.x + win.w / 2 - 1, win.y, 2, win.h);
-  frame(win.x, win.y + win.h / 2 - 1, win.w, 2);
-  interior.rect(win.x - 6, win.y + win.h + 3, win.w + 12, 4, P.wood);
-  interior.rect(win.x - 6, win.y + win.h + 3, win.w + 12, 1, P.peach);
-  // shelves with jars
-  for (const sy of [44, 76]) {
-    interior.rect(206, sy, 96, 3, P.wood);
-    interior.rect(206, sy + 3, 96, 1, P.woodDeep);
-    for (let x = 210; x < 296; x += r.int(10, 14)) {
-      const h = r.int(7, 12);
-      const col = r.pick([P.butter, P.rose, P.lavender, P.cream, P.peach, P.grassMid]);
-      interior.rect(x, sy - h, 7, h, col);
-      interior.rect(x, sy - h, 7, 2, P.woodDark);
-      interior.px(x + 1, sy - h + 3, P.white);
-    }
-  }
-  // a little framed heart picture
-  interior.rect(174, 30, 20, 18, P.woodDark);
-  interior.rect(176, 32, 16, 14, P.cream);
-  heartShape(interior, 184, 39, 7, P.rose);
-  // wood panelling
-  interior.rect(0, 118, W, 62, P.wood);
-  for (let x = 6; x < W; x += 12) interior.rect(x, 120, 1, 60, P.woodDark);
-  interior.rect(0, 118, W, 2, P.woodDeep);
-  interior.rect(0, 120, W, 1, P.peach, 0.6);
-
-  const fairy = new Canvas(W, H);
-  const span = 320 / 3;
-  const sag = (x) => 6 + Math.round(Math.sin(PI * ((x % span) / span)) * 9);
-  for (let x = 0; x < W; x++) fairy.px(x, sag(x), P.plum);
-  const bulbs = [P.butter, P.rose, P.skyLight, P.butter, P.lavender];
-  for (let x = 5, i = 0; x < W; x += 13, i++) {
-    const y = sag(x) + 2;
-    fairy.glow(x, y, 4, bulbs[i % bulbs.length], 0.4);
-    fairy.rect(x, y, 2, 2, bulbs[i % bulbs.length]);
-    fairy.px(x, y, P.white);
-  }
-
-  const plant = new Canvas(W, H);
-  plant.rect(16, 152, 22, 20, P.terracotta);
-  plant.rect(14, 149, 26, 4, P.orange);
-  plant.rect(16, 168, 22, 4, P.roseDark);
-  for (let i = 0; i < 9; i++) {
-    const a = PI * (0.15 + (i / 8) * 0.7); // fan of leaves
-    const len = r.int(26, 44);
-    for (let t = 0; t < len; t++) {
-      const x = 27 - Math.cos(a) * t * 0.7;
-      const y = 150 - Math.sin(a) * t;
-      plant.px(x, y, t > len - 6 ? P.grassMid : P.grassDark);
-      if (t % 4 === 0 && t > 6) {
-        plant.ellipse(x + (i % 2 ? 2 : -2), y, 2, 1, i % 2 ? P.grass : P.grassMid);
-      }
-    }
-  }
-
-  const us = new Canvas(W, H);
-  place(us, figure({ ...HER, view: 'side', pose: 'sit' }), 122, 140);
-  place(us, figure({ ...HIM, view: 'side', pose: 'sit', flip: true }), 198, 140);
-
-  const table = new Canvas(W, H);
-  table.rect(152, 146, 16, 30, P.woodDark);
-  table.rect(140, 174, 40, 4, P.woodDeep);
-  table.rect(96, 134, 128, 7, P.wood);
-  table.rect(96, 134, 128, 1, P.peach);
-  table.rect(96, 141, 128, 4, P.woodDark);
-  for (const cupX of [140, 172]) {
-    table.ellipse(cupX + 4, 134, 7, 1.5, P.creamShade);
-    table.rect(cupX, 126, 9, 8, P.cream);
-    table.rect(cupX, 129, 9, 2, P.rose);
-    table.rect(cupX + 9, 128, 2, 4, P.cream);
-    table.rect(cupX + 1, 126, 7, 1, P.woodDeep);
-  }
-  table.rect(158, 120, 4, 14, P.skyLight); // vase
-  table.px(160, 117, P.grassDark);
-  table.px(160, 118, P.grassDark);
-  heartShape(table, 160, 115, 5, P.rose);
-
-  // 4 frames of rising steam (1280x180)
-  const steam = new Canvas(W * 4, H);
-  for (let f = 0; f < 4; f++)
-    for (const cupX of [144, 176])
-      for (let wisp = 0; wisp < 2; wisp++)
-        for (let y = 124; y > 100; y--) {
-          const t = (124 - y) / 24;
-          const x = cupX + wisp * 3 - 1 + Math.sin((y + f * 5 + wisp * 9) * 0.3) * (1 + t * 2);
-          if ((y + f + wisp) % 3 !== 0) steam.px(f * W + x, y, P.white, 0.75 * (1 - t));
-        }
-
-  return {
-    'sky.png': sky, 'clouds.png': clouds, 'interior.png': interior, 'fairy-lights.png': fairy,
-    'plant.png': plant, 'us.png': us, 'table.png': table, 'steam.png': steam,
   };
 }
 

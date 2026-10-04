@@ -36,6 +36,7 @@ Other commands:
 | `npm run placeholders` | regenerates any **missing** placeholder art/map |
 | `npm run pixelate -- photo.jpg out.png` | turns a photo into pixel art (see §5) |
 | `npm run scene:formal` | redraws the school formal scene + ballroom building (see §6) |
+| `npm run scene:pub` | redraws the Oxford Scholar scene + the pub and RMIT buildings (see §6) |
 
 ### Controls
 - **Move:** WASD or arrow keys · phone: put your thumb anywhere on the left half
@@ -204,6 +205,8 @@ existing files** unless you run it with `--force`, so re-running it is safe.
 | `public/assets/audio/*` | music: `.mp3`/`.ogg`/`.wav` |
 | `public/assets/audio/formal.mp3` | **expected, not included yet:** the school formal's slow-dance song. Until it exists, that scene plays silently |
 | `public/assets/tiles/hall.png` | 160×112: the ballroom building, 10×7 tiles (its own tileset in the map) |
+| `public/assets/tiles/oxford-scholar.png` | 128×96: the pub, 8×6 tiles (its own tileset in the map) |
+| `public/assets/tiles/rmit.png` | 80×96: RMIT's Building 80 next door, 5×6 tiles |
 
 If the player sprite size changes, update `PLAYER` in `src/config.js`.
 
@@ -236,6 +239,38 @@ Layers in `public/assets/memories/school-formal/` (back to front):
 
 Keep the two of you between about y = 92 and y = 142, around x = 160. The
 caption box covers the bottom of the frame.
+
+### The Oxford Scholar scene
+
+The pub (the one next to RMIT) is drawn by `tools/scenes/oxford-scholar.js`,
+the same way: change `PAL` at the top, then
+
+```
+npm run scene:pub                        # redraws all its layers + both buildings
+npm run scene:pub -- --keep us,table     # keep layers you've redrawn yourself
+```
+
+Previews: `tools/previews/oxford-scholar.png` and
+`tools/previews/oxford-scholar-street.png`. The first run turned the café on
+the map into the pub (same spot, same trigger) and put RMIT next door; later
+runs leave the map alone.
+
+Layers in `public/assets/memories/oxford-scholar/` (back to front):
+
+| file | size | contents | anim |
+|---|---|---|---|
+| `street.png` | 320×180 (opaque) | Swanston St at dusk: towers, plane tree, Building 80 + RMIT sign | none |
+| `street-lights.png` | 320×180 | lit office windows, shopfronts, street lamp | flicker |
+| `tram.png` | **960×180** | one tram, in a wide strip so it only comes past now and then | drift, speed 4 |
+| `interior.png` | 320×180, window glass see-through | brick walls, timber window, RMIT banner, pub sign, tote bag + books, lamp shades | none |
+| `lamps.png` | 320×180 | glow under the pendant lamps | pulse (subtle) |
+| `table.png` | 320×180 | high table, stools, fries, tomato sauce | none |
+| `us.png` | **2560×180**: 8 frames | the two of you clinking glasses (breathing + blinks) | frames, 3 fps |
+| `steam.png` | **3840×180**: 12 frames | steam off the fries, bubbles in the pint, the clink sparkle | frames, 4 fps |
+| `vignette.png` | 320×180 | soft dark edges | none |
+
+The glasses and hands sit in the same place in every frame of `us.png`, so the
+beer bubbles and the clink in `steam.png` line up with them.
 
 ---
 

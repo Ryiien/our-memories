@@ -176,8 +176,15 @@ presets warn and are skipped / shown static — never crash.
   `Decor`. Boot/World load every tileset in the map, so no code is needed.
   The ballroom ("SAN REMO", for the school formal) sits at tiles x 33–42,
   y 12–18, doors facing the main path, trigger at x 37–38, y 19.
+  The Oxford Scholar pub (`oxford-scholar`, 8×6) replaced the placeholder café
+  at tiles x 27–34, y 0–5 (doors at x 30–31, trigger `pub doors` at x 30–31,
+  y 6); RMIT's Building 80 (`rmit`, 5×6) replaced the house at x 37–41.
 - `npm run placeholders -- --force` regenerates `world.json` *without* such
-  additions; re-run the scene scripts (`npm run scene:formal`) to re-add them.
+  additions; re-run the scene scripts (`npm run scene:formal`, `npm run
+  scene:pub`) to re-add them.
+- Scene scripts live in `tools/scenes/` and share helpers from
+  `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
+  a 3×5 sign font, previews, `stampBuilding`). Each has a named `PAL` at the top.
 
 Placeholder tile ids (tools/lib/tileset.js `T`): row 0 grass/flowers/path/cobble/
 plaza/hedge, row 1 sand/shore/water(animated)/pier, row 2 walls/door/awning/roof

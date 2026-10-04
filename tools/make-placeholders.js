@@ -19,7 +19,7 @@ import { buildTestMap } from './lib/test-map.js';
 import {
   buildPlayerSheet, buildHeartIcon, bigHeart, buildPanel, buildSparkle, buildJoystick, buildActionButton,
 } from './lib/sprites.js';
-import { apolloBay, cafe, parkPicnic, firstDate, finale } from './lib/cutscenes.js';
+import { apolloBay, parkPicnic, firstDate, finale } from './lib/cutscenes.js';
 import { waves, musicBox } from './lib/audio.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -61,7 +61,6 @@ write(out('ui', 'action-button.png'), buildActionButton());
 // ---- Cutscenes -----------------------------------------------------------------------
 const scenes = {
   'apollo-bay': apolloBay(),
-  cafe: cafe(),
   'park-picnic': parkPicnic(),
   'first-date': firstDate(),
   finale: finale(),

@@ -4,7 +4,8 @@
 //
 //   x:  0..7    sea + shoreline         (beach memory)
 //   x:  8..17   sand
-//   x: 18..42   town: houses, café, street, lamps   (café memory)
+//   x: 18..42   town: houses, café, street, lamps   (pub memory: npm run scene:pub
+//               turns the café into the Oxford Scholar)
 //   x: 43..59   park with trees + picnic            (picnic memory)
 //   top-right   a dense grove hiding a bench        (hidden memory)
 // -----------------------------------------------------------------------------
@@ -141,7 +142,7 @@ export function buildTestMap({ tilesetImage, tilesetImageWidth, tilesetImageHeig
   });
   const triggers = [
     rect('beach', 10, 25, 4, 4, 'apollo-bay'),
-    rect('cafe door', 30, 6, 2, 1, 'cafe'),
+    rect('pub doors', 30, 6, 2, 1, 'oxford-scholar'),
     rect('picnic', 47, 26, 4, 3, 'park-picnic'),
     rect('secret bench', 54, 4, 2, 2, 'first-date'),
   ];
