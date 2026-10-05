@@ -17,13 +17,13 @@
         { "src": "memories/apollo-bay/sea.png", "anim": "slide", "amount": 3, "speed": 0.6 },
         { "src": "memories/apollo-bay/sand.png" },
         { "src": "memories/apollo-bay/foam.png", "anim": "frames", "frameWidth": 320, "frameHeight": 180, "fps": 3 },
-        { "src": "memories/apollo-bay/us.png", "anim": "bob", "amount": 1, "speed": 0.4 }
+        { "src": "memories/apollo-bay/us.png" }
       ]
     },
     {
       "id": "oxford-scholar",
       "title": "The Oxford Scholar",
-      "date": "Any Evening 2026",
+      "date": "Evenings of 2026",
       "caption": "A Long Island for you, a pint for me, and fries to share.",
       "hidden": false,
       "requiresAction": false,
@@ -43,8 +43,8 @@
     {
       "id": "park-picnic",
       "title": "Picnic in the park",
-      "date": "January 2025",
-      "caption": "Placeholder caption — strawberries, sunshine, and a very long afternoon.",
+      "date": "2025-2026",
+      "caption": "Long, lazy afternoons at the park.",
       "hidden": false,
       "requiresAction": false,
       "unlockAfter": 0,
@@ -53,16 +53,17 @@
         { "src": "memories/park-picnic/sun.png", "anim": "pulse", "amount": 0.25, "speed": 0.5 },
         { "src": "memories/park-picnic/clouds.png", "anim": "drift", "speed": 0.5 },
         { "src": "memories/park-picnic/ground.png" },
-        { "src": "memories/park-picnic/trees.png", "anim": "sway", "amount": 2, "speed": 0.5 },
-        { "src": "memories/park-picnic/us.png", "anim": "bob", "amount": 1, "speed": 0.5 },
+        { "src": "memories/park-picnic/trees.png", "anim": "sway", "amount": 1, "speed": 0.4 },
+        { "src": "memories/park-picnic/bikes.png" },
+        { "src": "memories/park-picnic/us.png", "anim": "frames", "fps": 3 },
         { "src": "memories/park-picnic/butterflies.png", "anim": "frames", "fps": 5 }
       ]
     },
     {
       "id": "first-date",
       "title": "Where it all began",
-      "date": "October 2023",
-      "caption": "Placeholder caption — this one is hidden behind the trees, and only opens once two other memories have been found.",
+      "date": "19th October 2023",
+      "caption": "Our first date. We held hands.",
       "hidden": true,
       "requiresAction": true,
       "unlockAfter": 2,
@@ -72,6 +73,7 @@
         { "src": "memories/first-date/stars.png", "anim": "twinkle", "amount": 0.8, "speed": 0.7 },
         { "src": "memories/first-date/street.png" },
         { "src": "memories/first-date/windows.png", "anim": "flicker", "amount": 0.3, "speed": 0.3 },
+        { "src": "memories/first-date/bus-stop.png" },
         { "src": "memories/first-date/glow.png", "anim": "pulse", "amount": 0.3, "speed": 0.4 },
         { "src": "memories/first-date/us.png", "anim": "sway", "amount": 1, "speed": 0.35 }
       ]
@@ -94,6 +96,49 @@
         { "src": "memories/school-formal/spotlight.png", "anim": "pulse", "amount": 0.15, "speed": 0.35, "scale": 0 },
         { "src": "memories/school-formal/us.png", "anim": "frames", "fps": 3 },
         { "src": "memories/school-formal/vignette.png" }
+      ]
+    },
+    {
+      "id": "botanic-garden",
+      "title": "Valentines Day at The Botanic Garden",
+      "date": "14th February 2026",
+      "caption": "Dandenong Ranges Botanic Garden.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/botanic-garden/sky.png" },
+        { "src": "memories/botanic-garden/trees-back.png", "anim": "sway", "amount": 1, "speed": 0.3 },
+        { "src": "memories/botanic-garden/trees-autumn.png", "anim": "sway", "amount": 1, "speed": 0.4 },
+        { "src": "memories/botanic-garden/pond.png" },
+        { "src": "memories/botanic-garden/glints.png", "anim": "twinkle", "amount": 0.9, "speed": 0.8 },
+        { "src": "memories/botanic-garden/reeds.png", "anim": "sway", "amount": 1, "speed": 0.5 },
+        { "src": "memories/botanic-garden/deck.png" },
+        { "src": "memories/botanic-garden/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/botanic-garden/railing.png" },
+        { "src": "memories/botanic-garden/leaves.png", "anim": "frames", "fps": 6 },
+        { "src": "memories/botanic-garden/haze.png", "anim": "pulse", "amount": 0.25, "speed": 0.4, "scale": 0 }
+      ]
+    },
+    {
+      "id": "laufey-concert",
+      "title": "Laufey at the Palais Theatre",
+      "date": "7th September 2024",
+      "caption": "A magical night of music and lights.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/laufey-concert/hall.png" },
+        { "src": "memories/laufey-concert/lights.png", "anim": "pulse", "amount": 0.3, "speed": 0.5, "scale": 0 },
+        { "src": "memories/laufey-concert/laufey.png", "anim": "sway", "amount": 1, "speed": 0.4 },
+        { "src": "memories/laufey-concert/notes.png", "anim": "frames", "fps": 4 },
+        { "src": "memories/laufey-concert/crowd.png" },
+        { "src": "memories/laufey-concert/phones.png", "anim": "twinkle", "amount": 0.7, "speed": 0.6 },
+        { "src": "memories/laufey-concert/balcony.png" },
+        { "src": "memories/laufey-concert/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/laufey-concert/seats.png" },
+        { "src": "memories/laufey-concert/vignette.png" }
       ]
     }
   ]

@@ -37,6 +37,11 @@ Other commands:
 | `npm run pixelate -- photo.jpg out.png` | turns a photo into pixel art (see §5) |
 | `npm run scene:formal` | redraws the school formal scene + ballroom building (see §6) |
 | `npm run scene:pub` | redraws the Oxford Scholar scene + the pub and RMIT buildings (see §6) |
+| `npm run scene:garden` | redraws the botanic garden scene + the garden on the map (see §6) |
+| `npm run scene:picnic` | redraws the picnic scene + the picnic on the map (see §6) |
+| `npm run scene:first-date` | redraws the first date scene (street, bus stop, the two of you) (see §6) |
+| `npm run scene:laufey` | redraws the Laufey concert scene + the Palais Theatre on the map (see §6) |
+| `npm run scene:beach` | redraws the night on the beach scene (see §6) |
 
 ### Controls
 - **Move:** WASD or arrow keys · phone: put your thumb anywhere on the left half
@@ -207,6 +212,9 @@ existing files** unless you run it with `--force`, so re-running it is safe.
 | `public/assets/tiles/hall.png` | 160×112: the ballroom building, 10×7 tiles (its own tileset in the map) |
 | `public/assets/tiles/oxford-scholar.png` | 128×96: the pub, 8×6 tiles (its own tileset in the map) |
 | `public/assets/tiles/rmit.png` | 80×96: RMIT's Building 80 next door, 5×6 tiles |
+| `public/assets/tiles/palais.png` | 160×112: the Palais Theatre, 10×7 tiles (its own tileset in the map) |
+| `public/assets/tiles/picnic.png` | 64×32: the picnic on the map, 4×2 tiles (bikes on top, solid; blanket below, walkable) |
+| `public/assets/tiles/garden.png` | 320×144: the botanic garden, 10×9 tiles, drawn twice side by side (the second copy is the water's shimmer frame) |
 
 If the player sprite size changes, update `PLAYER` in `src/config.js`.
 
@@ -271,6 +279,146 @@ Layers in `public/assets/memories/oxford-scholar/` (back to front):
 
 The glasses and hands sit in the same place in every frame of `us.png`, so the
 beer bubbles and the clink in `steam.png` line up with them.
+
+### The botanic garden scene
+
+The Dandenong Ranges Botanic Garden day (based on the photo of the two of you
+at the pond railing) is drawn by `tools/scenes/botanic-garden.js`: change
+`PAL` at the top, then
+
+```
+npm run scene:garden                     # redraws all its layers + the garden tiles
+npm run scene:garden -- --keep us,pond   # keep layers you've redrawn yourself
+```
+
+Previews: `tools/previews/botanic-garden.png` and
+`tools/previews/botanic-garden-map.png`. The first run put the garden in the
+bottom-right corner of the map (a pond with a boardwalk out to a lookout deck,
+tiles x 50–59, y 29–37), a path running straight down to it from the main
+path, and the trigger on the deck. It also moved the picnic off that path, to
+the open grass further west (tiles x 29–32, y 25–27). Later runs leave the map
+alone.
+
+Layers in `public/assets/memories/botanic-garden/` (back to front):
+
+| file | size | contents | anim |
+|---|---|---|---|
+| `sky.png` | 320×180 (opaque) | bright hazy sky, brightest top right | none |
+| `trees-back.png` | 320×180 | misty forest + the tall gums | sway (slow) |
+| `trees-autumn.png` | 320×180 | golden / orange / green trees, shrubs on the far bank | sway |
+| `pond.png` | 320×180 | still water mirroring the trees | none |
+| `glints.png` | 320×180 | sun sparkling on the water | twinkle |
+| `reeds.png` | 320×180 | rushes and cattails | sway |
+| `deck.png` | 320×180 | the boardwalk you're standing on | none |
+| `us.png` | **2560×180**: 8 frames | the two of you at the railing, her head on his shoulder (breathing + blinks) | frames, 3 fps |
+| `railing.png` | 320×180 | weathered timber railing in front | none |
+| `leaves.png` | **7680×180**: 24 frames | a few autumn leaves drifting down | frames, 6 fps |
+| `haze.png` | 320×180 | warm sunlight from the top right | pulse (subtle) |
+
+Her hands rest on top of the railing (y = 125), so they line up in every frame.
+
+### The picnic scene
+
+The two of you lying on a blanket in the park facing each other, reading with a
+drink each, your bikes standing in the grass behind (drawn from photos: his
+yellow road bike with a white fork and front rack, her plum-purple mountain bike).
+Drawn by `tools/scenes/park-picnic.js`: change `PAL` at the top, then
+
+```
+npm run scene:picnic                     # redraws all its layers + the map picnic
+npm run scene:picnic -- --keep us,bikes  # keep layers you've redrawn yourself
+```
+
+Previews: `tools/previews/park-picnic.png` and
+`tools/previews/park-picnic-map.png`. The first run swapped the plain blanket
+on the map for your picnic (bikes + blanket with books and drinks) at the
+picnic trigger's top-left; later runs leave the map alone.
+
+Layers in `public/assets/memories/park-picnic/` (back to front):
+
+| file | size | contents | anim |
+|---|---|---|---|
+| `sky.png` | 320×180 (opaque) | clear sky + soft hills | none |
+| `sun.png` | 320×180 | the sun, top left | pulse |
+| `clouds.png` | 320×180 | clouds (wrap left↔right) | drift |
+| `ground.png` | 320×180 | grass, wildflowers, the gingham blanket | none |
+| `trees.png` | 320×180 | a shady tree each side, bushes | sway |
+| `bikes.png` | 320×180 | his yellow road bike, her purple mountain bike (shapes + colours in `HIS_BIKE` / `HER_BIKE`) | none |
+| `us.png` | **2560×180**: 8 frames | the two of you reading, feet kicking slowly (+ blinks) | frames, 3 fps |
+| `butterflies.png` | **1280×180**: 4 frames | two butterflies | frames, 5 fps |
+
+This scene used to be a generated placeholder; `npm run placeholders` no longer
+touches it.
+
+### The first date scene
+
+The lamp-lit street at dusk with the two of you under the lamp, and the bus stop
+beside you: a glass shelter (orange roof edge, yellow strip, bench) and a PT
+sign for the routes in `BUS_ROUTES` (513, 514, 903). Drawn by
+`tools/scenes/first-date.js`: change `PAL` / `BUS_ROUTES` at the top, then
+
+```
+npm run scene:first-date                       # redraws all its layers
+npm run scene:first-date -- --keep us,street   # keep layers you've redrawn yourself
+```
+
+Preview: `tools/previews/first-date.png`. Layers in
+`public/assets/memories/first-date/` (back to front): `sky.png`, `stars.png`
+(twinkle), `street.png`, `windows.png` (flicker), `bus-stop.png`, `glow.png`
+(pulse), `us.png` (sway). Like the picnic, it's no longer touched by
+`npm run placeholders`.
+
+### The beach scene
+
+The night on the beach at Apollo Bay: moon, stars, the town's lights on the
+headland, the moon's path on the sea, foam creeping up the sand, and the two of
+you sitting cross-legged on a blanket, seen from behind (you stay still; the
+world around you moves). Drawn by `tools/scenes/apollo-bay.js`: change `PAL`
+at the top, then
+
+```
+npm run scene:beach                      # redraws all its layers
+npm run scene:beach -- --keep us,sand    # keep layers you've redrawn yourself
+```
+
+Preview: `tools/previews/apollo-bay.png`. Layers in
+`public/assets/memories/apollo-bay/` (back to front): `sky.png`, `stars.png`
+(twinkle), `glow.png` (pulse), `lights.png` (flicker), `sea.png` (slide),
+`sand.png`, `foam.png` (3 frames), `us.png` (still). No longer touched by
+`npm run placeholders`.
+
+### The Laufey concert scene
+
+Laufey at the Palais Theatre, seen from your balcony seats: the gilded arch,
+red velvet curtain, lighting truss and speakers, Laufey at the mic beside a
+grand piano, and the two of you from behind in your paper crowns (hers pink,
+his blue). Drawn by `tools/scenes/laufey-concert.js`: change `PAL` at the top,
+then
+
+```
+npm run scene:laufey                     # redraws all its layers + the building
+npm run scene:laufey -- --keep us,hall   # keep layers you've redrawn yourself
+```
+
+Previews: `tools/previews/laufey-concert.png` and `tools/previews/palais.png`.
+The first run put the Palais on the map (tiles x 19–28, y 12–18, across the pub
+path from San Remo, doors facing the main path) with its trigger at the doors;
+later runs leave the map alone.
+
+Layers in `public/assets/memories/laufey-concert/` (back to front):
+
+| file | size | contents | anim |
+|---|---|---|---|
+| `hall.png` | 320×180 (opaque) | auditorium, gilded arch, curtain, stage, truss, speakers, piano | none |
+| `lights.png` | 320×180 | lamp glows, soft beams, the spotlight on Laufey | pulse |
+| `laufey.png` | 320×180 | Laufey at the mic | sway |
+| `notes.png` | **5120×180**: 16 frames | music notes floating up | frames, 4 fps |
+| `crowd.png` | 320×180 | heads in the stalls | none |
+| `phones.png` | 320×180 | a few phone screens | twinkle |
+| `balcony.png` | 320×180 | the red velvet balcony ledge + brass rail | none |
+| `us.png` | **2560×180**: 8 frames | the two of you from behind, crowns on, swaying a little | frames, 3 fps |
+| `seats.png` | 320×180 | the backs of your row of red velvet seats, right behind you | none |
+| `vignette.png` | 320×180 | dark edges | none |
 
 ---
 

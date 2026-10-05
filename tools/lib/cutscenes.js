@@ -1,34 +1,13 @@
 // -----------------------------------------------------------------------------
-// Layered 320x180 placeholder cutscenes. Each function returns
-// { 'file.png': Canvas, ... } for one memory folder.
-// Layers are designed to be stacked in order and animated by LayerAnimator.
+// The placeholder finale background, plus figure() — the little chibi person
+// the first date scene still uses. (Every memory now has its own hand-drawn
+// script in tools/scenes/.) finale() returns { 'file.png': Canvas, ... }.
 // -----------------------------------------------------------------------------
 import { Canvas, rng } from './canvas.js';
 import { P } from './palette.js';
 
 const W = 320;
 const H = 180;
-const PI = Math.PI;
-
-// A few extra scene-only colours
-const C = {
-  nightSand1: '#8a7894',
-  nightSand2: '#6f6080',
-  nightSand3: '#574a66',
-  headland: '#2a2547',
-  seaLight: '#3d4682',
-  farHill: '#b9dca0',
-  nearHill: '#9cc98a',
-  sunCore: '#fffbe6',
-  sun: '#fff1b8',
-  dusk2: '#d98a8a',
-  dusk3: '#f2b38a',
-  building1: '#3a2f52',
-  building2: '#33294a',
-  windowDark: '#2a2340',
-  pavement: '#5a4a6a',
-  pavementLight: '#6e5c80',
-};
 
 // ---- shared bits -------------------------------------------------------------
 
@@ -157,6 +136,10 @@ export function figure({
     // short skirt flare at the hips
     c.rect(bx - 1, bodyBottom - 4, bw + 2, 4, top);
     c.rect(bx - 1, bodyBottom - 1, bw + 2, 1, topShade);
+  } else if (jacket && sit && view === 'back') {
+    // sitting, seen from behind: the jacket hangs down over the seat, so only a
+    // sliver of jeans shows at the sides and bottom
+    c.rect(bx, bodyBottom, bw, 3, topShade);
   } else if (!dress) {
     c.rect(bx, bodyBottom - 2, bw, 2, bottom); // jeans waistband
   }
@@ -251,14 +234,20 @@ export function figure({
 
   // Short hair: trim everything below the hairline so the neck shows (back and
   // side) and the head isn't framed by hair (front).
+  // From behind the hair comes further down (a low hairline, ears at the sides),
+  // so only a short bit of neck shows above the collar.
   if (hair === 'short') {
-    const trimFrom = headY + 2;
+    const trimFrom = headY + (view === 'back' ? 4 : 2);
     for (let y = trimFrom; y <= headY + 6; y++)
       for (let x = 0; x < FIG_W; x++) {
         if (!sameColor(c, x, y, hairColor)) continue;
         if (view !== 'front' && x >= cx - 2 && x <= cx + 1) c.px(x, y, skin); // neck
         else c.clear(x, y);
       }
+    if (view === 'back') {
+      c.rect(cx - 6, headY, 1, 2, skin); // ears
+      c.rect(cx + 6, headY, 1, 2, skin);
+    }
   }
 
   // Grown-out roots: recolour the top of the hair dark, dithering into the
@@ -294,11 +283,6 @@ export function figure({
   return m;
 }
 
-/** Place a figure so its feet land at (x, baseY). */
-function place(c, fig, x, baseY) {
-  c.blit(fig, Math.round(x - FIG_W / 2), Math.round(baseY - (fig.height - 1)));
-}
-
 function starField(c, r, count, { maxY = 100, avoid = () => false } = {}) {
   for (let i = 0; i < count; i++) {
     const x = r.int(2, W - 3);
@@ -312,18 +296,6 @@ function starField(c, r, count, { maxY = 100, avoid = () => false } = {}) {
       c.px(x, y - 1, color, 0.5);
       c.px(x, y + 1, color, 0.5);
     }
-  }
-}
-
-/** Fluffy cloud; drawn three times (x-W, x, x+W) so the layer wraps seamlessly. */
-function cloud(c, x, y, w, light = P.white, shade = P.skyPale) {
-  for (const ox of [-W, 0, W]) {
-    const cx = x + ox;
-    c.ellipse(cx, y + 2, w * 0.5, 5, shade);
-    c.ellipse(cx - w * 0.22, y, w * 0.25, 5, light);
-    c.ellipse(cx + w * 0.12, y - 3, w * 0.24, 7, light);
-    c.ellipse(cx + w * 0.32, y + 1, w * 0.18, 4, light);
-    c.rect(cx - w * 0.45, y + 2, w * 0.9, 3, light);
   }
 }
 
@@ -348,235 +320,6 @@ function heartShape(c, cx, cy, size, color, alpha = 1) {
       const a = nx * nx + ny * ny - 1;
       if (a * a * a - nx * nx * ny * ny * ny <= 0) c.px(cx + x, cy + y, color, alpha);
     }
-}
-
-// ---- 1. Apollo Bay: night on the beach ---------------------------------------
-export function apolloBay() {
-  const r = rng(11);
-  const horizon = 90;
-  const hill = (x) => (x < 196 ? horizon : Math.round(horizon - Math.min(16, (x - 196) * 0.22) + Math.sin(x * 0.15) * 1.2));
-  const sandTop = (x) => 132 + Math.round(Math.sin(x * 0.05) * 1.5);
-
-  const sky = new Canvas(W, H);
-  sky.gradientV(0, 0, W, horizon, [P.night0, P.night1, P.night2, P.night3, P.night4, P.night5, P.dusk]);
-  sky.rect(0, horizon, W, H - horizon, P.night1);
-  for (let x = 196; x < W; x++) for (let y = hill(x); y < horizon; y++) sky.px(x, y, C.headland);
-  sky.circle(252, 34, 10, P.cream);
-  sky.circle(249, 31, 2, P.creamShade);
-  sky.circle(255, 38, 1.5, P.creamShade);
-  sky.px(256, 30, P.creamShade);
-
-  const stars = new Canvas(W, H);
-  starField(stars, r, 110, { maxY: 82, avoid: (x, y) => Math.hypot(x - 252, y - 34) < 22 || y > hill(x) - 3 });
-
-  const glow = new Canvas(W, H);
-  glow.glow(252, 34, 30, P.cream, 0.3);
-
-  const lights = new Canvas(W, H);
-  for (let i = 0; i < 14; i++) {
-    const x = r.int(212, 316);
-    const y = Math.min(horizon - 2, hill(x) + r.int(2, 9));
-    lights.glow(x, y, 3, P.butter, 0.35);
-    lights.px(x, y, r() < 0.5 ? P.butter : P.orange);
-    if (r() < 0.3) lights.px(x + 1, y, P.butter);
-  }
-
-  const sea = new Canvas(W, H);
-  sea.gradientV(0, horizon, W, 46, [C.seaLight, P.night3, P.night2, P.night2, P.night1]);
-  for (let y = horizon + 2; y < 134; y += 2) {
-    const half = 3 + (y - horizon) * 0.3;
-    for (let x = Math.round(252 - half); x <= 252 + half; x++) {
-      if (r() < 0.45) sea.px(x, y, r() < 0.5 ? P.cream : P.lavender, 0.9);
-    }
-  }
-  for (let i = 0; i < 70; i++) {
-    const x = r.int(0, W - 1);
-    const y = r.int(horizon + 3, 132);
-    const len = r.int(2, 6);
-    for (let k = 0; k < len; k++) sea.px((x + k) % W, y, P.lavender, 0.45);
-  }
-
-  const sand = new Canvas(W, H);
-  for (let x = 0; x < W; x++) for (let y = sandTop(x); y < H; y++) sand.px(x, y, C.nightSand2);
-  sand.gradientV(0, 140, W, 40, [C.nightSand2, C.nightSand3]);
-  for (let i = 0; i < 90; i++) sand.px(r.int(0, W - 1), r.int(136, H - 1), r() < 0.5 ? C.nightSand1 : C.nightSand3);
-  sand.ellipse(158, 146, 18, 3, P.berry); // blanket
-  sand.ellipse(158, 145, 16, 2, P.roseDark);
-
-  // three frames side by side (960x180) — the foam creeping up and back
-  const foam = new Canvas(W * 3, H);
-  [0, 2, 1].forEach((lift, f) => {
-    for (let x = 0; x < W; x++) {
-      const y0 = sandTop(x) - lift + Math.round(Math.sin(x * 0.07 + f * 2.1) * 1.4);
-      for (let y = sandTop(x); y < y0 + 4; y++) foam.px(f * W + x, y, C.nightSand3, 0.5); // wet sand
-      if (Math.sin(x * 0.31 + f * 1.7) > -0.4) foam.px(f * W + x, y0, P.foam, 0.9);
-      if (Math.sin(x * 0.53 + f) > 0.3) foam.px(f * W + x, y0 + 1, P.lavender, 0.7);
-      if ((x * 7 + f * 13) % 23 === 0) foam.px(f * W + x, y0 + 3, P.foam, 0.6);
-    }
-  });
-
-  const us = new Canvas(W, H);
-  // moonlit, so both figures are dimmed towards the night colours
-  place(us, figure({ ...HER, view: 'back', pose: 'sit', dim: 0.35 }), 151, 148);
-  place(us, figure({ ...HIM, view: 'back', pose: 'sit', dim: 0.35 }), 166, 148);
-
-  return {
-    'sky.png': sky, 'stars.png': stars, 'glow.png': glow, 'lights.png': lights,
-    'sea.png': sea, 'sand.png': sand, 'foam.png': foam, 'us.png': us,
-  };
-}
-
-// ---- 3. Park picnic -----------------------------------------------------------
-export function parkPicnic() {
-  const r = rng(33);
-
-  const sky = new Canvas(W, H);
-  sky.gradientV(0, 0, W, 110, [P.sky, P.skyLight, P.skyPale]);
-  sky.rect(0, 110, W, 70, P.grassMid);
-  for (let x = 0; x < W; x++) {
-    const far = Math.round(100 + Math.sin(x * 0.02) * 6);
-    const near = Math.round(110 + Math.sin(x * 0.031 + 1) * 5);
-    for (let y = far; y < 120; y++) sky.px(x, y, C.farHill);
-    for (let y = near; y < 120; y++) sky.px(x, y, C.nearHill);
-  }
-
-  const sun = new Canvas(W, H);
-  sun.glow(64, 32, 28, P.butter, 0.32);
-  sun.circle(64, 32, 11, C.sun);
-  sun.circle(62, 30, 6, C.sunCore);
-
-  const clouds = new Canvas(W, H);
-  cloud(clouds, 150, 30, 50, P.white, '#e3f1ef');
-  cloud(clouds, 270, 52, 36, P.white, '#e3f1ef');
-
-  const ground = new Canvas(W, H);
-  ground.gradientV(0, 116, W, 64, [P.grassLight, P.grass, P.grassMid]);
-  for (let i = 0; i < 220; i++) {
-    const x = r.int(0, W - 1);
-    const y = r.int(118, H - 1);
-    ground.px(x, y, r() < 0.5 ? P.grassDark : P.grassLight);
-    if (r() < 0.12) {
-      const col = r.pick([P.rose, P.cream, P.butter, P.lavender]);
-      ground.px(x, y - 1, col);
-      ground.px(x - 1, y, col);
-      ground.px(x + 1, y, col);
-    }
-  }
-  // gingham picnic blanket (a slightly squashed trapezoid for perspective)
-  for (let y = 124; y < 144; y++) {
-    const inset = Math.round((144 - y) * 0.4);
-    for (let x = 122 + inset; x < 202 - inset; x++) {
-      const check = (Math.floor((x - 122) / 5) + Math.floor((y - 124) / 4)) % 2;
-      ground.px(x, y, check ? P.rose : P.cream);
-    }
-  }
-  ground.rect(186, 118, 14, 10, P.woodDark); // basket
-  ground.rect(187, 119, 12, 8, P.wood);
-  ground.line(188, 118, 193, 112, P.woodDark);
-  ground.line(193, 112, 198, 118, P.woodDark);
-
-  const trees = new Canvas(W, H);
-  const tree = (x, baseY, size) => {
-    trees.ellipse(x, baseY, size * 0.6, 2, P.grassDark, 0.5);
-    trees.rect(x - 3, baseY - size * 1.6, 6, size * 1.6, P.woodDark);
-    trees.rect(x - 2, baseY - size * 1.6, 2, size * 1.6, P.wood);
-    const cy = baseY - size * 1.9;
-    trees.circle(x, cy, size, P.forest);
-    trees.circle(x - 2, cy - 2, size * 0.85, P.grassDark);
-    trees.circle(x - 4, cy - 4, size * 0.55, P.grassMid);
-    trees.circle(x - 6, cy - 7, size * 0.25, P.grass);
-  };
-  tree(42, 126, 22);
-  tree(276, 128, 26);
-  tree(312, 124, 14);
-
-  const us = new Canvas(W, H);
-  place(us, figure({ ...HER, view: 'front', pose: 'sit' }), 152, 140);
-  place(us, figure({ ...HIM, view: 'front', pose: 'sit' }), 172, 140);
-
-  // 4 frames of two fluttering butterflies (1280x180)
-  const butterflies = new Canvas(W * 4, H);
-  for (let f = 0; f < 4; f++) {
-    for (const [bx, by, col] of [[108, 92, P.butter], [228, 104, P.lavender]]) {
-      const x = f * W + bx + Math.round(Math.cos((f * PI) / 2) * 5);
-      const y = by + Math.round(Math.sin((f * PI) / 2) * 3);
-      butterflies.px(x, y, P.plum);
-      butterflies.px(x, y + 1, P.plum);
-      if (f % 2 === 0) {
-        butterflies.rect(x - 3, y - 1, 3, 3, col);
-        butterflies.rect(x + 1, y - 1, 3, 3, col);
-        butterflies.px(x - 2, y, P.white);
-        butterflies.px(x + 2, y, P.white);
-      } else {
-        butterflies.rect(x - 1, y - 2, 1, 3, col);
-        butterflies.rect(x + 1, y - 2, 1, 3, col);
-      }
-    }
-  }
-
-  return {
-    'sky.png': sky, 'sun.png': sun, 'clouds.png': clouds, 'ground.png': ground,
-    'trees.png': trees, 'us.png': us, 'butterflies.png': butterflies,
-  };
-}
-
-// ---- 4. First date (hidden): a lamp-lit street at dusk ------------------------
-export function firstDate() {
-  const r = rng(44);
-  const street = 140;
-  const blocks = [[0, 60, 62], [60, 110, 48], [110, 152, 74], [152, 210, 40], [210, 262, 58], [262, 320, 46]];
-
-  const sky = new Canvas(W, H);
-  sky.gradientV(0, 0, W, street, [P.night2, P.night3, P.night4, P.night5, P.dusk, C.dusk2, C.dusk3]);
-  sky.rect(0, street, W, H - street, C.pavement);
-
-  const stars = new Canvas(W, H);
-  starField(stars, r, 40, { maxY: 56 });
-
-  const streetImg = new Canvas(W, H);
-  const windows = new Canvas(W, H);
-  blocks.forEach(([x0, x1, h], i) => {
-    const top = street - h;
-    streetImg.rect(x0, top, x1 - x0, h, i % 2 ? C.building2 : C.building1);
-    streetImg.rect(x0, top, x1 - x0, 2, P.night4);
-    if (i % 2 === 0) streetImg.rect(x0 + 8, top - 6, 5, 6, C.building1); // chimney
-    for (let wy = top + 7; wy < street - 10; wy += 11)
-      for (let wx = x0 + 6; wx < x1 - 8; wx += 10) {
-        streetImg.rect(wx, wy, 5, 6, C.windowDark);
-        if (r() < 0.45) {
-          windows.rect(wx, wy, 5, 6, P.butter);
-          windows.rect(wx, wy + 4, 5, 2, P.orange);
-          windows.px(wx + 1, wy + 1, P.cream);
-        }
-      }
-  });
-  streetImg.rect(0, street, W, H - street, C.pavement);
-  streetImg.rect(0, street, W, 2, C.pavementLight);
-  for (let x = 0; x < W; x += 24) streetImg.line(x, street + 2, x - 10, H, C.pavementLight);
-  streetImg.rect(231, 70, 3, 72, P.night1); // lamp post
-  streetImg.rect(226, 140, 13, 3, P.night1);
-  streetImg.rect(226, 62, 13, 3, P.night1);
-  streetImg.rect(227, 65, 2, 8, P.night1);
-  streetImg.rect(236, 65, 2, 8, P.night1);
-  streetImg.rect(226, 73, 13, 2, P.night1);
-
-  const glow = new Canvas(W, H);
-  glow.glow(232, 69, 36, P.butter, 0.42);
-  glow.ellipse(228, 148, 44, 9, P.butter, 0.14);
-  glow.ellipse(228, 148, 30, 6, P.butter, 0.14);
-  glow.rect(229, 65, 7, 8, P.butter);
-  glow.rect(230, 66, 3, 4, P.cream);
-
-  const us = new Canvas(W, H);
-  place(us, figure({ ...HER, view: 'front' }), 204, 148);
-  place(us, figure({ ...HIM, view: 'front' }), 218, 148);
-  us.rect(209, 127, 4, 2, P.herSkin); // holding hands
-  heartShape(us, 211, 96, 7, P.rose);
-
-  return {
-    'sky.png': sky, 'stars.png': stars, 'street.png': streetImg,
-    'windows.png': windows, 'glow.png': glow, 'us.png': us,
-  };
 }
 
 // ---- Finale background ---------------------------------------------------------

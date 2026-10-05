@@ -66,8 +66,10 @@ export default class Memory extends Phaser.Scene {
     if (m.music) Music.play(this, m.music);
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 
-    this.showTitle(m);
-    this.buildCaption(m);
+    // The title + date show on their own first; the caption box comes up after
+    // them, and once it's up the title fades away.
+    const titleTime = this.showTitle(m);
+    this.buildCaption(m, titleTime ? titleTime + TIMING.titleAlone : TIMING.captionDelay);
 
     // Input: any key/tap skips the typing, then continues.
     this.input.keyboard.on('keydown', (e) => {
@@ -76,9 +78,13 @@ export default class Memory extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.advance());
   }
 
-  /** Title + date at the top: fade in, wait, fade out. */
+  /**
+   * Title + date at the top: fade in, and stay until hideTitle() (called once
+   * the caption box is up). Returns how long the fade-in takes (0 = no title).
+   */
   showTitle(m) {
-    if (!m.title && !m.date) return;
+    this.titleParts = [];
+    if (!m.title && !m.date) return 0;
     const parts = [];
     const title = pixelText(this, 0, 8, m.title, { color: COLORS.cream, shadow: COLORS.black });
     title.setX(Math.round((GAME_WIDTH - title.getTextBounds(false).local.width) / 2));
@@ -97,18 +103,21 @@ export default class Memory extends Phaser.Scene {
     parts.unshift(band);
 
     parts.forEach((p) => p.setAlpha(0));
-    this.tweens.chain({
-      targets: parts,
-      tweens: [
-        { alpha: 1, duration: 700, delay: 300 },
-        { alpha: 1, duration: TIMING.titleShow },
-        { alpha: 0, duration: 900 },
-      ],
-    });
+    this.titleParts = parts;
+    const delay = 300;
+    const duration = 700;
+    this.tweens.add({ targets: parts, alpha: 1, duration, delay });
+    return delay + duration;
   }
 
-  /** The cosy caption box at the bottom, typed out. */
-  buildCaption(m) {
+  hideTitle() {
+    if (!this.titleParts.length) return;
+    this.tweens.killTweensOf(this.titleParts);
+    this.tweens.add({ targets: this.titleParts, alpha: 0, duration: TIMING.titleFadeOut });
+  }
+
+  /** The cosy caption box at the bottom, typed out; it comes up after `delay` ms. */
+  buildCaption(m, delay) {
     const width = GAME_WIDTH - BOX.margin * 2;
     this.typer = new Typewriter(this, {
       x: BOX.margin + BOX.padX,
@@ -130,7 +139,10 @@ export default class Memory extends Phaser.Scene {
       this.children.bringToTop(o);
     });
 
-    this.continueButton = new ContinueHeart(this, BOX.margin + width - BOX.padX, top + height - 4, () => this.advance());
+    // On its own row it sits along the bottom; next to the text it's centred
+    // up and down in the box (the label's middle is 4 px above its anchor).
+    const continueY = continueRow ? top + height - 4 : Math.round(top + height / 2) + 4;
+    this.continueButton = new ContinueHeart(this, BOX.margin + width - BOX.padX, continueY, () => this.advance());
 
     // Slide the box up, then start typing.
     const parts = [this.box, ...this.typer.objects];
@@ -143,9 +155,10 @@ export default class Memory extends Phaser.Scene {
       y: '-=12',
       alpha: { from: 0, to: 0.95 },
       duration: 500,
-      delay: TIMING.captionDelay - 500,
+      delay,
       ease: 'Sine.easeOut',
       onComplete: () => {
+        this.hideTitle();
         this.typer.setAlpha(1);
         this.typer.start(() => this.time.delayedCall(TIMING.continueDelay, () => this.continueButton.show()));
       },

@@ -45,8 +45,9 @@ export const CAMERA_LERP = 0.12;
 export const TIMING = {
   fadeOut: 450, // world -> black before a memory
   fadeIn: 650, // black -> memory / back to world
-  titleShow: 2800, // how long the memory title + date stay at the top
-  captionDelay: 900, // pause before the caption starts typing
+  titleAlone: 2000, // how long the memory title + date show on their own before the caption box comes up
+  titleFadeOut: 900, // the title + date fade away once the caption box is up
+  captionDelay: 900, // pause before the caption box comes up when a memory has no title or date
   typewriterCps: 32, // caption typing speed, characters per second
   continueDelay: 350, // pause after typing finishes before Continue appears
   toast: 2800, // "Memory found!" toast duration

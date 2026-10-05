@@ -179,12 +179,32 @@ presets warn and are skipped / shown static — never crash.
   The Oxford Scholar pub (`oxford-scholar`, 8×6) replaced the placeholder café
   at tiles x 27–34, y 0–5 (doors at x 30–31, trigger `pub doors` at x 30–31,
   y 6); RMIT's Building 80 (`rmit`, 5×6) replaced the house at x 37–41.
+  The botanic garden (`garden`, 10×9, for `botanic-garden`) fills the bottom-right
+  corner at x 50–59, y 29–37 (top row = treetop headroom): pond + boardwalk
+  (walkable) out to a lookout deck (trigger `garden lookout` = the deck, x 53–56,
+  y 34–35). The branch path runs straight down from the main path at x 48–49
+  (y 22–39), then along y 38–39 to the boardwalk. The picnic (trigger x 29–32,
+  y 25–27) was moved there off that path. Its blanket is now the `picnic` tileset
+  (4×2: bikes on top, solid; blanket below, walkable) at x 29–32, y 25–26.
+  The Palais Theatre (`palais`, 10×7, for `laufey-concert`) sits across the pub
+  path from San Remo at x 19–28, y 12–18 (doors facing the main path, trigger
+  `palais doors` at x 23–24, y 19).
+- `stampBuilding` options: `walkable` (tile ids that don't collide; default all
+  solid) and `frames`/`animated`/`frameMs` (the image holds N copies side by
+  side; listed tiles cycle through them as a Tiled tile animation).
 - `npm run placeholders -- --force` regenerates `world.json` *without* such
   additions; re-run the scene scripts (`npm run scene:formal`, `npm run
-  scene:pub`) to re-add them.
+  scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`) to re-add them
+  (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
-  a 3×5 sign font, previews, `stampBuilding`). Each has a named `PAL` at the top.
+  `foliage`/`blobsIn` for leafy trees, a 3×5 sign font, previews, `stampBuilding`,
+  `placeLamp` for a cosy street lamp — San Remo and the Palais each have one either
+  side of their door path).
+  Each has a named `PAL` at the top. Hand-drawn memories (school-formal,
+  oxford-scholar, botanic-garden, park-picnic, first-date, laufey-concert, apollo-bay)
+  are not in
+  `make-placeholders.js`. The sign font (`miniText`) has digits 0–9 and `>`.
 
 Placeholder tile ids (tools/lib/tileset.js `T`): row 0 grass/flowers/path/cobble/
 plaza/hedge, row 1 sand/shore/water(animated)/pier, row 2 walls/door/awning/roof

@@ -21,7 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { Canvas, rng, bayer } from '../lib/canvas.js';
-import { ROOT, makeSaver, ring, thickLine, rimLight, softEllipse, text, textWidth, writePreview, stampBuilding } from '../lib/scene-kit.js';
+import { ROOT, makeSaver, ring, thickLine, rimLight, softEllipse, text, textWidth, writePreview, stampBuilding, placeLamp } from '../lib/scene-kit.js';
 
 // ---- Palette: change colours here -----------------------------------------------
 const PAL = {
@@ -600,6 +600,9 @@ function addToMap() {
   // a short path from the main path up to the doors (cosy tile 4 = path, gid 5)
   const doorY = HALL_AT.y + HALL_ROWS;
   for (let x = HALL_AT.x + 3; x <= HALL_AT.x + 6; x++) set('Ground', x, doorY, 5);
+  // a street lamp either side of that path
+  placeLamp(map, HALL_AT.x + 2, doorY);
+  placeLamp(map, HALL_AT.x + 7, doorY);
   // trigger right in front of the doors
   layer('Triggers').objects.push({
     id: map.nextobjectid++,

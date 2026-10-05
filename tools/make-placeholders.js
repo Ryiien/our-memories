@@ -19,7 +19,7 @@ import { buildTestMap } from './lib/test-map.js';
 import {
   buildPlayerSheet, buildHeartIcon, bigHeart, buildPanel, buildSparkle, buildJoystick, buildActionButton,
 } from './lib/sprites.js';
-import { apolloBay, parkPicnic, firstDate, finale } from './lib/cutscenes.js';
+import { finale } from './lib/cutscenes.js';
 import { waves, musicBox } from './lib/audio.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -60,9 +60,9 @@ write(out('ui', 'action-button.png'), buildActionButton());
 
 // ---- Cutscenes -----------------------------------------------------------------------
 const scenes = {
-  'apollo-bay': apolloBay(),
-  'park-picnic': parkPicnic(),
-  'first-date': firstDate(),
+  // apollo-bay is hand-drawn by tools/scenes/apollo-bay.js (npm run scene:beach)
+  // park-picnic is hand-drawn by tools/scenes/park-picnic.js (npm run scene:picnic)
+  // first-date is hand-drawn by tools/scenes/first-date.js (npm run scene:first-date)
   finale: finale(),
 };
 for (const [folder, files] of Object.entries(scenes))

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
 // Shared bits for the hand-drawn memory scripts in tools/scenes/:
-// saving layers (with --keep), drawing helpers, two pixel fonts for signs,
+// saving layers (with --keep), drawing helpers (incl. leafy foliage), two pixel fonts for signs,
 // previews, and adding a building tileset to maps/world.json.
 // -----------------------------------------------------------------------------
 import fs from 'node:fs';
@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { Canvas, bayer } from './canvas.js';
+import { Canvas, bayer, rng } from './canvas.js';
 import { GLYPHS } from './font.js';
 
 const PI = Math.PI;
@@ -117,9 +117,17 @@ const MINI = {
   S: ['.##', '#..', '.#.', '..#', '##.'],
   T: ['###', '.#.', '.#.', '.#.', '.#.'],
   X: ['#.#', '#.#', '.#.', '#.#', '#.#'],
+  0: ['###', '#.#', '#.#', '#.#', '###'],
   1: ['.#.', '##.', '.#.', '.#.', '###'],
+  2: ['##.', '..#', '.#.', '#..', '###'],
+  3: ['##.', '..#', '.#.', '..#', '##.'],
+  4: ['#.#', '#.#', '###', '..#', '..#'],
+  5: ['###', '#..', '##.', '..#', '##.'],
+  6: ['.##', '#..', '###', '#.#', '###'],
   7: ['###', '..#', '.#.', '.#.', '.#.'],
   8: ['###', '#.#', '###', '#.#', '###'],
+  9: ['###', '#.#', '###', '..#', '##.'],
+  '>': ['#..', '.#.', '..#', '.#.', '#..'],
 };
 
 /** Text in the tiny 3x5 sign font. Returns the width drawn. */
@@ -142,6 +150,53 @@ export const miniWidth = (str) => {
   for (const ch of str.toUpperCase()) w += ch === ' ' ? 2 : MINI[ch][0].length + 1;
   return w - 1;
 };
+
+// ---- Foliage: clumps of round leafy blobs (trees, bushes) ---------------------------------
+
+/** Random blobs inside an ellipse — the shape of one tree's canopy. */
+export function blobsIn(r, cx, cy, rx, ry, count, minR, maxR) {
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const a = r() * PI * 2;
+    const d = Math.sqrt(r());
+    out.push({ x: cx + Math.cos(a) * rx * d, y: cy + Math.sin(a) * ry * d, r: r.range(minR, maxR) });
+  }
+  return out;
+}
+
+/**
+ * Fills the union of the blobs. Each pixel is shaded by the blob it sits in
+ * (lit from the top right, or the top left with `sun: 'left'`; darker
+ * underneath), banded with dithering into the given colours (dark to light),
+ * then speckled for a leafy texture.
+ */
+export function foliage(c, blobs, colors, seed = 1, { sun = 'right' } = {}) {
+  const sunX = sun === 'left' ? -1 : 1;
+  const r = rng(seed);
+  const n = colors.length - 1;
+  const top = Math.min(...blobs.map((b) => b.y - b.r));
+  const bottom = Math.max(...blobs.map((b) => b.y + b.r));
+  for (let y = Math.floor(top); y <= bottom; y++)
+    for (let x = Math.floor(Math.min(...blobs.map((b) => b.x - b.r))); x <= Math.max(...blobs.map((b) => b.x + b.r)); x++) {
+      let best = null;
+      let bestD = 1;
+      for (const b of blobs) {
+        const d = Math.hypot(x - b.x, y - b.y) / b.r;
+        if (d <= bestD) {
+          bestD = d;
+          best = b;
+        }
+      }
+      if (!best) continue;
+      const lit = ((x - best.x) * 0.55 * sunX - (y - best.y) * 0.85) / best.r; // -1 (shadow) .. 1 (sun)
+      const low = (y - top) / Math.max(1, bottom - top); // the underside of the tree is darker
+      let v = 0.55 + lit * 0.45 - low * 0.45 - bestD * 0.15;
+      v = v * n + (bayer(x, y) - 0.5) * 0.9;
+      const i = Math.max(0, Math.min(n, Math.round(v)));
+      c.px(x, y, colors[i]);
+      if (r() < 0.06) c.px(x, y, colors[Math.min(n, i + 1)]); // leafy speckle
+    }
+}
 
 // ---- Previews ---------------------------------------------------------------------
 
@@ -166,29 +221,55 @@ export function writePreview(name, canvas) {
 // ---- The map ------------------------------------------------------------------------
 
 /**
- * Adds an image as its own embedded tileset (every tile solid) and stamps the
- * whole picture into the Decor layer with its top-left tile at (at.x, at.y).
- * Returns the tileset's first gid.
+ * A cosy-tileset street lamp: the post at tile (x, y) in Decor (solid) and the
+ * lamp head on the tile above it in Above (drawn over her).
  */
-export function stampBuilding(map, { name, image, cols, rows, at }) {
+export function placeLamp(map, x, y) {
+  const layer = (name) => map.layers.find((l) => l.name === name).data;
+  layer('Decor')[y * map.width + x] = 31; // cosy tile 30 (lamp base); gid = tile + 1
+  layer('Above')[(y - 1) * map.width + x] = 32; // cosy tile 31 (lamp top)
+}
+
+/**
+ * Adds an image as its own embedded tileset and stamps the whole picture into
+ * the Decor layer with its top-left tile at (at.x, at.y). Returns the
+ * tileset's first gid.
+ *
+ * Every tile is solid unless its id (row * cols + col) is in `walkable`.
+ * For gentle tile animation (water shimmer), the image can hold `frames`
+ * copies of the picture side by side; tiles listed in `animated` then cycle
+ * through those copies, `frameMs` each. Only the first copy is stamped.
+ */
+export function stampBuilding(map, { name, image, cols, rows, at, walkable = [], frames = 1, animated = [], frameMs = 500 }) {
   const firstgid = Math.max(...map.tilesets.map((t) => t.firstgid + t.tilecount));
-  const tilecount = cols * rows;
+  const sheetCols = cols * frames;
+  const tiles = [];
+  for (let ty = 0; ty < rows; ty++)
+    for (let tx = 0; tx < cols; tx++) {
+      const local = ty * cols + tx; // id within one copy of the picture
+      const id = ty * sheetCols + tx; // id in the whole tileset image
+      const entry = { id };
+      if (!walkable.includes(local)) entry.properties = [{ name: 'collides', type: 'bool', value: true }];
+      if (frames > 1 && animated.includes(local))
+        entry.animation = Array.from({ length: frames }, (_, f) => ({ tileid: id + f * cols, duration: frameMs }));
+      if (entry.properties || entry.animation) tiles.push(entry);
+    }
   map.tilesets.push({
     firstgid,
     name,
     image,
-    imagewidth: cols * 16,
+    imagewidth: sheetCols * 16,
     imageheight: rows * 16,
     tilewidth: 16,
     tileheight: 16,
-    columns: cols,
-    tilecount,
+    columns: sheetCols,
+    tilecount: sheetCols * rows,
     margin: 0,
     spacing: 0,
-    tiles: Array.from({ length: tilecount }, (_, id) => ({ id, properties: [{ name: 'collides', type: 'bool', value: true }] })),
+    tiles,
   });
   const decor = map.layers.find((l) => l.name === 'Decor');
   for (let ty = 0; ty < rows; ty++)
-    for (let tx = 0; tx < cols; tx++) decor.data[(at.y + ty) * map.width + at.x + tx] = firstgid + ty * cols + tx;
+    for (let tx = 0; tx < cols; tx++) decor.data[(at.y + ty) * map.width + at.x + tx] = firstgid + ty * sheetCols + tx;
   return firstgid;
 }

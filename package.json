@@ -11,7 +11,12 @@
     "placeholders": "node tools/make-placeholders.js",
     "pixelate": "node tools/pixelate-photo.js",
     "scene:formal": "node tools/scenes/school-formal.js",
-    "scene:pub": "node tools/scenes/oxford-scholar.js"
+    "scene:pub": "node tools/scenes/oxford-scholar.js",
+    "scene:garden": "node tools/scenes/botanic-garden.js",
+    "scene:picnic": "node tools/scenes/park-picnic.js",
+    "scene:first-date": "node tools/scenes/first-date.js",
+    "scene:laufey": "node tools/scenes/laufey-concert.js",
+    "scene:beach": "node tools/scenes/apollo-bay.js"
   },
   "dependencies": {
     "phaser": "^4.2.1"
