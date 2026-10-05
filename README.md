@@ -101,6 +101,11 @@ covers the bottom and the title covers the top for a few seconds.
 - `requiresAction: true`: only opens when she presses **E** / taps **♥** there
   (great for a bench or a sign).
 - `unlockAfter: N`: stays switched off until she's found N other memories.
+  `"all"` means every other memory.
+- `momosNeeded: N`: also stays switched off until she's collected N momos.
+- `revealOnUnlock: true`: for a `hidden` memory. Once it unlocks, its sparkle
+  appears and a "A hidden memory appeared..." message pops up. (The first date
+  uses `"unlockAfter": "all"`, `"momosNeeded": 10` and this.)
 - `music`: optional, any `.mp3`, `.ogg` or `.wav` in `public/assets/audio/`.
 
 **c) A trigger in the map:** see §4. Draw a rectangle on the `Triggers` layer
@@ -144,6 +149,7 @@ For `drift`, make the left and right edges of the image match so the loop is sea
 | `Collision` | the red ✕ tile, wherever she shouldn't walk (invisible in the game) |
 | `Triggers` | rectangles (Insert Rectangle, `R`) with a custom property `memoryId` |
 | `Spawn` | one point (Insert Point) named `player`: where a new game starts |
+| `Momos` | one point per momo to collect, named `momo-1`, `momo-2`… |
 
 Water, walls, tree trunks, fences, rocks etc. already block her: their tiles
 have a `collides = true` property in the tileset. To make another tile solid:
@@ -153,6 +159,11 @@ Use the `Collision` layer for invisible walls.
 **Adding a trigger:** select the `Triggers` layer → Insert Rectangle → drag over
 the spot → in Properties, click **+**, add a `string` property named `memoryId`
 with the memory's `id`.
+
+**Moving the momos:** either drag the points on the `Momos` layer in Tiled
+(keep their names: that's how her save remembers which ones she's eaten), or
+edit the `SPOTS` list at the top of `tools/place-momos.js` (tile x, y) and run
+`npm run momos`. The counter's total is however many points there are.
 
 4. Save (Ctrl+S). Keep it as **JSON**.
 
@@ -386,6 +397,29 @@ Preview: `tools/previews/apollo-bay.png`. Layers in
 (twinkle), `glow.png` (pulse), `lights.png` (flicker), `sea.png` (slide),
 `sand.png`, `foam.png` (3 frames), `us.png` (still). No longer touched by
 `npm run placeholders`.
+
+### The camping scene
+
+A starry night at the campsite: the two of you in camping chairs either side of
+the firepit (the round steel ring on its concrete pad, grill plate swung out to
+the side), him smoking a joint with the smoke curling up, the dome tent with a
+lantern glowing inside, and the waterfall pouring down the sandstone cliff
+behind. Drawn by `tools/scenes/camping.js`: change `PAL` at the top, then
+
+```
+npm run scene:camping                      # redraws all its layers
+npm run scene:camping -- --keep us,tent    # keep layers you've redrawn yourself
+```
+
+Preview: `tools/previews/camping.png`. Layers in
+`public/assets/memories/camping/` (back to front): `sky.png`, `stars.png`
+(twinkle), `glow.png` (pulse), `cliff.png`, `waterfall.png` (4 frames),
+`trees.png` (sway), `ground.png`, `tent.png`, `firelight.png` (pulse),
+`pit.png`, `fire.png` (4 frames), `pit-front.png`, `us.png` (8 frames),
+`smoke.png` (6 frames), `sparks.png` (4 frames), `vignette.png`. The first
+run also puts a little campsite (tent, chairs, a flickering fire) on the map in
+the bottom-left, with its trigger in front of the fire
+(`tools/previews/camping-map.png`).
 
 ### The Laufey concert scene
 

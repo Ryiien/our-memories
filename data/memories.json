@@ -66,7 +66,9 @@
       "caption": "Our first date. We held hands.",
       "hidden": true,
       "requiresAction": true,
-      "unlockAfter": 2,
+      "unlockAfter": "all",
+      "momosNeeded": 10,
+      "revealOnUnlock": true,
       "music": "audio/music-box.wav",
       "layers": [
         { "src": "memories/first-date/sky.png" },
@@ -139,6 +141,33 @@
         { "src": "memories/laufey-concert/us.png", "anim": "frames", "fps": 3 },
         { "src": "memories/laufey-concert/seats.png" },
         { "src": "memories/laufey-concert/vignette.png" }
+      ]
+    },
+    {
+      "id": "camping",
+      "title": "Camping",
+      "date": "",
+      "caption": "Just the two of us.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/camping/sky.png" },
+        { "src": "memories/camping/stars.png", "anim": "twinkle", "amount": 0.8, "speed": 0.7 },
+        { "src": "memories/camping/glow.png", "anim": "pulse", "amount": 0.3, "speed": 0.4 },
+        { "src": "memories/camping/cliff.png" },
+        { "src": "memories/camping/waterfall.png", "anim": "frames", "fps": 8 },
+        { "src": "memories/camping/trees.png", "anim": "sway", "amount": 1, "speed": 0.3 },
+        { "src": "memories/camping/ground.png" },
+        { "src": "memories/camping/tent.png" },
+        { "src": "memories/camping/firelight.png", "anim": "pulse", "amount": 0.35, "speed": 1.6, "scale": 0 },
+        { "src": "memories/camping/pit.png" },
+        { "src": "memories/camping/fire.png", "anim": "frames", "fps": 8 },
+        { "src": "memories/camping/pit-front.png" },
+        { "src": "memories/camping/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/camping/smoke.png", "anim": "frames", "fps": 4 },
+        { "src": "memories/camping/sparks.png", "anim": "frames", "fps": 6 },
+        { "src": "memories/camping/vignette.png" }
       ]
     }
   ]

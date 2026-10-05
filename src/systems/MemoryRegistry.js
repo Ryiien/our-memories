@@ -7,8 +7,12 @@
 // -----------------------------------------------------------------------------
 import rawData from '../../data/memories.json';
 import { PRESETS } from './LayerAnimator.js';
+import Momos from './Momos.js';
 
-const MEMORY_FIELDS = ['id', 'title', 'date', 'caption', 'hidden', 'requiresAction', 'unlockAfter', 'music', 'layers'];
+const MEMORY_FIELDS = [
+  'id', 'title', 'date', 'caption', 'hidden', 'requiresAction', 'unlockAfter', 'momosNeeded', 'revealOnUnlock',
+  'music', 'layers',
+];
 const LAYER_FIELDS = ['src', 'anim', 'amount', 'speed', 'scale', 'groups', 'frameWidth', 'frameHeight', 'fps'];
 
 const warnings = [];
@@ -50,7 +54,13 @@ function normalise(raw, index) {
   for (const key of Object.keys(raw)) {
     if (!MEMORY_FIELDS.includes(key)) warn(`${where}: unknown setting "${key}" (typo?).`);
   }
-  const unlockAfter = Number(raw.unlockAfter ?? 0);
+  // unlockAfter: a number, or "all" = every other memory (worked out below,
+  // once we know how many memories there are).
+  const unlockAll = raw.unlockAfter === 'all';
+  const unlockAfter = unlockAll ? 0 : Number(raw.unlockAfter ?? 0);
+  if (!unlockAll && !Number.isFinite(unlockAfter))
+    warn(`${where}: "unlockAfter" should be a number or "all", not "${raw.unlockAfter}".`);
+  const momosNeeded = Number(raw.momosNeeded ?? 0);
   return {
     id: raw.id.trim(),
     title: String(raw.title ?? ''),
@@ -59,6 +69,9 @@ function normalise(raw, index) {
     hidden: Boolean(raw.hidden),
     requiresAction: Boolean(raw.requiresAction),
     unlockAfter: Number.isFinite(unlockAfter) ? Math.max(0, Math.floor(unlockAfter)) : 0,
+    unlockAll,
+    momosNeeded: Number.isFinite(momosNeeded) ? Math.max(0, Math.floor(momosNeeded)) : 0,
+    revealOnUnlock: Boolean(raw.revealOnUnlock),
     music: raw.music ? String(raw.music) : null,
     layers: checkLayers(raw.layers ?? [], where),
   };
@@ -78,7 +91,14 @@ const byId = new Map();
   byId.set(memory.id, memory);
 });
 if (list.length === 0) warn('No memories found. Add some to data/memories.json!');
+if (list.filter((m) => m.unlockAll).length > 1)
+  warn('More than one memory has unlockAfter "all", so each waits for the other and none can unlock.');
 list.forEach((m) => {
+  if (m.unlockAll) m.unlockAfter = list.length - 1;
+  if (m.momosNeeded > Momos.count)
+    warn(`memory "${m.id}" needs ${m.momosNeeded} momos, but the map only has ${Momos.count} — it can never unlock.`);
+  if (m.revealOnUnlock && !m.hidden) warn(`memory "${m.id}" has revealOnUnlock but isn't hidden, so there's nothing to reveal.`);
+
   if (m.unlockAfter > list.length - 1)
     warn(`memory "${m.id}" has unlockAfter ${m.unlockAfter}, but there are only ${list.length - 1} other memories — it can never unlock.`);
 });
@@ -95,9 +115,9 @@ const MemoryRegistry = {
   warnings,
   warn,
 
-  /** Has she found enough other memories for this one to be active? */
-  isUnlocked(memory, foundCount) {
-    return foundCount >= memory.unlockAfter;
+  /** Has she found enough other memories (and momos) for this one to be active? */
+  isUnlocked(memory, foundCount, momoCount) {
+    return foundCount >= memory.unlockAfter && momoCount >= memory.momosNeeded;
   },
 
   /** Every music file used by memories (so Boot can preload them). */

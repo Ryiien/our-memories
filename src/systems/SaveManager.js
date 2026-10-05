@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
-// SaveManager — remembers which memories she's found and where she was
-// standing, using the browser's localStorage.
+// SaveManager — remembers which memories and momos she's found and where she
+// was standing, using the browser's localStorage.
 //
 // Everything is wrapped in try/catch: if storage is unavailable (private
 // browsing, blocked cookies…), the game still works, it just won't remember
@@ -8,10 +8,12 @@
 // -----------------------------------------------------------------------------
 import { SAVE_KEY } from '../config.js';
 import MemoryRegistry from './MemoryRegistry.js';
+import Momos from './Momos.js';
 
 function emptySave() {
   return {
     found: [], // memory ids, in the order she found them
+    momos: [], // momo ids she's collected
     position: null, // { x, y, facing } — her feet, in map pixels
     finaleSeen: false,
   };
@@ -26,6 +28,7 @@ function readStorage() {
       ...emptySave(),
       ...parsed,
       found: Array.isArray(parsed.found) ? parsed.found.filter((id) => typeof id === 'string') : [],
+      momos: Array.isArray(parsed.momos) ? parsed.momos.filter((id) => typeof id === 'string') : [],
     };
   } catch (err) {
     console.warn('[save] Could not read saved progress:', err);
@@ -69,6 +72,23 @@ const SaveManager = {
   markFound(id) {
     if (data.found.includes(id)) return false;
     data.found.push(id);
+    persist();
+    return true;
+  },
+
+  hasMomo(id) {
+    return data.momos.includes(id);
+  },
+
+  /** Only counts momos that are still on the map. */
+  momoCount() {
+    return data.momos.filter((id) => Momos.has(id)).length;
+  },
+
+  /** Returns true if this momo was newly collected. */
+  collectMomo(id) {
+    if (data.momos.includes(id)) return false;
+    data.momos.push(id);
     persist();
     return true;
   },

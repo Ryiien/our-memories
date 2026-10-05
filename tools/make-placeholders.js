@@ -18,6 +18,7 @@ import { buildTileset, tiledTsx } from './lib/tileset.js';
 import { buildTestMap } from './lib/test-map.js';
 import {
   buildPlayerSheet, buildHeartIcon, bigHeart, buildPanel, buildSparkle, buildJoystick, buildActionButton,
+  buildMomo, buildMomoHud, buildMomoGlow,
 } from './lib/sprites.js';
 import { finale } from './lib/cutscenes.js';
 import { waves, musicBox } from './lib/audio.js';
@@ -57,6 +58,9 @@ const joystick = buildJoystick();
 write(out('ui', 'joystick-base.png'), joystick.base);
 write(out('ui', 'joystick-knob.png'), joystick.knob);
 write(out('ui', 'action-button.png'), buildActionButton());
+write(out('ui', 'momo.png'), buildMomo());
+write(out('ui', 'momo-hud.png'), buildMomoHud());
+write(out('ui', 'momo-glow.png'), buildMomoGlow());
 
 // ---- Cutscenes -----------------------------------------------------------------------
 const scenes = {

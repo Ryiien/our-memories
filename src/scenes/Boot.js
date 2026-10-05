@@ -8,6 +8,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, FONT, PLAYER } from '../config.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
+import Momos from '../systems/Momos.js';
 import { musicKey } from '../systems/Music.js';
 import gameData from '../../data/game.json';
 import finaleData from '../../data/finale.json';
@@ -37,6 +38,9 @@ export default class Boot extends Phaser.Scene {
     this.load.image('joystick-base', 'ui/joystick-base.png');
     this.load.image('joystick-knob', 'ui/joystick-knob.png');
     this.load.image('action-button', 'ui/action-button.png');
+    this.load.image('momo', 'ui/momo.png');
+    this.load.image('momo-hud', 'ui/momo-hud.png');
+    this.load.image('momo-glow', 'ui/momo-glow.png');
 
     // Player
     this.load.spritesheet('player', 'sprites/player.png', {
@@ -91,6 +95,11 @@ export default class Boot extends Phaser.Scene {
     const ids = triggers.map((o) => (o.properties ?? []).find((p) => p.name === 'memoryId')?.value).filter(Boolean);
     if (ids.length < triggers.length) MemoryRegistry.warn('Some trigger zones in the map have no "memoryId" property.');
     MemoryRegistry.checkAgainstMap(ids);
+
+    // Momos are optional, but two with the same name would count as one.
+    const momoIds = Momos.all().map((m) => m.id);
+    const dupes = [...new Set(momoIds.filter((id, i) => momoIds.indexOf(id) !== i))];
+    if (dupes.length) MemoryRegistry.warn(`Some momos on the map share a name (${dupes.join(', ')}) — each needs its own.`);
 
     // Characters the pixel font can't draw would silently disappear — say so.
     const font = this.cache.bitmapFont.get(FONT.key);

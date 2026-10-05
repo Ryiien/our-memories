@@ -8,15 +8,17 @@
 //                    wherever she shouldn't walk
 //   Triggers       — object layer: rectangles with a "memoryId" property
 //   Spawn          — object layer: a point named "player"
+//   Momos          — object layer (optional): one point per momo to collect
 // Any tile whose tileset property collides = true blocks her, on any of
 // Ground / Decor / Collision.
 // -----------------------------------------------------------------------------
 import Phaser from 'phaser';
-import { DEPTH, CAMERA_LERP, TIMING, COLORS, TILE_SIZE } from '../config.js';
+import { DEPTH, CAMERA_LERP, TIMING, COLORS, TILE_SIZE, MOMO } from '../config.js';
 import Player from '../objects/Player.js';
 import TouchControls from '../objects/TouchControls.js';
 import { pixelText } from '../objects/Typewriter.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
+import Momos from '../systems/Momos.js';
 import SaveManager from '../systems/SaveManager.js';
 import Music from '../systems/Music.js';
 import { tilesetKey } from './Boot.js';
@@ -41,6 +43,7 @@ export default class World extends Phaser.Scene {
     this.spawnPlayer(data.newGame);
     this.readTriggers();
     this.createMarkers();
+    this.createMomos();
     this.createPrompt();
 
     // Camera: follow her smoothly, never showing outside the map.
@@ -149,13 +152,17 @@ export default class World extends Phaser.Scene {
   }
 
   isActive(memory) {
-    return MemoryRegistry.isUnlocked(memory, SaveManager.foundCount()) || SaveManager.isFound(memory.id);
+    return (
+      MemoryRegistry.isUnlocked(memory, SaveManager.foundCount(), SaveManager.momoCount()) ||
+      SaveManager.isFound(memory.id)
+    );
   }
 
   /**
    * Visible memories she hasn't found get a twinkling sparkle; found ones get
    * a small heart so she can find them again. Hidden ones show nothing until
-   * found. Locked ones (unlockAfter) appear once they unlock.
+   * found, unless they have revealOnUnlock. Locked ones (unlockAfter,
+   * momosNeeded) appear once they unlock.
    */
   createMarkers() {
     if (!this.anims.exists('sparkle')) {
@@ -170,14 +177,89 @@ export default class World extends Phaser.Scene {
       return { trigger: t, sparkle, heart };
     });
     this.refreshMarkers();
+    // revealOnUnlock memories that are already showing (so we only
+    // announce the ones that appear from now on).
+    this.revealed = new Set(this.triggers.filter((t) => this.isRevealed(t.memory)).map((t) => t.memory.id));
+  }
+
+  /** A hidden memory with revealOnUnlock shows its sparkle once it unlocks. */
+  isRevealed(memory) {
+    return memory.revealOnUnlock && this.isActive(memory);
   }
 
   refreshMarkers() {
     for (const m of this.markers) {
       const { memory } = m.trigger;
       const found = SaveManager.isFound(memory.id);
-      m.sparkle.setVisible(!found && !memory.hidden && this.isActive(memory));
+      const visible = !memory.hidden || this.isRevealed(memory);
+      m.sparkle.setVisible(!found && visible && this.isActive(memory));
+      // A revealed secret shines through the treetops so she can spot it.
+      if (memory.revealOnUnlock) m.sparkle.setDepth(DEPTH.above + 1);
       m.heart.setVisible(found);
+    }
+  }
+
+  /**
+   * Has a hidden memory just appeared (she found the last momo or memory it
+   * was waiting for)? Show its sparkle and say so.
+   */
+  checkReveals() {
+    let appeared = false;
+    for (const { memory } of this.triggers) {
+      if (this.revealed.has(memory.id) || !this.isRevealed(memory) || SaveManager.isFound(memory.id)) continue;
+      this.revealed.add(memory.id);
+      appeared = true;
+    }
+    if (!appeared) return;
+    this.refreshMarkers();
+    this.hud.toast('A hidden memory appeared... ♥');
+  }
+
+  // ---- Momos ---------------------------------------------------------------------------
+  /** A small glowing momo on every spot of the Momos layer she hasn't collected yet. */
+  createMomos() {
+    this.momos = Momos.all()
+      .filter((m) => !SaveManager.hasMomo(m.id))
+      .map((m) => {
+        const glow = this.add.image(m.x, m.y - 4, 'momo-glow').setDepth(DEPTH.markers);
+        const sprite = this.add.image(m.x, m.y - 4, 'momo').setDepth(DEPTH.markers);
+        // Start each one at a random point in its float/glow so they don't all move together.
+        const offset = Math.random();
+        this.tweens.add({
+          targets: [sprite, glow], y: `-=${MOMO.bob}`, duration: MOMO.bobMs, yoyo: true, repeat: -1,
+          ease: 'Sine.easeInOut', delay: offset * MOMO.bobMs,
+        });
+        glow.setAlpha(MOMO.glowAlpha[0]);
+        this.tweens.add({
+          targets: glow, alpha: MOMO.glowAlpha[1], duration: MOMO.glowMs, yoyo: true, repeat: -1,
+          ease: 'Sine.easeInOut', delay: offset * MOMO.glowMs,
+        });
+        return { ...m, sprite, glow };
+      });
+  }
+
+  /** Collect any momo her feet are touching. */
+  checkMomos() {
+    if (!this.momos.length) return;
+    const feet = this.player.getFeet();
+    for (const momo of this.momos) {
+      if (Phaser.Math.Distance.Between(feet.x, feet.y, momo.x, momo.y) > MOMO.pickupRadius) continue;
+      this.momos = this.momos.filter((m) => m !== momo);
+      SaveManager.collectMomo(momo.id);
+
+      // Pop up and fade away.
+      this.tweens.killTweensOf([momo.sprite, momo.glow]);
+      this.tweens.add({
+        targets: momo.sprite, y: momo.sprite.y - 12, scale: 1.4, alpha: 0, duration: 450, ease: 'Sine.easeOut',
+        onComplete: () => momo.sprite.destroy(),
+      });
+      this.tweens.add({
+        targets: momo.glow, scale: 2, alpha: 0, duration: 450, ease: 'Sine.easeOut',
+        onComplete: () => momo.glow.destroy(),
+      });
+      this.hud.momoCollected();
+      this.checkReveals();
+      return; // one per frame is plenty
     }
   }
 
@@ -221,6 +303,7 @@ export default class World extends Phaser.Scene {
     let y = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
     if (x === 0 && y === 0) ({ x, y } = this.touch.vector);
     this.player.move(x, y);
+    this.checkMomos();
 
     const interact = this.consumeInteract();
 
@@ -318,6 +401,7 @@ export default class World extends Phaser.Scene {
 
     if (data.newlyFound) {
       this.hud.toast();
+      this.checkReveals(); // (its toast waits for "Memory found!" to finish)
       // The last one! Give the toast a moment, then play the finale.
       if (SaveManager.allFound() && !SaveManager.finaleSeen) {
         this.time.delayedCall(TIMING.toast, () => this.openFinale());

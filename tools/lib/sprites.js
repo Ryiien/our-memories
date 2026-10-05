@@ -217,6 +217,60 @@ export function buildSparkle() {
   return c;
 }
 
+/**
+ * ui/momo.png: a tiny Nepali momo (steamed dumpling), 11x9, pleats twisted
+ * up to a little knot on top. Used in the world and on the HUD counter.
+ */
+export function buildMomo() {
+  const c = new Canvas(11, 9);
+  c.map(
+    [
+      '.....o.....',
+      '....oWo....',
+      '...oCcCo...',
+      '..oCcCcCo..',
+      '.oCcCWCcCo.',
+      'oCWCCCCCCSo',
+      'oCCCCCCCSSo',
+      '.oSSSSSSSo.',
+      '..ooooooo..',
+    ],
+    { o: P.woodDark, W: P.white, C: P.cream, c: P.stoneShade, S: P.sandShade }
+  );
+  return c;
+}
+
+/**
+ * ui/momo-hud.png: the momo with a little white dish of orange achar (the
+ * dipping sauce) in front, 17x10, for the HUD counter — so it reads as momo,
+ * not just any dumpling.
+ */
+export function buildMomoHud() {
+  const c = new Canvas(17, 10);
+  c.blit(buildMomo(), 0, 0);
+  c.map(
+    [
+      '..ooooo..',
+      '.oWAAAWo.',
+      'oWAAhAAWo',
+      '.oSWWWSo.',
+      '..ooooo..',
+    ],
+    { o: P.woodDark, W: P.white, S: P.creamShade, A: P.orange, h: P.butter },
+    8,
+    5
+  );
+  return c;
+}
+
+/** ui/momo-glow.png: soft warm light drawn (additively) behind each momo. */
+export function buildMomoGlow() {
+  const c = new Canvas(25, 25);
+  c.glow(12, 12, 12, P.butter, 0.7);
+  c.glow(12, 12, 7, P.cream, 0.45);
+  return c;
+}
+
 export function buildJoystick() {
   const base = new Canvas(40, 40);
   base.circle(19.5, 19.5, 19, P.plum, 0.35);

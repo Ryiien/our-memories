@@ -55,6 +55,15 @@ export const TIMING = {
   savePositionEvery: 2000, // how often her position is saved while walking
 };
 
+// ---- Momos (collectable dumplings, placed on the map's "Momos" layer) -------
+export const MOMO = {
+  pickupRadius: 9, // she collects one when her feet come this close (pixels)
+  bob: 2, // pixels the momo floats up and down
+  bobMs: 1100, // one float up (or down)
+  glowMs: 1300, // one glow brighten (or dim)
+  glowAlpha: [0.7, 1], // the glow breathes between these
+};
+
 // ---- Audio -----------------------------------------------------------------
 export const AUDIO = {
   musicVolume: 0.6, // 0..1

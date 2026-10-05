@@ -5,6 +5,9 @@ version of herself, walking around a cosy top-down map made of places from the
 relationship. Walking onto a memory spot plays a short looping pixel-art
 cutscene (layered images, gently animated) with a title, date and caption, until
 she presses Continue. Some memories are hidden. Finding them all plays a finale.
+Ten little glowing momos (Nepali dumplings) are scattered around the map to
+collect; the secret first-date memory only appears once she has all ten and
+every other memory.
 
 **Tone:** cosy, soft, charming — Stardew Valley / Animal Crossing. Gentle motion,
 warm palette, no fail states, nothing stressful. The person who maintains this
@@ -26,7 +29,8 @@ quests, etc.). Obvious extension points are marked with `// TODO` comments.
 - Static build → GitHub Pages (`.github/workflows/deploy.yml`, Vite `base: './'`).
 - Tools (Node): `pngjs` (placeholder art), `sharp` (photo pixelation).
 - Commands: `npm run dev`, `npm run build`, `npm run preview`,
-  `npm run placeholders [-- --force]`, `npm run pixelate -- <photo> [out] [opts]`.
+  `npm run placeholders [-- --force]`, `npm run pixelate -- <photo> [out] [opts]`,
+  `npm run momos` (writes the map's `Momos` layer from the spot list in `tools/place-momos.js`).
 - In dev, `window.game` is the Phaser game (e.g. `game.scene.getScene('World')`).
 - Data problems are `console.warn`ed with friendly messages; in dev the title
   screen shows "! N data warnings".
@@ -53,7 +57,7 @@ our-memories/
 │   ├── tiles/tileset.png      # 16x16 tiles, 8 columns
 │   ├── sprites/player.png     # 4x4 frames of 16x24
 │   ├── memories/<id>/*.png    # one folder per memory (+ memories/finale/)
-│   ├── ui/                    # font.png+font.xml, heart, panel, sparkle, touch controls
+│   ├── ui/                    # font.png+font.xml, heart, panel, sparkle, touch controls, momo, momo-hud (+ dish of achar), momo-glow
 │   └── audio/                 # music (wav/mp3/ogg)
 ├── maps/world.json            # the Tiled map (JSON, embedded tileset)
 ├── maps/cosy.tsx              # same tileset as a Tiled file, for starting new maps
@@ -63,6 +67,7 @@ our-memories/
 ├── tools/
 │   ├── make-placeholders.js   # generates all placeholder art/audio/map (never overwrites without --force)
 │   ├── pixelate-photo.js      # photo -> 320x180 limited-palette PNG
+│   ├── place-momos.js         # writes the map's "Momos" layer (spot list at the top)
 │   ├── lib/                   # generator pieces: canvas, palette, font, tileset, test-map, sprites, cutscenes, audio
 │   ├── scenes/<id>.js         # one script per hand-crafted memory scene (named PAL palette at the top),
 │   │                          #   writes its layers, any map building, and tools/previews/<id>.png
@@ -73,7 +78,7 @@ our-memories/
     ├── config.js              # ALL tunable constants (sizes, speeds, timings, colours, depths)
     ├── scenes/  Boot, Title, World, HUD, Memory, Finale
     ├── objects/ Player, TouchControls, Typewriter (pixel text + typing), ContinueHeart
-    └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades)
+    └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades), Momos (reads the Momos layer)
 ```
 
 Additions beyond the original brief, and why: `data/game.json` (title text and
@@ -105,14 +110,16 @@ memories never slows startup.
       "caption": "Apollo Bay — ...",   // typed out in the bottom box; wraps automatically
       "hidden": false,                 // true = no sparkle marker in the world until found
       "requiresAction": false,         // true = only opens when she presses E / taps ♥ in the zone
-      "unlockAfter": 0,                // stays inactive until N other memories are found
+      "unlockAfter": 0,                // stays inactive until N other memories are found ("all" = every other one)
+      "momosNeeded": 0,                // ...and until she's collected this many momos
+      "revealOnUnlock": false,         // hidden + this = its sparkle appears (with a toast) once it unlocks
       "music": "audio/waves.wav",      // optional; crossfades in, back out on Continue
       "layers": [ { "src": "memories/apollo-bay/sky.png" }, ... ]   // back to front
     }
   ]
 }
 ```
-Defaults: `hidden`/`requiresAction` false, `unlockAfter` 0, no music. All paths
+Defaults: `hidden`/`requiresAction`/`revealOnUnlock` false, `unlockAfter`/`momosNeeded` 0, no music. All paths
 are relative to `public/assets/`. Unknown keys produce "typo?" warnings.
 Hidden memories count toward the HUD total but nothing reveals which are hidden.
 Behaviour: unseen + no action → starts on entering the zone; seen → "Press E to
@@ -169,6 +176,11 @@ presets warn and are skipped / shown static — never crash.
     `memoryId`. A trigger fires when her **feet** (centre of her 10×6 collision
     box) are inside the rectangle.
   - `Spawn` — object layer with a point named `player` (her feet position).
+  - `Momos` — object layer (optional) of points, one per momo, named `momo-1`…
+    (the name is the save id). Point = her feet position to collect it (within
+    `MOMO.pickupRadius` in config.js). `npm run momos` rewrites this layer from
+    `SPOTS` in `tools/place-momos.js`; re-run it after `placeholders --force`.
+    The HUD's top-right counter shows found/total; it's hidden if there are none.
 - Boot cross-checks: every memory needs a trigger and every trigger a memory.
 - **Buildings as their own tileset:** a one-off building can be a separate
   embedded tileset whose image is the whole facade cut into 16×16 tiles (e.g.
@@ -189,12 +201,17 @@ presets warn and are skipped / shown static — never crash.
   The Palais Theatre (`palais`, 10×7, for `laufey-concert`) sits across the pub
   path from San Remo at x 19–28, y 12–18 (doors facing the main path, trigger
   `palais doors` at x 23–24, y 19).
+  The campsite (`campsite`, 5×3, for `camping`) is at x 25–29, y 34–36, just
+  right of the momo under the tree (x 22, y 35): tent (x 25–26, y 34–35), her
+  chair / firepit / his chair along y 35 (solid), the rest walkable; its fire
+  tiles flicker (3 frames). Trigger `campfire` = x 27–29, y 36 (in front of the fire).
 - `stampBuilding` options: `walkable` (tile ids that don't collide; default all
   solid) and `frames`/`animated`/`frameMs` (the image holds N copies side by
   side; listed tiles cycle through them as a Tiled tile animation).
 - `npm run placeholders -- --force` regenerates `world.json` *without* such
   additions; re-run the scene scripts (`npm run scene:formal`, `npm run
-  scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`) to re-add them
+  scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`,
+  `npm run scene:camping`, then `npm run momos`) to re-add them
   (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
@@ -202,7 +219,8 @@ presets warn and are skipped / shown static — never crash.
   `placeLamp` for a cosy street lamp — San Remo and the Palais each have one either
   side of their door path).
   Each has a named `PAL` at the top. Hand-drawn memories (school-formal,
-  oxford-scholar, botanic-garden, park-picnic, first-date, laufey-concert, apollo-bay)
+  oxford-scholar, botanic-garden, park-picnic, first-date, laufey-concert, apollo-bay,
+  camping)
   are not in
   `make-placeholders.js`. The sign font (`miniText`) has digits 0–9 and `>`.
 
@@ -256,13 +274,15 @@ blocker(44)/grass edge.
 ## Saves
 
 localStorage key `our-memories-save-v1` (`SAVE_KEY`):
-`{ found: [ids], position: {x, y, facing}, finaleSeen }`. All access is
+`{ found: [ids], momos: [ids], position: {x, y, facing}, finaleSeen }`. All access is
 try/catch'd; the game runs without storage. Unknown ids in a save are ignored
 in counts. A saved position inside a wall (map edited) falls back to Spawn.
 
 ## Testing checklist for changes
 
 `npm run dev` → title → Start → walk (keys + touch) → each memory triggers →
-Continue returns to the same spot → revisit prompt works → refresh keeps
-progress → all found plays finale. Test phone landscape (dev server prints a
+Continue returns to the same spot → revisit prompt works → momos collect and
+the top-right counter ticks up → all 10 momos + every other memory reveals the
+first date ("A hidden memory appeared...") → refresh keeps progress → all found
+plays finale. Test phone landscape (dev server prints a
 Network URL). Check the browser console for `[memories.json]` warnings.
