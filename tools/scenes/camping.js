@@ -3,9 +3,10 @@
 // camping.js — draws the "Camping by the waterfall" memory as layered pixel
 // art: a starry night at our campsite, the two of us in camping chairs either
 // side of the firepit (the round steel ring on a concrete pad, with the
-// swing-out grill plate, from the photo), our dome tent with a lantern inside,
-// and the waterfall pouring down the sandstone cliff behind us. He's smoking a
-// joint; the smoke curls up into the dark.
+// swing-out grill plate, from the photo), our red dome tent with its door unzipped and a lantern inside,
+// a faded row of trees, and the waterfall pouring down the sandstone cliff
+// behind us. She's toasting a marshmallow; he takes a drag on a joint and breathes the
+// smoke out into the dark.
 // Also stamps a little campsite (tent, chairs, a crackling fire) onto the map,
 // with its trigger, right of the momo hiding under the tree in the bottom-left
 // — only the first time.
@@ -45,6 +46,10 @@ const PAL = {
   bark: '#7c7590',
   barkShade: '#555068',
   barkHi: '#a39cb4',
+  // the row of trees between the campsite and the cliff, faded by the night mist
+  treeline: ['#252a48', '#2e3556', '#3a4363', '#4b5574'],
+  treelineBark: '#5a5d80',
+  haze: '#4a4f7a',
   // the campsite
   dirt: ['#2a2130', '#3a2c38', '#4a3840'],
   litter: ['#5c4648', '#6e5450', '#2a2130'],
@@ -66,14 +71,12 @@ const PAL = {
   flame: ['#c8462f', '#ef7d32', '#f6b14a', '#fde3a0'],
   fireLight: '#f3a35a',
   fireGlow: '#f08a3c',
-  // the tent (grey dome, navy fly, teal trim, like ours)
-  tent: '#5f6680',
-  tentShade: '#474d66',
-  fly: '#283050',
-  flyShade: '#1c2240',
-  trim: '#3a8f9e',
-  pole: '#9aa0b6',
-  tentInside: '#191726',
+  // the tent: our red dome, lit up from inside like in the photo (dark edges to bright middle)
+  tentRed: ['#3e0a12', '#6e1018', '#a3141f', '#d0202a', '#ee3a3a'],
+  tentSeam: '#3a0812',
+  tentGlow: '#e0343a', // the red light it throws on the ground
+  groundsheet: '#a39cab',
+  tentInside: '#2a0e16',
   lantern: '#f6d983',
   rope: '#8a8496',
   // camping chairs: hers the bright blue one from the photo, his navy
@@ -108,6 +111,10 @@ const PAL = {
   jeans: '#5b7bb5',
   jeansShade: '#465f94',
   himShoes: '#3b3550',
+  // her marshmallow stick (held out over the fire from her armrest)
+  stick: '#6b4a36',
+  mallow: '#f6efe4',
+  mallowToast: '#d9a066',
   // his joint + its smoke
   paper: '#efe6d6',
   ember: '#f08a3c',
@@ -318,6 +325,60 @@ function drawWaterfall() {
   return sheet;
 }
 
+// ---- 5b. treeline.png — a faded row of trees between the campsite and the cliff -----------------
+// Cool and pale next to the warm rock, and fading into the night mist towards
+// the ground, so it reads as further back than the campsite. Shorter in front
+// of the waterfall, so the water still shows.
+function drawTreeline() {
+  const c = new Canvas(W, H);
+  const rr = rng(1915);
+  const base = BUSH_Y + 5; // hidden behind the scrub and the ground from here down
+  const trees = [];
+  for (let x = -6; x < W + 6; x += rr.int(10, 16)) {
+    const near = Math.abs(x - FALL.x) < 18;
+    trees.push({ x, top: near ? rr.int(90, 94) : rr.int(64, 78), lean: rr.range(-1, 1) });
+  }
+  // thin pale trunks first, so they peek out between the crowns
+  for (const t of trees) {
+    for (let y = t.top + 8; y < base; y++) {
+      const tx = Math.round(t.x + t.lean * (base - y) * 0.08);
+      c.rect(tx, y, 2, 1, PAL.treelineBark);
+    }
+  }
+  // the crowns: a few ragged clumps each (gums are open, not round), then a
+  // low band of scrub joining the row together along the bottom
+  trees.forEach((t, i) => {
+    const h = base - t.top;
+    const blobs = [];
+    for (let k = 0; k < 3; k++) {
+      const cx = t.x + t.lean * 2 + rr.int(-7, 7);
+      const cy = t.top + 4 + rr.range(0, h * 0.45);
+      blobs.push(...blobsIn(rr, cx, cy, 6, 3, 5, 2, 4.5));
+    }
+    foliage(c, blobs, PAL.treeline, 1916 + i, { sun: 'left' });
+  });
+  const under = [];
+  for (let x = -4; x < W + 4; x += 5) {
+    if (Math.abs(x - FALL.x) < 12) continue; // leave the pool under the waterfall clear
+    under.push(...blobsIn(rr, x, base - 7, 3, 2, 2, 2.5, 4.5));
+  }
+  foliage(c, under, PAL.treeline, 1915, { sun: 'left' });
+  // night mist: everything fades into the haze, more towards the ground
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const [rr2, g, b, a] = c.get(x, y);
+      if (!a) continue;
+      const low = Math.max(0, Math.min(1, (y - 70) / (base - 70)));
+      const t = 0.18 + low * 0.4 + (bayer(x, y) - 0.5) * 0.12;
+      const out = mix([rr2, g, b], PAL.haze, Math.max(0, Math.min(1, t)));
+      const i = (y * W + x) * 4;
+      c.data[i] = out[0];
+      c.data[i + 1] = out[1];
+      c.data[i + 2] = out[2];
+    }
+  return c;
+}
+
 // ---- 6. trees.png — gum trees either side, scrub along the cliff's foot (sway) ----------------
 function gum(c, x, lean, seed) {
   // a pale, smooth trunk going up out of frame, a fork, a dark crown at the top
@@ -377,47 +438,63 @@ function drawGround() {
   return c;
 }
 
-// ---- 8. tent.png — our dome tent, door open, a lantern inside ---------------------------------
-const TENT = { x: 52, base: 114, rx: 36, h: 36 };
+// ---- 8. tent.png — our red dome tent, door unzipped, a lantern glowing inside -------------------
+const TENT = { x: 52, base: 114, rx: 34, h: 32 };
 
 function drawTent() {
   const c = new Canvas(W, H);
-  softEllipse(c, TENT.x + 4, TENT.base + 1, TENT.rx + 8, 4, PAL.outline, 0.6);
+  // the red light it throws on the ground around it
+  softEllipse(c, TENT.x, TENT.base + 1, TENT.rx + 20, 7, PAL.tentGlow, 0.3);
+  c.glow(TENT.x, TENT.base - 12, TENT.rx + 12, PAL.tentGlow, 0.14);
+  softEllipse(c, TENT.x + 2, TENT.base + 1, TENT.rx + 4, 3, PAL.outline, 0.5);
   // guy ropes out to the pegs
-  c.line(TENT.x - TENT.rx + 4, TENT.base - 20, TENT.x - TENT.rx - 10, TENT.base + 2, PAL.rope, 0.6);
-  c.line(TENT.x + TENT.rx - 4, TENT.base - 20, TENT.x + TENT.rx + 10, TENT.base + 2, PAL.rope, 0.6);
-  const top = (x) => TENT.base - Math.round(TENT.h * Math.sqrt(Math.max(0, 1 - ((x - TENT.x) / TENT.rx) ** 2)));
-  const flyEdge = (x) => TENT.base - 15 + Math.round(Math.sin((x - TENT.x) * 0.35) * 1.5); // scalloped hem
+  c.line(TENT.x - TENT.rx + 4, TENT.base - 18, TENT.x - TENT.rx - 10, TENT.base + 2, PAL.rope, 0.6);
+  c.line(TENT.x + TENT.rx - 4, TENT.base - 18, TENT.x + TENT.rx + 10, TENT.base + 2, PAL.rope, 0.6);
+  // the dome: steep sides, a rounded top
+  const top = (x) => TENT.base - Math.round(TENT.h * Math.pow(Math.max(0, 1 - ((x - TENT.x) / TENT.rx) ** 2), 0.55));
+  const apex = top(TENT.x);
+  const n = PAL.tentRed.length - 1;
   for (let x = TENT.x - TENT.rx; x <= TENT.x + TENT.rx; x++) {
     for (let y = top(x); y < TENT.base; y++) {
-      const side = (x - TENT.x) / TENT.rx;
-      const onFly = y < flyEdge(x);
-      const shade = side < -0.55 || (bayer(x, y) < 0.3 && side < -0.35);
-      c.px(x, y, onFly ? (shade ? PAL.flyShade : PAL.fly) : shade ? PAL.tentShade : PAL.tent);
+      // brightest in the middle, where the light inside shines through the fabric
+      const d = Math.hypot((x - TENT.x) / TENT.rx, (y - (TENT.base - 11)) / TENT.h);
+      const v = (1 - d) * n * 1.25 + 0.6 + (bayer(x, y) - 0.5) * 0.9;
+      c.px(x, y, PAL.tentRed[Math.max(0, Math.min(n, Math.round(v)))]);
     }
-    c.px(x, flyEdge(x), PAL.trim); // teal trim along the fly's hem
-    c.px(x, top(x), PAL.pole, 0.6); // the dome's outline catches the light
+    c.px(x, top(x), PAL.tentRed[1]); // its edge against the night
   }
-  // the crossing poles
-  for (let a = 0; a <= 64; a++) {
-    const ang = PI + (a / 64) * PI; // the upper half only
-    c.px(Math.round(TENT.x + Math.cos(ang) * TENT.rx * 0.55), Math.round(TENT.base + Math.sin(ang) * (TENT.h - 1)), PAL.pole, 0.5);
+  // seams: two curving down from the top to the pegged-out corners...
+  for (const sgn of [-1, 1]) {
+    for (let k = 0; k <= 60; k++) {
+      const t = k / 60;
+      const x = Math.round(TENT.x + sgn * TENT.rx * 0.82 * Math.sin((t * PI) / 2));
+      const y = Math.round(apex + (TENT.base - 1 - apex) * t * t);
+      c.px(x, y, PAL.tentSeam, 0.8);
+    }
   }
-  c.rect(TENT.x - TENT.rx, TENT.base - 1, TENT.rx * 2 + 1, 1, PAL.tentShade);
-  // the door: an arch on the side facing the fire, open, a lantern glowing inside
-  const door = { x: 68, top: TENT.base - 26, half: 10 };
-  for (let y = door.top; y < TENT.base; y++) {
-    const t = (y - door.top) / (TENT.base - door.top);
-    const half = Math.round(door.half * Math.sqrt(t));
-    for (let x = door.x - half; x <= door.x + half; x++) c.px(x, y, PAL.tentInside);
+  // ...and the pole down the middle of the front, catching the light on one side
+  for (let y = apex; y < TENT.base; y++) {
+    c.px(TENT.x, y, PAL.tentSeam);
+    c.px(TENT.x + 1, y, PAL.tentRed[n], 0.7);
   }
-  c.glow(door.x + 2, TENT.base - 9, 11, PAL.lantern, 0.45);
-  c.rect(door.x + 1, TENT.base - 10, 3, 4, PAL.lantern);
-  c.px(door.x + 2, TENT.base - 11, PAL.grillHi);
-  c.rect(door.x - 11, door.top + 4, 3, 10, PAL.flyShade); // the rolled-back door flap
-  c.rect(door.x - 11, door.top + 4, 1, 10, PAL.trim);
-  tint(c, NIGHT, 0.12);
-  sideLight(c, 1, PAL.fireLight, 0.4, 2);
+  // the pale groundsheet peeking out along the bottom
+  c.rect(TENT.x - Math.round(TENT.rx * 0.6), TENT.base - 1, Math.round(TENT.rx * 1.2), 1, PAL.groundsheet);
+  c.rect(TENT.x - TENT.rx, TENT.base, TENT.rx * 2 + 1, 1, PAL.tentRed[0]);
+  // the door: the zip down the middle, undone at the bottom and one side
+  // pulled back a little, so you can see the lantern on the floor inside
+  const door = { top: TENT.base - 20, open: 7 }; // where the zip's undone to, how far it's pulled back
+  for (let y = door.top; y < TENT.base - 1; y++) {
+    const w = Math.round(door.open * ((y - door.top) / (TENT.base - door.top)) ** 1.3);
+    for (let x = TENT.x + 1; x <= TENT.x + w; x++) c.px(x, y, PAL.tentInside);
+    c.px(TENT.x + w + 1, y, PAL.tentRed[n]); // the edge of the pulled-back flap, catching the light
+  }
+  const lamp = { x: TENT.x + 2, y: TENT.base - 2 }; // its bottom-left, on the groundsheet
+  c.glow(lamp.x + 1, lamp.y - 2, 8, PAL.lantern, 0.5);
+  c.rect(lamp.x, lamp.y - 3, 3, 3, PAL.lantern);
+  c.rect(lamp.x, lamp.y - 4, 3, 1, PAL.grillHi); // its lid
+  c.px(lamp.x + 1, lamp.y - 5, PAL.grillHi); // and handle
+  tint(c, NIGHT, 0.06);
+  sideLight(c, 1, PAL.fireLight, 0.3, 2);
   return c;
 }
 
@@ -518,9 +595,10 @@ function drawPitFront() {
   return c;
 }
 
-// ---- 13. us.png — the two of us in camping chairs by the fire (8 frames: a blink each) -------
+// ---- 13. us.png — the two of us by the fire, him having a smoke (16 frames, see DRAG) -------
 // Both drawn side-on, facing right: her as she is, him at the mirror-image spot,
-// then flipped to face her across the fire.
+// then flipped to face her across the fire. The joint's ember and its smoke are
+// drawn into the same frames, so they always line up with his hand.
 
 function herHead(c, hx, hy, blink) {
   const s = PAL;
@@ -588,9 +666,10 @@ const HIM_LOOK = {
 
 /**
  * One of us in a camping chair, side-on, facing right, hips at (hx, SEAT_Y).
- * Returns where the tip of the joint is (if holding one).
+ * `joint` = which JOINT_POSES pose he's in; `marshmallow` = a toasting stick in her resting hand.
+ * Returns where the tip of the joint and his lips are (if holding one).
  */
-function seated(c, hx, who, { blink = false, joint = false } = {}) {
+function seated(c, hx, who, { blink = false, joint = null, marshmallow = false } = {}) {
   const t = who.tall;
   const lean = (y) => Math.round((SEAT_Y - 2 - y) * -0.12); // leaning back into the chair
   const shoulderY = SEAT_Y - 20 - t;
@@ -639,85 +718,132 @@ function seated(c, hx, who, { blink = false, joint = false } = {}) {
   c.rect(hx + 8, GROUND_Y, 3, 1, PAL.chairFrame);
 
   // near arm
-  const elbow = { x: hx + 1, y: SEAT_Y - 10 };
+  const pose = joint ? JOINT_POSES[joint] : null;
+  const elbow = pose ? { x: hx + pose.elbow[0], y: SEAT_Y + pose.elbow[1] } : { x: hx + 1, y: SEAT_Y - 10 };
   thickLine(c, sx, shoulderY + 1, elbow.x, elbow.y, 3, who.arm);
   c.rect(sx - 1, shoulderY + 1, 3, 2, who.sleeve);
-  if (!joint) {
+  if (!pose) {
     // forearm resting along the armrest, hand over the end
     thickLine(c, elbow.x, elbow.y, hx + 8, SEAT_Y - 10, 3, who.arm);
+    if (marshmallow) {
+      // a long stick held out to the edge of the flames, a marshmallow on the end
+      const tip = { x: hx + 38, y: SEAT_Y - 15 };
+      c.line(hx + 9, SEAT_Y - 9, tip.x, tip.y, PAL.stick);
+      c.rect(tip.x - 1, tip.y - 2, 3, 3, PAL.mallow);
+      c.rect(tip.x - 1, tip.y, 3, 1, PAL.mallowToast); // toasting underneath
+      c.px(tip.x + 1, tip.y - 1, PAL.mallowToast);
+    }
     c.rect(hx + 8, SEAT_Y - 11, 3, 3, who.skin);
     return null;
   }
-  // forearm raised, the joint held up between his fingers
-  const hand = { x: hx + 8, y: shoulderY + 3 };
+  // forearm raised, the joint held between his fingers
+  const hand = { x: hx + pose.hand[0], y: shoulderY + pose.hand[1] };
   thickLine(c, elbow.x, elbow.y, hand.x - 1, hand.y + 1, 3, who.arm);
-  c.rect(elbow.x + 4, elbow.y - 3, 2, 1, who.sleeve); // cuff
+  const cuff = { x: Math.round(elbow.x + (hand.x - elbow.x) * 0.6), y: Math.round(elbow.y + (hand.y - elbow.y) * 0.6) };
+  c.rect(cuff.x, cuff.y, 2, 1, who.sleeve);
   c.rect(hand.x - 1, hand.y - 1, 3, 3, who.skin);
   c.px(hand.x + 2, hand.y, who.skinShade); // finger + thumb
-  c.line(hand.x + 2, hand.y - 1, hand.x + 6, hand.y - 3, PAL.paper);
-  return { x: hand.x + 7, y: hand.y - 4 }; // the lit end
+  const [jx, jy] = pose.joint;
+  const tip = { x: hand.x + jx[1] + 1, y: hand.y + jy[1] + Math.sign(jy[1] - jy[0]) };
+  c.line(hand.x + jx[0], hand.y + jy[0], hand.x + jx[1], hand.y + jy[1], PAL.paper);
+  return { tip, mouth: { x: sx + 7, y: shoulderY - 5 } }; // the lit end, and his lips
 }
 
-let JOINT_TIP = null; // where the ember ends up after he's mirrored (worked out in drawUs)
+// His arm through a drag: elbow [x from his hips, y from the seat], hand
+// [x from his hips, y from his shoulders], joint [[x0, x1], [y0, y1]] from his hand.
+const JOINT_POSES = {
+  rest: { elbow: [1, -10], hand: [8, 3], joint: [[2, 6], [-1, -1]] }, // held out, chatting
+  raise: { elbow: [2, -12], hand: [8, -1], joint: [[2, 6], [-1, -1]] }, // on the way up / down
+  lips: { elbow: [3, -14], hand: [7, -4], joint: [[-2, 3], [-1, -1]] }, // a drag
+};
 
-function drawUsFrame(f) {
+// The 16-frame loop (4 fps = 4 s): chatting, a drag, then breathing it out.
+const DRAG = {
+  frames: 16,
+  pose: (f) => (f === 5 || f === 9 ? 'raise' : f >= 6 && f <= 8 ? 'lips' : 'rest'),
+  hot: (f) => f >= 6 && f <= 9, // the ember flares while he draws on it
+  exhale: [10, 11, 12], // frames he breathes the smoke out
+  herBlink: (f) => f === 2 || f === 13,
+  hisBlink: (f) => f === 7 || f === 8 || f === 15, // eyes closed for the drag
+};
+
+/** A smoke particle's spot `age` frames after it left (x0, y0), rising and drifting away from the fire. */
+function smokeAt(x0, y0, age, seed, { up = 2, out = 0 } = {}) {
+  const wobble = Math.sin(age * 0.9 + seed * 1.7) * Math.min(3, age * 0.5);
+  const forward = out * (1 - Math.exp(-age * 0.6)) * 6; // a puff shoots out, then slows
+  return { x: Math.round(x0 + forward + age * 0.6 + wobble), y: Math.round(y0 - 1 - age * up) };
+}
+
+/** The ember, the thin wisp from it, and the breathed-out puff, for frame f. */
+function drawSmoke(c, f, tips, mouth) {
+  const N = DRAG.frames;
+  const { x: ex, y: ey } = tips[f];
+  // the wisp: two bits leave the ember every frame (one while his arm moves,
+  // none while he's drawing on it), each lasting 9 frames
+  for (let age = 8; age >= 0; age--) {
+    const b = (f - age + N) % N;
+    for (let k = 0; k < 2; k++) {
+      if (DRAG.pose(b) === 'lips' || (DRAG.pose(b) === 'raise' && k)) continue;
+      const p = smokeAt(tips[b].x, tips[b].y, age + k * 0.5, b * 2 + k, { up: 2.4 });
+      const a = (1 - age / 9) * 0.55;
+      c.px(p.x, p.y, PAL.smoke, a);
+      if (age > 3) c.px(p.x + 1, p.y, PAL.smoke, a * 0.6);
+    }
+  }
+  // the puff he breathes out: out from his lips towards the fire, then up and away
+  for (const b of DRAG.exhale) {
+    const age = (f - b + N) % N;
+    if (age > 7) continue;
+    for (let k = 0; k < 8; k++) {
+      const p = smokeAt(mouth.x - 1, mouth.y + (k % 3) - 1, age + (k % 2) * 0.4, b * 5 + k, { up: 1.4, out: -1 - (k % 4) * 0.35 });
+      const a = (1 - age / 8) * 0.6;
+      const size = Math.min(3, 1 + Math.floor(age / 2)); // spreads out as it rises
+      c.rect(p.x - (size >> 1), p.y - (size >> 1), size, size, PAL.smoke, a);
+    }
+  }
+  // the ember, flaring while he draws on it
+  const hot = DRAG.hot(f);
+  c.glow(ex, ey, hot ? 4 : 3, PAL.ember, hot ? 0.6 : 0.3);
+  c.px(ex, ey, hot ? PAL.emberHot : PAL.ember);
+}
+
+function drawUsFrame(f, hims) {
   const c = new Canvas(W, H);
   softEllipse(c, HER_HIP + 2, GROUND_Y + 1, 18, 2, PAL.outline, 0.5);
   softEllipse(c, HIM_HIP - 2, GROUND_Y + 1, 18, 2, PAL.outline, 0.5);
 
   const her = new Canvas(W, H);
-  seated(her, HER_HIP, HER_LOOK, { blink: f === 2 });
+  seated(her, HER_HIP, HER_LOOK, { blink: DRAG.herBlink(f), marshmallow: true });
   tint(her, NIGHT, 0.22);
   sideLight(her, 1, PAL.fireLight, 0.6, 2);
   her.outline(PAL.outline);
 
-  const drawn = new Canvas(W, H);
-  const tip = seated(drawn, W - 1 - HIM_HIP, HIM_LOOK, { blink: f === 6, joint: true });
-  tint(drawn, NIGHT, 0.22);
-  sideLight(drawn, 1, PAL.fireLight, 0.6, 2);
-  drawn.outline(PAL.outline);
-  const him = mirror(drawn);
-  JOINT_TIP = { x: W - 1 - tip.x, y: tip.y };
-
   c.blit(her, 0, 0);
-  c.blit(him, 0, 0);
+  c.blit(hims[f].him, 0, 0);
+  drawSmoke(c, f, hims.map((h) => h.tip), hims[0].mouth);
   return c;
 }
 
+/** Him in frame f, drawn facing right then mirrored; plus where his joint's tip and lips end up. */
+function himFrame(f) {
+  const drawn = new Canvas(W, H);
+  const at = seated(drawn, W - 1 - HIM_HIP, HIM_LOOK, { blink: DRAG.hisBlink(f), joint: DRAG.pose(f) });
+  tint(drawn, NIGHT, 0.22);
+  sideLight(drawn, 1, PAL.fireLight, 0.6, 2);
+  drawn.outline(PAL.outline);
+  const flip = (p) => ({ x: W - 1 - p.x, y: p.y });
+  return { him: mirror(drawn), tip: flip(at.tip), mouth: flip(at.mouth) };
+}
+
 function drawUs() {
-  const FR = 8;
-  const sheet = new Canvas(W * FR, H);
-  for (let f = 0; f < FR; f++) sheet.blit(drawUsFrame(f), f * W, 0);
+  const N = DRAG.frames;
+  const hims = Array.from({ length: N }, (_, f) => himFrame(f)); // all first: the smoke trails behind the joint
+  const sheet = new Canvas(W * N, H);
+  for (let f = 0; f < N; f++) sheet.blit(drawUsFrame(f, hims), f * W, 0);
   return sheet;
 }
 
-// ---- 14. smoke.png — the joint's ember and its smoke curling up (6 frames) -------------------
-function drawSmoke() {
-  const FR = 6;
-  const sheet = new Canvas(W * FR, H);
-  const { x: ex, y: ey } = JOINT_TIP;
-  for (let f = 0; f < FR; f++) {
-    const c = new Canvas(W, H);
-    // the ember: brightest when he's just had a drag
-    c.glow(ex, ey, 3, PAL.ember, f < 2 ? 0.55 : 0.3);
-    c.px(ex, ey, f < 2 ? PAL.emberHot : PAL.ember);
-    // a thin wisp of smoke, drifting up and away from the fire
-    for (let k = 0; k < 4; k++) {
-      for (let s = 0; s < 6; s++) {
-        const age = ((k * 6 + s + f) % 24) / 24; // 0 = just left the ember, 1 = gone
-        const x = Math.round(ex + Math.sin(age * 9 + k * 1.7) * 3 * age + age * 6);
-        const y = Math.round(ey - 2 - age * 30);
-        const a = (1 - age) * 0.55;
-        c.px(x, y, PAL.smoke, a);
-        if (age > 0.4) c.px(x + 1, y, PAL.smoke, a * 0.6);
-      }
-    }
-    sheet.blit(c, f * W, 0);
-  }
-  return sheet;
-}
-
-// ---- 15. sparks.png — embers floating up from the fire (4 frames) ----------------------------
+// ---- 14. sparks.png — embers floating up from the fire (4 frames) ----------------------------
 function drawSparks() {
   const FR = 4;
   const sheet = new Canvas(W * FR, H);
@@ -733,7 +859,7 @@ function drawSparks() {
   return sheet;
 }
 
-// ---- 16. vignette.png — darker towards the edges -------------------------------------------
+// ---- 15. vignette.png — darker towards the edges -------------------------------------------
 function drawVignette() {
   const c = new Canvas(W, H);
   for (let y = 0; y < H; y++)
@@ -762,19 +888,20 @@ function drawMapCampFrame(f) {
       if (d > 0.8 && bayer(x, y) < (d - 0.8) * 5) continue;
       c.px(x, y, d > 0.65 || bayer(x, y) < 0.15 ? PAL.mapDirtDark : PAL.mapDirt);
     }
-  // the tent (tiles 0-1, rows 0-1), door facing the fire
+  // the tent (tiles 0-1, rows 0-1): our red dome
   c.ellipse(17, 29, 14, 2, PAL.mapGrassDark, 0.5);
   for (let x = 3; x <= 29; x++) {
-    const top = 28 - Math.round(20 * Math.sqrt(Math.max(0, 1 - ((x - 16) / 13) ** 2)));
-    for (let y = top; y <= 28; y++) c.px(x, y, y < 20 ? '#3b4570' : x < 9 ? '#8a90a8' : '#a3a9bf');
-    c.px(x, top, '#2b3354');
-    c.px(x, 20, PAL.trim);
+    const top = 28 - Math.round(20 * Math.pow(Math.max(0, 1 - ((x - 16) / 13) ** 2), 0.55));
+    for (let y = top; y <= 28; y++) c.px(x, y, x < 8 ? PAL.tentRed[2] : x > 25 || y > 26 ? PAL.tentRed[3] : PAL.tentRed[4]);
+    c.px(x, top, PAL.tentRed[1]);
   }
-  for (let y = 17; y <= 28; y++) {
-    const half = Math.round(((y - 17) / 11) * 4);
-    for (let x = 22 - half; x <= 22 + half; x++) c.px(x, y, '#2a2638');
+  for (let y = 9; y <= 28; y++) c.px(16, y, PAL.tentRed[1]); // the pole down the front
+  c.rect(10, 28, 13, 1, PAL.groundsheet);
+  for (let y = 18; y <= 27; y++) {
+    const w = Math.round(((y - 18) / 9) * 3); // the door, unzipped and pulled back a little
+    for (let x = 17; x <= 16 + w; x++) c.px(x, y, PAL.tentInside);
   }
-  c.px(22, 26, PAL.lantern);
+  c.px(18, 27, PAL.lantern);
   c.line(3, 26, 0, 30, PAL.rope);
   c.line(29, 26, 32, 30, PAL.rope);
   // chairs (tiles 2 and 4 of the middle row), facing the fire
@@ -845,13 +972,13 @@ function addToMap() {
 
 // ---- Run --------------------------------------------------------------------------------------
 console.log('Drawing our camping trip…');
-const us = drawUs(); // first: works out where his joint is, for the smoke
 const layers = {
   sky: drawSky(),
   stars: drawStars(),
   glow: drawGlow(),
   cliff: drawCliff(),
   waterfall: drawWaterfall(),
+  treeline: drawTreeline(),
   trees: drawTrees(),
   ground: drawGround(),
   tent: drawTent(),
@@ -859,8 +986,7 @@ const layers = {
   pit: drawPit(),
   fire: drawFire(),
   'pit-front': drawPitFront(),
-  us,
-  smoke: drawSmoke(),
+  us: drawUs(),
   sparks: drawSparks(),
   vignette: drawVignette(),
 };

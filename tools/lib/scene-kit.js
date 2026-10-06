@@ -106,7 +106,8 @@ const MINI = {
   D: ['##.', '#.#', '#.#', '#.#', '##.'],
   E: ['###', '#..', '##.', '#..', '###'],
   F: ['###', '#..', '##.', '#..', '#..'],
-  H: ['#.#', '#.#', '###', '#.#', '#.#'],
+  G: ['.##', '#..', '#.#', '#.#', '.##'],
+  H:['#.#', '#.#', '###', '#.#', '#.#'],
   I: ['###', '.#.', '.#.', '.#.', '###'],
   L: ['#..', '#..', '#..', '#..', '###'],
   M: ['#...#', '##.##', '#.#.#', '#...#', '#...#'],
@@ -116,7 +117,11 @@ const MINI = {
   R: ['##.', '#.#', '##.', '#.#', '#.#'],
   S: ['.##', '#..', '.#.', '..#', '##.'],
   T: ['###', '.#.', '.#.', '.#.', '.#.'],
+  U: ['#.#', '#.#', '#.#', '#.#', '###'],
+  V: ['#.#', '#.#', '#.#', '#.#', '.#.'],
+  W: ['#...#', '#...#', '#.#.#', '##.##', '#...#'],
   X: ['#.#', '#.#', '.#.', '#.#', '#.#'],
+  Y: ['#.#', '#.#', '.#.', '.#.', '.#.'],
   0: ['###', '#.#', '#.#', '#.#', '###'],
   1: ['.#.', '##.', '.#.', '.#.', '###'],
   2: ['##.', '..#', '.#.', '#..', '###'],
@@ -231,16 +236,11 @@ export function placeLamp(map, x, y) {
 }
 
 /**
- * Adds an image as its own embedded tileset and stamps the whole picture into
- * the Decor layer with its top-left tile at (at.x, at.y). Returns the
- * tileset's first gid.
- *
- * Every tile is solid unless its id (row * cols + col) is in `walkable`.
- * For gentle tile animation (water shimmer), the image can hold `frames`
- * copies of the picture side by side; tiles listed in `animated` then cycle
- * through those copies, `frameMs` each. Only the first copy is stamped.
+ * Adds an image (cols x rows tiles) as its own embedded tileset, without
+ * placing any of it. Returns the tileset's first gid: tile id n is gid
+ * firstgid + n. Options as for stampBuilding.
  */
-export function stampBuilding(map, { name, image, cols, rows, at, walkable = [], frames = 1, animated = [], frameMs = 500 }) {
+export function addTileset(map, { name, image, cols, rows, walkable = [], frames = 1, animated = [], frameMs = 500 }) {
   const firstgid = Math.max(...map.tilesets.map((t) => t.firstgid + t.tilecount));
   const sheetCols = cols * frames;
   const tiles = [];
@@ -268,6 +268,23 @@ export function stampBuilding(map, { name, image, cols, rows, at, walkable = [],
     spacing: 0,
     tiles,
   });
+  return firstgid;
+}
+
+/**
+ * Adds an image as its own embedded tileset and stamps the whole picture into
+ * the Decor layer with its top-left tile at (at.x, at.y). Returns the
+ * tileset's first gid.
+ *
+ * Every tile is solid unless its id (row * cols + col) is in `walkable`.
+ * For gentle tile animation (water shimmer), the image can hold `frames`
+ * copies of the picture side by side; tiles listed in `animated` then cycle
+ * through those copies, `frameMs` each. Only the first copy is stamped.
+ */
+export function stampBuilding(map, options) {
+  const { cols, rows, at, frames = 1 } = options;
+  const firstgid = addTileset(map, options);
+  const sheetCols = cols * frames;
   const decor = map.layers.find((l) => l.name === 'Decor');
   for (let ty = 0; ty < rows; ty++)
     for (let tx = 0; tx < cols; tx++) decor.data[(at.y + ty) * map.width + at.x + tx] = firstgid + ty * sheetCols + tx;

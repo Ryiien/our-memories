@@ -18,7 +18,10 @@
     "scene:first-date": "node tools/scenes/first-date.js",
     "scene:laufey": "node tools/scenes/laufey-concert.js",
     "scene:beach": "node tools/scenes/apollo-bay.js",
-    "scene:camping": "node tools/scenes/camping.js"
+    "scene:camping": "node tools/scenes/camping.js",
+    "scene:collins": "node tools/scenes/collins-coffee-house.js",
+    "scene:street": "node tools/scenes/collins-street.js",
+    "scene:venues": "node tools/scenes/venue-fronts.js"
   },
   "dependencies": {
     "phaser": "^4.2.1"

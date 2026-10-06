@@ -157,6 +157,7 @@
         { "src": "memories/camping/glow.png", "anim": "pulse", "amount": 0.3, "speed": 0.4 },
         { "src": "memories/camping/cliff.png" },
         { "src": "memories/camping/waterfall.png", "anim": "frames", "fps": 8 },
+        { "src": "memories/camping/treeline.png" },
         { "src": "memories/camping/trees.png", "anim": "sway", "amount": 1, "speed": 0.3 },
         { "src": "memories/camping/ground.png" },
         { "src": "memories/camping/tent.png" },
@@ -164,10 +165,30 @@
         { "src": "memories/camping/pit.png" },
         { "src": "memories/camping/fire.png", "anim": "frames", "fps": 8 },
         { "src": "memories/camping/pit-front.png" },
-        { "src": "memories/camping/us.png", "anim": "frames", "fps": 3 },
-        { "src": "memories/camping/smoke.png", "anim": "frames", "fps": 4 },
+        { "src": "memories/camping/us.png", "anim": "frames", "fps": 4 },
         { "src": "memories/camping/sparks.png", "anim": "frames", "fps": 6 },
         { "src": "memories/camping/vignette.png" }
+      ]
+    },
+    {
+      "id": "collins-coffee-house",
+      "title": "High tea at Collins Coffee House",
+      "date": "19th October 2025",
+      "caption": "Tiny cakes, a pot of tea, and champagne.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/collins-coffee-house/outside.png" },
+        { "src": "memories/collins-coffee-house/leaves.png", "anim": "sway", "amount": 1, "speed": 0.4 },
+        { "src": "memories/collins-coffee-house/room.png" },
+        { "src": "memories/collins-coffee-house/guests.png" },
+        { "src": "memories/collins-coffee-house/light.png", "anim": "pulse", "amount": 0.3, "speed": 0.5, "scale": 0 },
+        { "src": "memories/collins-coffee-house/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/collins-coffee-house/table.png" },
+        { "src": "memories/collins-coffee-house/tea.png", "anim": "frames", "fps": 6 },
+        { "src": "memories/collins-coffee-house/motes.png", "anim": "twinkle", "amount": 0.8, "speed": 0.6 },
+        { "src": "memories/collins-coffee-house/vignette.png" }
       ]
     }
   ]

@@ -42,6 +42,10 @@ Other commands:
 | `npm run scene:first-date` | redraws the first date scene (street, bus stop, the two of you) (see §6) |
 | `npm run scene:laufey` | redraws the Laufey concert scene + the Palais Theatre on the map (see §6) |
 | `npm run scene:beach` | redraws the night on the beach scene (see §6) |
+| `npm run scene:camping` | redraws the camping scene + the campsite on the map (see §6) |
+| `npm run scene:collins` | redraws the high tea scene + Collins Coffee House on the map (see §6) |
+| `npm run scene:street` | redraws the street props along Collins Coffee House, the pub and RMIT (see §6) |
+| `npm run scene:venues` | redraws the props in front of the Palais Theatre and San Remo (see §6) |
 
 ### Controls
 - **Move:** WASD or arrow keys · phone: put your thumb anywhere on the left half
@@ -222,7 +226,7 @@ existing files** unless you run it with `--force`, so re-running it is safe.
 | `public/assets/audio/formal.mp3` | **expected, not included yet:** the school formal's slow-dance song. Until it exists, that scene plays silently |
 | `public/assets/tiles/hall.png` | 160×112: the ballroom building, 10×7 tiles (its own tileset in the map) |
 | `public/assets/tiles/oxford-scholar.png` | 128×96: the pub, 8×6 tiles (its own tileset in the map) |
-| `public/assets/tiles/rmit.png` | 80×96: RMIT's Building 80 next door, 5×6 tiles |
+| `public/assets/tiles/rmit.png` | 112×96: RMIT's Building 80 next door, 7×6 tiles |
 | `public/assets/tiles/palais.png` | 160×112: the Palais Theatre, 10×7 tiles (its own tileset in the map) |
 | `public/assets/tiles/picnic.png` | 64×32: the picnic on the map, 4×2 tiles (bikes on top, solid; blanket below, walkable) |
 | `public/assets/tiles/garden.png` | 320×144: the botanic garden, 10×9 tiles, drawn twice side by side (the second copy is the water's shimmer frame) |
@@ -402,9 +406,10 @@ Preview: `tools/previews/apollo-bay.png`. Layers in
 
 A starry night at the campsite: the two of you in camping chairs either side of
 the firepit (the round steel ring on its concrete pad, grill plate swung out to
-the side), him smoking a joint with the smoke curling up, the dome tent with a
-lantern glowing inside, and the waterfall pouring down the sandstone cliff
-behind. Drawn by `tools/scenes/camping.js`: change `PAL` at the top, then
+the side), her toasting a marshmallow on a stick, him taking a drag on a joint (hand to his lips,
+the ember flaring) and breathing the smoke out, the red dome tent with its door open and a lantern
+glowing inside, a faded row of trees, and the waterfall pouring down the
+sandstone cliff behind. Drawn by `tools/scenes/camping.js`: change `PAL` at the top, then
 
 ```
 npm run scene:camping                      # redraws all its layers
@@ -414,12 +419,70 @@ npm run scene:camping -- --keep us,tent    # keep layers you've redrawn yourself
 Preview: `tools/previews/camping.png`. Layers in
 `public/assets/memories/camping/` (back to front): `sky.png`, `stars.png`
 (twinkle), `glow.png` (pulse), `cliff.png`, `waterfall.png` (4 frames),
-`trees.png` (sway), `ground.png`, `tent.png`, `firelight.png` (pulse),
-`pit.png`, `fire.png` (4 frames), `pit-front.png`, `us.png` (8 frames),
-`smoke.png` (6 frames), `sparks.png` (4 frames), `vignette.png`. The first
+`treeline.png`, `trees.png` (sway), `ground.png`, `tent.png`, `firelight.png`
+(pulse), `pit.png`, `fire.png` (4 frames), `pit-front.png`, `us.png` (16 frames
+at 4 fps; his drag and its smoke are drawn in, timed by `DRAG` in the script),
+`sparks.png` (4 frames), `vignette.png`. The first
 run also puts a little campsite (tent, chairs, a flickering fire) on the map in
 the bottom-left, with its trigger in front of the fire
 (`tools/previews/camping-map.png`).
+
+### The Collins Coffee House scene
+
+High tea in the Collins Coffee House: dark timber panelling, a Gothic arched
+window onto the plane trees of Collins Street with the sun streaming in, the
+gold-framed "Collins Coffee House — High Tea Room" sign, a pastry cabinet, and
+other guests (and a waiter with a teapot) faded into the background.
+At a round wooden table with a three-tier stand of cakes, sandwiches and
+quiches: her in her long blue puff-sleeve dress on a red velvet chair, pouring
+tea from the white-and-gold teapot, and him in his dark plum shirt and wide
+trousers on a red velvet armchair, holding a coupe glass. Drawn by
+`tools/scenes/collins-coffee-house.js`: change `PAL` at the top, then
+
+```
+npm run scene:collins                      # redraws all its layers
+npm run scene:collins -- --keep us,table   # keep layers you've redrawn yourself
+```
+
+Preview: `tools/previews/collins-coffee-house.png`. Layers in
+`public/assets/memories/collins-coffee-house/` (back to front): `outside.png`,
+`leaves.png` (sway), `room.png`, `guests.png`, `light.png` (pulse), `us.png` (8 frames),
+`table.png`, `tea.png` (6 frames: the pour + steam), `motes.png` (twinkle),
+`vignette.png`. The first run also swaps the little house left of the Oxford
+Scholar for the building itself (sandstone Gothic, the spire on its corner tower,
+a gold sign over the arched doors), with its trigger at the doors
+(`tools/previews/collins-coffee-house-map.png`).
+
+### Street props along the main strip
+
+The pavement in front of Collins Coffee House, the Oxford Scholar and RMIT has a
+few little things on it: a high-tea chalkboard and two clipped bay trees by the
+coffee house doors, a marble bistro table with red velvet chairs, a barrel
+table with a pint and a chalkboard by the pub, a bike rack (one RMIT-red bike)
+and a bin by RMIT. Across the road: two plane trees, and a bench beside each of
+the outer lamps. Drawn by `tools/scenes/collins-street.js` (`PAL` at the top; where
+each prop goes is in `PLACES`, `TREES` and `BENCHES`):
+
+```
+npm run scene:street      # redraws the props (and puts them on the map the first time)
+```
+
+Run it after `scene:collins` and `scene:pub`. Preview: `tools/previews/collins-street.png`.
+
+### The fronts of the Palais Theatre and San Remo
+
+Outside the Palais: two poster easels in gold frames (one pink, one blue, like
+the posters on its front) and art-deco urns of flowers. Outside San Remo: a red
+carpet up to the doors (walkable — it's where the formal memory starts), brass
+posts with a red velvet rope either side of it, and spiral topiaries in white
+stone urns. Drawn by `tools/scenes/venue-fronts.js` (`PAL` at the top; where each
+prop goes is in `PLACES`):
+
+```
+npm run scene:venues      # redraws the props (and puts them on the map the first time)
+```
+
+Run it after `scene:laufey` and `scene:formal`. Preview: `tools/previews/venue-fronts.png`.
 
 ### The Laufey concert scene
 

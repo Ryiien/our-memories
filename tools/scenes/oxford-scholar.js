@@ -10,7 +10,7 @@
 // Tweak colours in PAL below and re-run. Outputs:
 //   public/assets/memories/oxford-scholar/*.png   the 9 cutscene layers
 //   public/assets/tiles/oxford-scholar.png        the pub (128x96 = 8x6 tiles)
-//   public/assets/tiles/rmit.png                  RMIT next door (80x96 = 5x6 tiles)
+//   public/assets/tiles/rmit.png                  RMIT next door (112x96 = 7x6 tiles)
 //   tools/previews/oxford-scholar.png             flattened preview (3x size)
 //   tools/previews/oxford-scholar-street.png      the two buildings on the map (3x)
 //
@@ -715,7 +715,10 @@ function drawVignette() {
 
 // ---- The buildings for the map ------------------------------------------------------------------
 const PUB = { cols: 8, rows: 6, at: { x: 27, y: 0 } }; // where the café was; doors at tiles x 30–31
-const RMIT = { cols: 5, rows: 6, at: { x: 37, y: 0 } }; // replaces the house east of the pub
+// RMIT: right up against the pub, where the house east of it was, and wide
+// enough that the pavement sticks out past it by one tile (like it does on the left)
+const RMIT = { cols: 7, rows: 6, at: { x: 35, y: 0 } };
+const OLD_HOUSE = { x: 37, y: 2, w: 5, h: 4 }; // the placeholder house RMIT replaces (cleared first)
 
 /** The Oxford Scholar: red brick, cream render, timber-fin awning, "1887" up top. */
 function drawPub() {
@@ -831,16 +834,26 @@ function drawRmitBuilding() {
   // red canopy, dark sign panel with the logo and name, zig-zag red trim under it
   c.rect(0, 60, w, 2, s.rmitRed);
   c.rect(0, 62, w, 12, s.signPanel);
-  drawRmitLogo(c, 12, 63, 9);
-  text(c, 'RMIT', 25, 64, s.signText);
+  const signW = 9 + 4 + textWidth('RMIT'); // logo, gap, name — centred
+  const signX = Math.round((w - signW) / 2);
+  drawRmitLogo(c, signX, 63, 9);
+  text(c, 'RMIT', signX + 13, 64, s.signText);
   for (let x = 0; x < w; x++) c.rect(x, 74, 1, 2 + ((x >> 2) % 2), s.rmitRed);
   // glass shopfront + the red door
   c.rect(0, 77, w, 16, s.shopfront);
-  for (let x = 2; x < w; x += 13) c.rect(x, 78, 10, 14, s.litWindow, 0.45);
-  c.rect(32, 79, 16, 14, s.rmitRed);
-  c.rect(39, 79, 1, 14, s.rmitRedDark);
-  c.px(37, 86, s.signText);
-  c.px(41, 86, s.signText);
+  const door = w / 2; // the doors are in the middle, the panes mirrored either side
+  for (let i = 0; i < 4; i++) {
+    c.rect(door + 11 + 12 * i, 78, 9, 14, s.litWindow, 0.45);
+    c.rect(door - 20 - 12 * i, 78, 9, 14, s.litWindow, 0.45);
+  }
+  // glass double doors in a red frame, with tall door pulls
+  c.rect(door - 8, 77, 16, 16, s.rmitRed);
+  c.rect(door - 8, 77, 16, 1, s.rmitRedDark);
+  c.rect(door - 6, 79, 12, 14, s.shopfront);
+  c.rect(door - 6, 79, 5, 14, s.litWindow, 0.6);
+  c.rect(door + 1, 79, 5, 14, s.litWindow, 0.6);
+  c.rect(door - 2, 83, 1, 5, s.signText);
+  c.rect(door + 1, 83, 1, 5, s.signText);
   c.rect(0, 93, w, 3, s.step);
   return c;
 }
@@ -856,6 +869,9 @@ function addToMap() {
     console.log('  map      already has the Oxford Scholar — left untouched');
     return;
   }
+  const decor = map.layers.find((l) => l.name === 'Decor').data;
+  for (let y = OLD_HOUSE.y; y < OLD_HOUSE.y + OLD_HOUSE.h; y++)
+    for (let x = OLD_HOUSE.x; x < OLD_HOUSE.x + OLD_HOUSE.w; x++) decor[y * map.width + x] = 0;
   stampBuilding(map, { name: 'oxford-scholar', image: '../public/assets/tiles/oxford-scholar.png', ...PUB });
   stampBuilding(map, { name: 'rmit', image: '../public/assets/tiles/rmit.png', ...RMIT });
   // the trigger in front of the doors (re-using the café's, if it's there)
@@ -905,6 +921,6 @@ street.rect(0, 0, street.width, street.height, '#8cc269');
 street.rect(0, 6 * 16, street.width, 16, '#e6d3b0');
 street.rect(0, 7 * 16, street.width, 16, '#a99886');
 street.blit(pub, 16, 0);
-street.blit(rmit, 16 + 10 * 16, 0);
+street.blit(rmit, 16 + (RMIT.at.x - PUB.at.x) * 16, 0);
 writePreview('oxford-scholar-street.png', street);
 console.log('  preview  tools/previews/oxford-scholar.png, tools/previews/oxford-scholar-street.png');

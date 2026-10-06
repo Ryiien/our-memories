@@ -190,7 +190,10 @@ presets warn and are skipped / shown static — never crash.
   y 12–18, doors facing the main path, trigger at x 37–38, y 19.
   The Oxford Scholar pub (`oxford-scholar`, 8×6) replaced the placeholder café
   at tiles x 27–34, y 0–5 (doors at x 30–31, trigger `pub doors` at x 30–31,
-  y 6); RMIT's Building 80 (`rmit`, 5×6) replaced the house at x 37–41.
+  y 6); RMIT's Building 80 (`rmit`, 7×6) sits right against the pub at x 35–41
+  (it replaced the house at x 37–41, which the script clears first), so the
+  row Collins–pub–RMIT spans x 19–41 and the pavement (x 18–42) sticks out one
+  tile past each end.
   The botanic garden (`garden`, 10×9, for `botanic-garden`) fills the bottom-right
   corner at x 50–59, y 29–37 (top row = treetop headroom): pond + boardwalk
   (walkable) out to a lookout deck (trigger `garden lookout` = the deck, x 53–56,
@@ -205,24 +208,43 @@ presets warn and are skipped / shown static — never crash.
   right of the momo under the tree (x 22, y 35): tent (x 25–26, y 34–35), her
   chair / firepit / his chair along y 35 (solid), the rest walkable; its fire
   tiles flicker (3 frames). Trigger `campfire` = x 27–29, y 36 (in front of the fire).
+  Collins Coffee House (`collins`, 8×6, for `collins-coffee-house`) — the sandstone
+  Gothic building with the corner spire — replaced the house left of the Oxford
+  Scholar (and the hedge behind it) at x 19–26, y 0–5; doors at x 22–23, trigger
+  `collins doors` at x 22–23, y 6.
+  Street props along that strip (`street-props`, one row of 16×16 props, all
+  solid, placed tile by tile by `tools/scenes/collins-street.js`): on the
+  pavement (y 6) a chalkboard (x 19), bay trees (x 21, 24), a bistro table
+  (x 25–26), a barrel table (x 27), a pub chalkboard (x 32), bikes (x 35–36) and
+  a bin (x 41) — door tiles x 22–23, 30–31, 38 kept clear; across the road two
+  plane trees (cosy tree tiles, canopy x 24–25 / 37–38, y 9–10, trunks y 11) and
+  benches at x 22–23 and 39–40, y 9, just inside the outer lamps (x 21, x 41).
+  The fronts of the Palais and San Remo (`venue-props`, placed tile by tile by
+  `tools/scenes/venue-fronts.js`, all on y 19): flower urns (x 19, 28) and pink /
+  blue poster easels (x 20, 27) outside the Palais's lamps; a red carpet on San
+  Remo's trigger tiles (x 37–38, walkable), rope posts either side (x 36, 39) and
+  spiral topiaries (x 34, 41).
 - `stampBuilding` options: `walkable` (tile ids that don't collide; default all
   solid) and `frames`/`animated`/`frameMs` (the image holds N copies side by
   side; listed tiles cycle through them as a Tiled tile animation).
 - `npm run placeholders -- --force` regenerates `world.json` *without* such
   additions; re-run the scene scripts (`npm run scene:formal`, `npm run
   scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`,
-  `npm run scene:camping`, then `npm run momos`) to re-add them
+  `npm run scene:camping`, `npm run scene:collins`, `npm run scene:street`,
+  `npm run scene:venues`, then `npm run momos`) to re-add them
   (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
   `foliage`/`blobsIn` for leafy trees, a 3×5 sign font, previews, `stampBuilding`,
+  `addTileset` (a tileset you place tile by tile, e.g. scattered props),
   `placeLamp` for a cosy street lamp — San Remo and the Palais each have one either
   side of their door path).
   Each has a named `PAL` at the top. Hand-drawn memories (school-formal,
   oxford-scholar, botanic-garden, park-picnic, first-date, laufey-concert, apollo-bay,
-  camping)
+  camping, collins-coffee-house)
   are not in
-  `make-placeholders.js`. The sign font (`miniText`) has digits 0–9 and `>`.
+  `make-placeholders.js`. The sign font (`miniText`) has the capitals A–I, L–P,
+  R–Y (no J, K, Q, Z yet), digits 0–9 and `>`.
 
 Placeholder tile ids (tools/lib/tileset.js `T`): row 0 grass/flowers/path/cobble/
 plaza/hedge, row 1 sand/shore/water(animated)/pier, row 2 walls/door/awning/roof
