@@ -46,6 +46,7 @@ Other commands:
 | `npm run scene:collins` | redraws the high tea scene + Collins Coffee House on the map (see §6) |
 | `npm run scene:street` | redraws the street props along Collins Coffee House, the pub and RMIT (see §6) |
 | `npm run scene:venues` | redraws the props in front of the Palais Theatre and San Remo (see §6) |
+| `npm run scene:all-nations` | redraws the All Nations Park scene + the hilltop bench on the map (see §6) |
 | `npm run scene:fishing` | redraws the fishing minigame (pier at sunset, bobber, letter paper…) + the fishing spot on the map (see §6) |
 
 ### Controls
@@ -460,6 +461,32 @@ at 4 fps; his drag and its smoke are drawn in, timed by `DRAG` in the script),
 run also puts a little campsite (tent, chairs, a flickering fire) on the map in
 the bottom-left, with its trigger in front of the fire
 (`tools/previews/camping-map.png`).
+
+### The All Nations Park scene
+
+Our one-year anniversary (19th October 2024): the top of the hill at night,
+the city skyline and a tall lit-up building across the twinkling suburbs, a
+hazy sky glowing warm from the city, a light pole, gum trees and the row of
+basalt boulders along the gravel. The two of you sit on the bench, seen from
+behind: her blonde hair resting on his shoulder and her arm around him, in her
+black jacket and pink-and-white floral scarf; him with his buzzcut, olive-brown
+jacket and purple checked shirt. Drawn by `tools/scenes/all-nations-park.js`:
+change `PAL` at the top, then
+
+```
+npm run scene:all-nations                  # redraws all its layers
+npm run scene:all-nations -- --keep us     # keep layers you've redrawn yourself
+```
+
+Preview: `tools/previews/all-nations-park.png`. Layers in
+`public/assets/memories/all-nations-park/` (back to front): `sky.png`,
+`stars.png` (twinkle), `clouds.png` (drift), `city.png`, `windows.png`
+(flicker), `lights.png` (twinkle), `hill.png`, `trees.png` (sway),
+`lamp.png` (pulse), `rocks.png`, `us.png` (4 frames: her scarf in the
+breeze), `bench.png` (the backrest, in front of you), `vignette.png`. The
+first run also puts the hilltop bench on the map, at the top of the clearing east of RMIT:
+a bench between two basalt boulders on a gravel pad, with a row of bushes
+behind it and its trigger on the gravel in front (`tools/previews/all-nations-park-map.png`).
 
 ### The Collins Coffee House scene
 

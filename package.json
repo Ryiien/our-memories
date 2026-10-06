@@ -22,7 +22,8 @@
     "scene:collins": "node tools/scenes/collins-coffee-house.js",
     "scene:street": "node tools/scenes/collins-street.js",
     "scene:venues": "node tools/scenes/venue-fronts.js",
-    "scene:fishing": "node tools/scenes/fishing.js"
+    "scene:fishing": "node tools/scenes/fishing.js",
+    "scene:all-nations": "node tools/scenes/all-nations-park.js"
   },
   "dependencies": {
     "phaser": "^4.2.1"

@@ -193,6 +193,30 @@
         { "src": "memories/collins-coffee-house/motes.png", "anim": "twinkle", "amount": 0.8, "speed": 0.6 },
         { "src": "memories/collins-coffee-house/vignette.png" }
       ]
+    },
+    {
+      "id": "all-nations-park",
+      "title": "One year at All Nations Park",
+      "date": "19th October 2024",
+      "caption": "Our first anniversary, what a year it was.",
+      "hidden": false,
+      "requiresAction": false,
+      "unlockAfter": 0,
+      "layers": [
+        { "src": "memories/all-nations-park/sky.png" },
+        { "src": "memories/all-nations-park/stars.png", "anim": "twinkle", "amount": 0.8, "speed": 0.6 },
+        { "src": "memories/all-nations-park/clouds.png", "anim": "drift", "speed": 0.4 },
+        { "src": "memories/all-nations-park/city.png" },
+        { "src": "memories/all-nations-park/windows.png", "anim": "flicker", "amount": 0.3, "speed": 0.3 },
+        { "src": "memories/all-nations-park/lights.png", "anim": "twinkle", "amount": 0.7, "speed": 0.7 },
+        { "src": "memories/all-nations-park/hill.png" },
+        { "src": "memories/all-nations-park/trees.png", "anim": "sway", "amount": 1, "speed": 0.35 },
+        { "src": "memories/all-nations-park/lamp.png", "anim": "pulse", "amount": 0.2, "speed": 0.4, "scale": 0 },
+        { "src": "memories/all-nations-park/rocks.png" },
+        { "src": "memories/all-nations-park/us.png", "anim": "frames", "fps": 3 },
+        { "src": "memories/all-nations-park/bench.png" },
+        { "src": "memories/all-nations-park/vignette.png" }
+      ]
     }
   ]
 }

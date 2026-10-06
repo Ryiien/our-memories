@@ -32,7 +32,8 @@ quests, etc.). Obvious extension points are marked with `// TODO` comments.
 - Commands: `npm run dev`, `npm run build`, `npm run preview`,
   `npm run placeholders [-- --force]`, `npm run pixelate -- <photo> [out] [opts]`,
   `npm run momos` (writes the map's `Momos` layer from the spot list in `tools/place-momos.js`),
-  `npm run scene:fishing` (fishing art + the map's `Fishing` spot).
+  `npm run scene:fishing` (fishing art + the map's `Fishing` spot),
+  `npm run scene:<name>` for each hand-drawn memory (see the README table).
 - In dev, `window.game` is the Phaser game (e.g. `game.scene.getScene('World')`).
 - Data problems are `console.warn`ed with friendly messages; in dev the title
   screen shows "! N data warnings".
@@ -251,6 +252,12 @@ water just left of each spot.
   Gothic building with the corner spire — replaced the house left of the Oxford
   Scholar (and the hedge behind it) at x 19–26, y 0–5; doors at x 22–23, trigger
   `collins doors` at x 22–23, y 6.
+  The hilltop bench (`all-nations`, 4×2, for `all-nations-park`) sits at the
+  top of the clearing east of RMIT, centred between the bushes (x 42–43) and
+  the trees (x 50+) at x 45–48, y 1–2, with a row of bushes (cosy HEDGE) behind
+  it along the top edge at x 44–49, y 0: basalt boulders either side of a
+  bench on the top row (solid), tan gravel below (walkable); trigger
+  `hilltop bench` at x 46–47, y 2.
   Street props along that strip (`street-props`, one row of 16×16 props, all
   solid, placed tile by tile by `tools/scenes/collins-street.js`): on the
   pavement (y 6) a chalkboard (x 19), bay trees (x 21, 24), a bistro table
@@ -270,7 +277,7 @@ water just left of each spot.
   additions; re-run the scene scripts (`npm run scene:formal`, `npm run
   scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`,
   `npm run scene:camping`, `npm run scene:collins`, `npm run scene:street`,
-  `npm run scene:venues`, `npm run scene:fishing`, then `npm run momos`) to re-add them
+  `npm run scene:venues`, `npm run scene:fishing`, `npm run scene:all-nations`, then `npm run momos`) to re-add them
   (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
@@ -280,7 +287,7 @@ water just left of each spot.
   side of their door path).
   Each has a named `PAL` at the top. Hand-drawn memories (school-formal,
   oxford-scholar, botanic-garden, park-picnic, first-date, laufey-concert, apollo-bay,
-  camping, collins-coffee-house)
+  camping, collins-coffee-house, all-nations-park)
   are not in
   `make-placeholders.js`. The sign font (`miniText`) has the capitals A–I, L–P,
   R–Y (no J, K, Q, Z yet), digits 0–9 and `>`.
@@ -319,6 +326,11 @@ blocker(44)/grass edge.
 - **Him (the partner):** tall, white with a warm (not pale) skin tone, **short**
   black hair with a fringe (neck visible from back and side), open **brown
   jacket** (shoulder highlights, lapels, pockets, cuffs) over a white shirt, jeans.
+- **Looks change with the date of the memory.** In October 2024
+  (`all-nations-park`) she was **blonde** (long, past her shoulders) in a black
+  jacket and a pink-and-white floral scarf, and he had a **buzzcut** and an
+  olive-brown jacket over a purple checked shirt. Those colours live in that
+  script's `PAL`; don't "fix" them to match the looks above.
 - Colours live in `tools/lib/palette.js` (`her*`, `him*`, `jeans`, `silver`).
   Walking sprite: `tools/lib/sprites.js`. Cutscene figures: `HER` / `HIM` presets
   plus `figure()` in `tools/lib/cutscenes.js` (`dim` darkens them for night scenes).
