@@ -8,7 +8,7 @@
 //   npm run scene:pub -- --keep us,table    # don't overwrite layers you've redrawn
 //
 // Tweak colours in PAL below and re-run. Outputs:
-//   public/assets/memories/oxford-scholar/*.png   the 9 cutscene layers
+//   public/assets/memories/oxford-scholar/*.png   the 12 cutscene layers
 //   public/assets/tiles/oxford-scholar.png        the pub (128x96 = 8x6 tiles)
 //   public/assets/tiles/rmit.png                  RMIT next door (112x96 = 7x6 tiles)
 //   tools/previews/oxford-scholar.png             flattened preview (3x size)
@@ -16,8 +16,9 @@
 //
 // The scene: dusk, inside the pub at a high table by the big timber-framed
 // windows. She has a Long Island iced tea, he has a pint, and they clink
-// glasses over a basket of fries. Outside: Swanston Street, a tram going past
-// and RMIT's Building 80 with its red sign.
+// glasses over a basket of fries. Outside: Swanston Street, a tram going past,
+// people out on the footpath (some standing about, some strolling by) and
+// RMIT's Building 80 with its red sign.
 // -----------------------------------------------------------------------------
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,14 +52,22 @@ const PAL = {
   trunk: '#4a3a34',
   leaves: ['#a8883a', '#c9a443', '#e2c463'],
   // the tram (Yarra Trams white + green)
-  tram: '#e9ece6',
-  tramShade: '#c3c9c2',
-  tramGreen: '#3f9a6e',
-  tramGreenDark: '#2d7553',
-  tramWindow: '#f2d49a',
-  tramWindowDark: '#3a3546',
-  tramSkirt: '#4a4752',
-  tramDest: '#ffb347',
+  // a W-class tram (the green-and-cream City Circle one)
+  tramCream: '#ecd89c',
+  tramCreamShade: '#cdb67a',
+  tramRoof: '#d9c08a',
+  tramRoofShade: '#b9a06c',
+  tramClerestory: '#6e665c', // the raised strip along the top of the roof
+  tramGreen: '#3d7a3c',
+  tramGreenDark: '#2c5c2c',
+  tramGold: '#c9a94a', // lining + fleet number
+  tramGrab: '#f2c94c', // yellow grab poles by the doors
+  tramFender: '#1e1c22',
+  tramBogie: '#2e2a30',
+  tramGlass: '#5a4c58', // dark glass in cream frames...
+  tramGlow: '#c99a5e', // ...with a warm glow from the lights inside
+  tramPassenger: '#2e2830',
+  tramRouteBox: '#2f6a34',
   // inside the pub
   brick: ['#9c4a3a', '#8f4334', '#a65242'],
   mortar: '#6b3128',
@@ -123,9 +132,19 @@ const PAL = {
   herSkin: P.herSkin,
   herSkinShade: P.herSkinShade,
   herBlush: P.herBlush,
+  herSkinHi: '#e8b892',
   herDress: P.herDress,
   herDressShade: P.herDressShade,
+  herDressHi: P.herDressHi, // puff sleeve, light on the pleats
+  herDressDeep: P.herDressDeep, // the crease under her sleeve
+  lace: P.cream, // lace neckline + hem
+  laceShade: P.creamShade,
+  sash: P.berry, // her sash...
+  sashDark: '#7e3a4a',
+  sashLoop: P.roseDark, // ...tied in a bow at the back
+  sashLoopHi: P.rose,
   herShoes: P.white,
+  herSole: '#cfd0d8',
   piercing: P.silver,
   himHair: P.himHair,
   himHairHi: P.himHairHi,
@@ -136,9 +155,16 @@ const PAL = {
   jacketShade: P.himJacketShade,
   jacketHi: P.himJacketHi,
   shirt: P.himShirt,
-  jeans: P.jeans,
-  jeansShade: P.jeansShade,
+  shirtShade: '#d9d2c4',
+  button: '#b8ae9c',
+  belt: '#2e2220',
+  buckle: '#d6b25a',
+  jeans: '#33467a', // dark denim
+  jeansShade: '#25345c',
+  jeansHi: '#4a5f96',
   himShoes: P.shoeDark,
+  himShoesHi: '#5a5470',
+  himSole: '#e2ddd2',
   eye: '#1a1214',
   outline: '#1a1014',
   // edges
@@ -275,43 +301,262 @@ function drawStreetLights() {
   return c;
 }
 
-// ---- 3. tram.png — a Melbourne tram gliding past (960 wide, "drift" scrolls it) ------------
+// ---- 2b. people on Swanston Street ------------------------------------------------------------
+//   people.png         standing about on the far footpath (still)
+//   walkers-left.png   strolling to the left  (drift)
+//   walkers-right.png  strolling to the right (drift, negative speed)
+// Little people about 15 px tall, feet on the far footpath. They sit behind
+// the tram layer, so it glides in front of them.
+const FOOTPATH = 91; // their feet
+const FOLK = {
+  skin: ['#f0cfb4', '#e8c0a0', '#c98e66', '#a8714c', '#8a5a3c'],
+  hair: ['#2a1f24', '#5a3a28', '#d8b060', '#1a1418', '#8a4a30', '#c8c0c8'],
+  coat: {
+    navy: ['#3a4a6a', '#2c3852'],
+    wine: ['#6a3a44', '#4e2a32'],
+    olive: ['#4a5a3a', '#36432a'],
+    camel: ['#9a7a52', '#7a5e3c'],
+    black: ['#2e2c3a', '#22202c'],
+    rust: ['#8a4a3a', '#6a362a'],
+    cream: ['#c8b89a', '#a8987c'],
+    teal: ['#2e5a5e', '#224446'],
+  },
+  legs: ['#22202c', '#3a3f5a', '#4a3a30', '#2e3446'],
+  shoes: '#1a1418',
+  tote: '#e9e2d0',
+  backpack: ['#2a3557', '#6a2a32', '#3a4a2e'],
+  phone: '#cfe6ff',
+  dog: '#b07a4a',
+  dogShade: '#8a5a34',
+};
+
+/**
+ * One little person, feet at (x, feet). o = { facing: 'left'|'right'|'front',
+ * stride, coat: [colour, shade], longCoat, legs, skin, hair, hairStyle:
+ * 'short'|'long'|'bun'|'beanie', beanie, backpack, tote, phone, dog }.
+ */
+function person(c, x, feet, o) {
+  const d = o.facing === 'right' ? 1 : o.facing === 'left' ? -1 : 0;
+  const top = feet - 14;
+  const [coat, coatShade] = o.coat;
+  // legs and shoes
+  if (d === 0) {
+    c.rect(x - 1, top + 10, 1, 4, o.legs);
+    c.rect(x + 1, top + 10, 1, 4, o.legs);
+    c.px(x - 1, feet, FOLK.shoes);
+    c.px(x + 1, feet, FOLK.shoes);
+  } else if (o.stride) {
+    c.px(x, top + 10, o.legs);
+    for (const k of [-1, 1]) {
+      c.px(x + k, top + 11, o.legs);
+      c.px(x + k, top + 12, o.legs);
+      c.px(x + 2 * k, top + 13, o.legs);
+      c.px(x + 2 * k, feet, FOLK.shoes);
+    }
+    c.px(x + 3 * d, feet, FOLK.shoes); // toe of the front foot
+  } else {
+    c.rect(x - 1, top + 10, 2, 4, o.legs);
+    c.rect(x - 1, feet, 2, 1, FOLK.shoes);
+    c.px(d > 0 ? x + 1 : x - 2, feet, FOLK.shoes);
+  }
+  // backpack (behind)
+  if (o.backpack && d) c.rect(x - 2 * d, top + 4, 1, 5, o.backpack);
+  // coat
+  c.rect(x - 1, top + 4, 3, 6 + (o.longCoat ? 2 : 0), coat);
+  const back = d > 0 ? x - 1 : x + 1;
+  c.rect(back, top + 4, 1, 6 + (o.longCoat ? 2 : 0), coatShade);
+  if (d === 0) {
+    c.rect(x - 2, top + 5, 1, 4, coat); // arms
+    c.rect(x + 2, top + 5, 1, 4, coatShade);
+    c.px(x - 2, top + 9, o.skin);
+    c.px(x + 2, top + 9, o.skin);
+  } else {
+    c.rect(x, top + 5, 1, 4, coatShade); // arm down her/his side
+    c.px(x + (o.stride ? -d : 0), top + 9, o.skin); // hand (swinging back mid-step)
+  }
+  // head + hair
+  c.rect(x - 1, top + 1, 3, 3, o.skin);
+  c.rect(x - 1, top, 3, 1, o.hair);
+  if (d) {
+    c.rect(x - d, top + 1, 1, o.hairStyle === 'long' ? 4 : 2, o.hair); // the back of the head
+    if (o.hairStyle === 'long') c.px(x - 2 * d, top + 3, o.hair);
+    c.px(x + d, top + 1, o.hair); // fringe
+  } else {
+    c.px(x - 1, top + 1, o.hair);
+    c.px(x + 1, top + 1, o.hair);
+    if (o.hairStyle === 'long') {
+      c.rect(x - 2, top + 1, 1, 4, o.hair);
+      c.rect(x + 2, top + 1, 1, 4, o.hair);
+    }
+  }
+  if (o.hairStyle === 'bun') c.px(x - d, top - 1, o.hair);
+  if (o.hairStyle === 'beanie') {
+    c.rect(x - 1, top - 1, 3, 2, o.beanie);
+    c.px(x, top - 2, o.beanie);
+  }
+  // things they carry
+  if (o.tote) {
+    const tx = x + (d || 1) * 2;
+    c.rect(tx, top + 8, 2, 3, FOLK.tote);
+    c.px(tx + (d < 0 ? 0 : 1), top + 9, PAL.rmitRed); // a little RMIT logo
+    c.px(tx, top + 7, FOLK.tote, 0.7); // the strap
+  }
+  if (o.phone) {
+    const px = x + (d || 1);
+    c.px(px, top + 6, FOLK.phone);
+    c.px(px, top + 2, FOLK.phone, 0.35); // its glow on their face
+    c.px(px, top + 5, o.skin);
+  }
+  if (o.dog) {
+    const dx = x + d * 5;
+    const dy = feet - 2;
+    c.rect(dx - 2, dy, 5, 2, FOLK.dog);
+    c.rect(dx - 2, dy + 1, 5, 1, FOLK.dogShade);
+    c.px(dx - 2, feet, FOLK.dogShade);
+    c.px(dx + 2, feet, FOLK.dogShade);
+    c.rect(dx + 2 * d, dy - 2, 2, 2, FOLK.dog); // head
+    c.px(dx + 3 * d, dy - 1, FOLK.dogShade); // nose
+    c.px(dx - 3 * d, dy - 1, FOLK.dog); // tail up
+    c.line(x + d, top + 8, dx + 2 * d, dy - 1, '#1a1418', 0.6); // lead
+  }
+}
+
+/** Pull the little people back into the dusk, with a touch of warm light from above. */
+function dusk(c) {
+  rimLight(c, PAL.warmLight, 0.18);
+  const night = [44, 42, 74];
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < c.width; x++) {
+      const [rr, g, b, a] = c.get(x, y);
+      if (!a) continue;
+      c.clear(x, y);
+      c.px(x, y, [rr, g, b].map((v, i) => Math.round(v + (night[i] - v) * 0.22)), a / 255);
+    }
+  return c;
+}
+
+function drawPeople() {
+  const c = new Canvas(W, H);
+  const f = FOOTPATH;
+  // left window: a couple chatting under the plane tree, someone waiting for the tram
+  person(c, 52, f, { facing: 'right', coat: FOLK.coat.camel, longCoat: true, legs: FOLK.legs[0], skin: FOLK.skin[1], hair: FOLK.hair[2], hairStyle: 'long' });
+  person(c, 57, f, { facing: 'left', coat: FOLK.coat.navy, legs: FOLK.legs[1], skin: FOLK.skin[3], hair: FOLK.hair[0] });
+  person(c, 106, f, { facing: 'front', coat: FOLK.coat.olive, legs: FOLK.legs[2], skin: FOLK.skin[0], hair: FOLK.hair[1], hairStyle: 'beanie', beanie: '#c46a80', tote: true });
+  // right window, outside RMIT: students chatting, someone on their phone, a dog walker
+  person(c, 210, f, { facing: 'right', coat: FOLK.coat.teal, legs: FOLK.legs[3], skin: FOLK.skin[2], hair: FOLK.hair[3], backpack: FOLK.backpack[0] });
+  person(c, 215, f, { facing: 'left', coat: FOLK.coat.rust, legs: FOLK.legs[0], skin: FOLK.skin[4], hair: FOLK.hair[0], hairStyle: 'bun', tote: true });
+  person(c, 239, f, { facing: 'front', coat: FOLK.coat.black, longCoat: true, legs: FOLK.legs[1], skin: FOLK.skin[1], hair: FOLK.hair[4], hairStyle: 'long', phone: true });
+  person(c, 262, f, { facing: 'left', coat: FOLK.coat.wine, legs: FOLK.legs[2], skin: FOLK.skin[0], hair: FOLK.hair[5], dog: true });
+  return dusk(c);
+}
+
+function drawWalkersLeft() {
+  const c = new Canvas(W, H);
+  const f = FOOTPATH;
+  person(c, 24, f, { facing: 'left', stride: true, coat: FOLK.coat.cream, longCoat: true, legs: FOLK.legs[0], skin: FOLK.skin[0], hair: FOLK.hair[1], hairStyle: 'bun' });
+  person(c, 96, f, { facing: 'left', stride: true, coat: FOLK.coat.navy, legs: FOLK.legs[3], skin: FOLK.skin[2], hair: FOLK.hair[0], backpack: FOLK.backpack[1] });
+  // a couple holding hands
+  person(c, 166, f, { facing: 'left', stride: true, coat: FOLK.coat.wine, legs: FOLK.legs[1], skin: FOLK.skin[1], hair: FOLK.hair[2], hairStyle: 'long' });
+  person(c, 171, f, { facing: 'left', stride: true, coat: FOLK.coat.black, legs: FOLK.legs[0], skin: FOLK.skin[3], hair: FOLK.hair[3] });
+  c.rect(167, f - 5, 4, 1, FOLK.skin[1]); // their hands
+  person(c, 286, f, { facing: 'left', stride: true, coat: FOLK.coat.olive, legs: FOLK.legs[2], skin: FOLK.skin[4], hair: FOLK.hair[0], hairStyle: 'beanie', beanie: '#e2c463' });
+  return dusk(c);
+}
+
+function drawWalkersRight() {
+  const c = new Canvas(W, H);
+  const f = FOOTPATH;
+  person(c, 70, f, { facing: 'right', stride: true, coat: FOLK.coat.rust, legs: FOLK.legs[1], skin: FOLK.skin[0], hair: FOLK.hair[4], tote: true });
+  person(c, 190, f, { facing: 'right', stride: true, coat: FOLK.coat.teal, longCoat: true, legs: FOLK.legs[0], skin: FOLK.skin[3], hair: FOLK.hair[1], hairStyle: 'long', phone: true });
+  person(c, 252, f, { facing: 'right', stride: true, coat: FOLK.coat.camel, legs: FOLK.legs[3], skin: FOLK.skin[2], hair: FOLK.hair[0], backpack: FOLK.backpack[2] });
+  return dusk(c);
+}
+
+// ---- 3. tram.png — a W-class tram gliding past (960 wide, "drift" scrolls it) ---------------
 function drawTram() {
   const c = new Canvas(W * 3, H);
+  // A W-class: cream window band under a rounded tan roof, green below with
+  // gold lining, doors in the middle with yellow grab poles, a trolley pole up
+  // to the wire, and the "35" route box on the roof. Front on the left: it's
+  // heading left.
   const x0 = 300; // enters the window about a second after the scene opens
-  const len = 150;
-  const top = 74;
-  const bottom = 100;
-  const x1 = x0 + len;
-  // body + roof
-  c.rect(x0 + 3, top, len - 3, bottom - top, PAL.tram);
-  c.rect(x0, top + 3, 3, bottom - top - 3, PAL.tram);
-  c.px(x0 + 1, top + 2, PAL.tram);
-  c.px(x0 + 2, top + 1, PAL.tram);
-  c.rect(x0 + 6, top - 2, len - 12, 2, PAL.tramShade);
-  c.rect(x0 + 3, bottom - 8, len - 3, 3, PAL.tramGreen);
-  c.rect(x0, bottom - 5, len, 1, PAL.tramGreenDark);
-  c.rect(x0, bottom - 4, len, 4, PAL.tramSkirt);
-  // windscreen, destination sign, headlight (the front is on the left: it's heading left)
-  c.rect(x0, top + 4, 4, 11, PAL.tramWindowDark);
-  c.rect(x0 + 5, top + 1, 12, 2, PAL.tramDest);
-  c.px(x0 + 1, bottom - 7, PAL.lampHead);
-  // three sections: lit windows, a door each, joints between them
-  for (let s = 0; s < 3; s++) {
-    const sx = x0 + 6 + s * 49;
-    for (let wx = sx; wx < sx + 42; wx += 8) c.rect(wx, top + 4, 6, 9, PAL.tramWindow);
-    c.rect(sx + 18, top + 4, 8, bottom - top - 8, PAL.tramShade); // door
-    c.rect(sx + 19, top + 5, 6, 8, PAL.tramWindow);
-    c.rect(sx + 21, top + 5, 1, bottom - top - 10, PAL.tramShade);
-    if (s > 0) c.rect(sx - 4, top - 1, 2, bottom - top + 1, PAL.tramSkirt);
+  const len = 112;
+  const x1 = x0 + len - 1;
+  const mid = x0 + Math.round(len / 2);
+  const T = { roof: 69, trim: 75, band: 76, belt: 86, panel: 87, fender: 96, bottom: 100 };
+
+  // roof: rounded at both ends, the raised clerestory strip along the top
+  c.rect(x0 + 14, T.roof, len - 28, 2, PAL.tramClerestory);
+  c.rect(x0 + 6, T.roof + 2, len - 12, 1, PAL.tramRoof);
+  c.rect(x0 + 3, T.roof + 3, len - 6, 1, PAL.tramRoof);
+  c.rect(x0 + 1, T.roof + 4, len - 2, 2, PAL.tramRoof);
+  c.rect(x0 + 1, T.roof + 5, len - 2, 1, PAL.tramRoofShade);
+  // the "35" route box standing up at the front
+  c.rect(x0 + 4, T.roof - 6, 11, 8, PAL.tramRouteBox);
+  miniText(c, '35', x0 + 6, T.roof - 5, PAL.signText);
+  // green trim under the roof, then the cream window band
+  c.rect(x0, T.trim, len, 1, PAL.tramGreen);
+  c.rect(x0, T.band, len, T.belt - T.band, PAL.tramCream);
+  c.rect(x0, T.band, 1, T.belt - T.band, PAL.tramCreamShade); // the rounded front
+  // windows: dark glass in cream frames, small transom panes over bigger
+  // ones, a warm glow from the lights inside
+  const windows = (from, to) => {
+    for (let wx = from; wx + 4 <= to; wx += 6) {
+      c.rect(wx, T.band + 1, 5, 2, PAL.tramGlass);
+      c.rect(wx, T.band + 4, 5, 5, PAL.tramGlass);
+      c.rect(wx, T.band + 4, 5, 1, PAL.tramGlow); // the glow along the top of each pane
+      c.rect(wx, T.band + 1, 5, 1, PAL.tramGlow, 0.6);
+    }
+  };
+  windows(x0 + 2, x0 + 13); // the driver's cab
+  windows(x0 + 16, mid - 9); // front saloon
+  windows(mid + 9, x1 - 2); // back saloon
+  // people inside
+  for (const wx of [x0 + 2, x0 + 22, x0 + 34, mid + 15, mid + 27, mid + 39]) {
+    c.rect(wx + 1, T.band + 6, 2, 3, PAL.tramPassenger);
+    c.px(wx + 1, T.band + 5, PAL.tramPassenger);
   }
-  // pantograph up to the wire
-  const px = x0 + 70;
-  c.line(px - 6, top - 2, px, top - 14, PAL.wire);
-  c.line(px + 6, top - 2, px, top - 14, PAL.wire);
-  c.line(px, top - 14, px - 4, 36, PAL.wire);
-  c.line(px - 7, 36, px - 1, 36, PAL.wire);
-  c.rect(x1 - 4, top + 4, 4, 11, PAL.tramWindowDark); // back window
+  // green belt and lower panels, with gold lining
+  c.rect(x0, T.belt, len, 1, PAL.tramGreenDark);
+  c.rect(x0, T.panel, len, T.fender - T.panel, PAL.tramGreen);
+  c.rect(x0, T.panel, 1, T.fender - T.panel, PAL.tramGreenDark);
+  for (const [l, r] of [[x0 + 16, mid - 9], [mid + 9, x1 - 2]]) {
+    c.rect(l, T.panel + 1, r - l, 1, PAL.tramGold, 0.7);
+    c.rect(l, T.fender - 2, r - l, 1, PAL.tramGold, 0.7);
+    c.rect(l, T.panel + 1, 1, T.fender - T.panel - 2, PAL.tramGold, 0.7);
+    c.rect(r - 1, T.panel + 1, 1, T.fender - T.panel - 2, PAL.tramGold, 0.7);
+  }
+  miniText(c, '946', x0 + 3, T.panel + 2, PAL.tramGold); // fleet number on the cab
+  // doors in the middle: two leaves, windows up top, yellow grab poles either side
+  for (const dx of [mid - 7, mid + 1]) {
+    c.rect(dx, T.band, 6, T.fender - T.band, PAL.tramGreen);
+    c.rect(dx + 1, T.band + 1, 4, 7, PAL.tramGlass);
+    c.rect(dx + 1, T.band + 1, 4, 1, PAL.tramGlow);
+    c.rect(dx + 1, T.band + 12, 4, 6, PAL.tramGreenDark, 0.5);
+  }
+  c.rect(mid - 1, T.band, 2, T.fender - T.band, PAL.tramGreenDark);
+  c.rect(mid - 9, T.band + 1, 1, T.fender - T.band - 2, PAL.tramGrab);
+  c.rect(mid + 8, T.band + 1, 1, T.fender - T.band - 2, PAL.tramGrab);
+  // front: headlight, marker lights, side mirror
+  c.px(x0, T.panel + 4, PAL.lampHead);
+  c.px(x0, T.panel + 2, '#e9a35b');
+  c.px(x0, T.panel + 6, '#c8281e');
+  c.rect(x0 - 2, T.band + 2, 1, 3, PAL.tramFender);
+  c.px(x0 - 1, T.band + 3, PAL.tramFender);
+  // black fender along the bottom, the bogies and wheels on the rail
+  c.rect(x0 - 1, T.fender, len + 2, 2, PAL.tramFender);
+  c.rect(x0 - 1, T.fender + 1, len + 2, 1, PAL.tramBogie);
+  for (const bx of [x0 + 20, x1 - 20]) {
+    c.rect(bx - 9, T.fender + 2, 18, 2, PAL.tramBogie);
+    c.circle(bx - 5, T.bottom, 1.6, PAL.tramFender);
+    c.circle(bx + 5, T.bottom, 1.6, PAL.tramFender);
+  }
+  // the trolley pole, trailing back from the roof up to the overhead wire
+  const poleX = mid + 6;
+  c.rect(poleX - 3, T.roof - 1, 7, 1, PAL.tramBogie); // its base on the roof
+  c.line(poleX, T.roof - 1, poleX + 30, 37, PAL.wire);
+  c.line(poleX + 1, T.roof - 1, poleX + 31, 37, PAL.wire, 0.6);
+  c.rect(poleX + 29, 36, 4, 1, PAL.wire); // the shoe on the wire
   return c;
 }
 
@@ -498,22 +743,62 @@ const CLINK = { x: 154, y: 80 };
 
 function drawHer(c, dy, blink) {
   const s = PAL;
-  // legs (still): lap under the skirt, shins, white shoes
-  thickLine(c, 130, 117, 143, 119, 3, s.herSkin);
+  const top = 95 + dy; // her shoulders
+  // legs (still): knees out from under the skirt, shins, white shoes with an ankle strap
+  thickLine(c, 138, 117, 144, 118, 3, s.herSkin);
   thickLine(c, 143, 120, 142, 136, 3, s.herSkin);
+  c.line(143, 121, 142, 135, s.herSkinShade); // the back of her shin, away from the light
+  c.px(145, 118, s.herSkinHi); // light on her knee
+  c.px(146, 119, s.herSkinHi);
   c.rect(141, 137, 6, 2, s.herShoes);
-  c.rect(141, 139, 6, 1, '#cfd0d8');
-  c.rect(126, 113, 14, 6, s.herDress); // short skirt over her lap
-  c.rect(126, 118, 14, 1, s.herDressShade);
-  // body
-  c.rect(126, 95 + dy, 12, 119 - 95 - dy, s.herDress);
-  c.rect(126, 96 + dy, 2, 119 - 96 - dy, s.herDressShade);
-  c.clear(126, 95 + dy);
-  c.clear(137, 95 + dy);
-  c.rect(128, 111, 10, 1, s.herDressShade); // waist
+  c.rect(141, 139, 6, 1, s.herSole);
+  c.rect(141, 136, 4, 1, s.herShoes); // strap
+  c.px(146, 137, s.herSole);
+
+  // her dress: bodice (back in shadow, a curve at the front, light on the front edge)
+  for (let y = top; y <= 111; y++) {
+    const bust = y >= top + 4 && y <= top + 8 ? 1 : 0;
+    for (let x = 127; x <= 137 + bust; x++) {
+      let col = s.herDress;
+      if (x <= 128) col = s.herDressShade;
+      else if (x === 137 + bust) col = s.herDressHi;
+      c.px(x, y, col);
+    }
+  }
+  c.clear(127, top);
+  c.clear(137, top);
+  c.px(135, top, s.herSkin); // lace scoop neckline
+  c.px(136, top, s.lace);
+  c.px(137, top + 1, s.lace);
+  c.px(133, top + 6, s.herDressShade); // a seam down the front of the bodice
+  c.px(133, top + 7, s.herDressShade);
+  // skirt draped over her lap: soft pleats, a lace hem with little scallops
+  for (let y = 112; y <= 118; y++) {
+    const right = 139 + Math.min(2, y - 112);
+    for (let x = 125; x <= right; x++) {
+      let col = s.herDress;
+      if (x <= 126) col = s.herDressShade;
+      else if (y > 113 && (x - 128) % 3 === 0) col = s.herDressShade;
+      else if (y > 113 && (x - 129) % 3 === 0) col = s.herDressHi;
+      c.px(x, y, col);
+    }
+  }
+  for (let x = 125; x <= 141; x++) {
+    c.px(x, 119, x % 2 ? s.lace : s.laceShade);
+    if (x % 2 === 0) c.px(x, 120, s.lace);
+  }
+  // sash at her waist, tied in a bow at the back with its tails hanging down
+  for (let x = 127; x <= 138; x++) {
+    c.px(x, 110, x === 138 ? s.sashLoopHi : s.sash);
+    c.px(x, 111, s.sashDark);
+  }
+  c.map(['.bb...', 'brbK..', 'bbKKK.', 'brbK..', '.bb...'], { b: s.sashLoop, r: s.sashLoopHi, K: s.sashDark }, 122, 108);
+  for (const [x, y, col] of [[126, 113, s.sash], [125, 114, s.sashDark], [125, 115, s.sash], [124, 116, s.sashDark], [127, 113, s.sashDark], [127, 114, s.sash]]) c.px(x, y, col);
+
   // neck
   c.rect(131, 91 + dy, 4, 5, s.herSkin);
   c.px(131, 94 + dy, s.herSkinShade);
+  c.px(132, 94 + dy, s.herSkinShade);
   // head: pink bob with dark roots, fringe pink at the ends, facing right
   const hx = HER_X;
   const hy = 85 + dy;
@@ -533,12 +818,17 @@ function drawHer(c, dy, blink) {
       if (!a || `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}` !== s.herHair) continue;
       if (y < hy - 5 || (y === hy - 5 && (x + y) % 2 === 0) || (y === hy - 4 && (x + y) % 4 === 0)) c.px(x, y, s.herRoots);
     }
-  for (const [x, y] of [[hx - 4, hy - 1], [hx - 3, hy - 2], [hx - 5, hy + 1], [hx + 1, hy - 3]]) c.px(x, y, s.herHairHi);
-  // eye, eyebrow piercing, blush
-  if (blink) c.px(hx + 6, hy + 2, s.herSkinShade);
-  else {
+  // strands: light catching the curve of the bob, shade where it tucks under
+  for (const [x, y] of [[hx - 4, hy - 1], [hx - 3, hy - 2], [hx - 5, hy + 1], [hx + 1, hy - 3], [hx - 6, hy + 2], [hx - 2, hy - 2], [hx + 4, hy - 3]]) c.px(x, y, s.herHairHi);
+  for (const [x, y] of [[hx - 6, hy + 4], [hx - 6, hy + 5], [hx - 3, hy + 5], [hx - 3, hy + 6], [hx - 5, hy + 6]]) c.px(x, y, s.herHairShade);
+  // eye (with a lash), eyebrow piercing, blush
+  if (blink) {
+    c.px(hx + 6, hy + 2, s.herSkinShade);
+    c.px(hx + 7, hy + 2, s.eye);
+  } else {
     c.px(hx + 6, hy + 1, s.eye);
     c.px(hx + 6, hy + 2, s.eye);
+    c.px(hx + 7, hy + 1, s.eye); // lash
   }
   c.px(hx + 7, hy, s.piercing); // eyebrow piercing
   c.px(hx + 5, hy + 4, s.herBlush);
@@ -547,24 +837,80 @@ function drawHer(c, dy, blink) {
 
 function drawHim(c, dy, blink) {
   const s = PAL;
-  // legs (still): jeans across to the knee, down to his shoes
-  thickLine(c, 188, 116, 174, 118, 4, s.jeans);
-  c.rect(174, 121, 14, 1, s.jeansShade);
-  thickLine(c, 175, 121, 176, 137, 3, s.jeans);
-  c.rect(172, 138, 7, 2, s.himShoes);
-  // body: open brown jacket over a white shirt (front faces left)
-  c.rect(182, 88 + dy, 13, 119 - 88 - dy, s.jacket);
-  c.rect(193, 89 + dy, 2, 119 - 89 - dy, s.jacketShade);
-  c.rect(185, 88 + dy, 8, 1, s.jacketHi); // light on the shoulders
-  c.rect(182, 88 + dy, 3, 26 - dy, s.shirt); // shirt down the front
-  c.rect(185, 89 + dy, 1, 10, s.jacketShade); // lapel
-  c.px(184, 88 + dy, s.shirt);
-  c.clear(194, 88 + dy);
-  c.rect(182, 114, 13, 5, s.jeans);
-  c.rect(182, 114, 13, 1, s.jeansShade);
+  const top = 88 + dy; // his shoulders
+  // legs (still): loose dark jeans. His thigh lies along the stool seat, a
+  // little lower at the knee, with soft folds across his lap...
+  for (let x = 174; x <= 194; x++) {
+    const t = (194 - x) / 20;
+    const thighTop = Math.round(113 + 2 * t);
+    c.rect(x, thighTop, 1, 121 - thighTop, s.jeans);
+    c.px(x, thighTop, s.jeansHi); // light along the top
+    c.px(x, 120, s.jeansShade); // shadow underneath
+  }
+  c.ellipse(174, 118, 3, 2.5, s.jeans); // his knee, rounded at the front but level with his thigh
+  c.px(173, 116, s.jeansHi);
+  for (const [x, y] of [[179, 116], [180, 117], [184, 116], [185, 117], [186, 118]]) c.px(x, y, s.jeansShade); // folds
+  // ...then his shin angles back from the knee so his feet rest on the
+  // stool's footrest (the ring at y 142): wide and loose, flaring a touch at
+  // the bottom, a crease down the front, bunching at the ankle.
+  const shinX = (y) => 175.5 + (7.5 * (y - 120)) / 18; // the middle of his shin at row y
+  for (let y = 120; y <= 138; y++) {
+    const flare = y > 133 ? 1 : 0;
+    const left = Math.round(shinX(y) - 4) - flare;
+    const right = Math.round(shinX(y) + 3);
+    c.rect(left, y, right - left + 1, 1, s.jeans);
+    c.px(right, y, s.jeansShade); // the back of his leg, away from the light
+    if (y >= 122 && y <= 133) c.px(Math.round(shinX(y) - 1), y, s.jeansHi, 0.6); // crease
+  }
+  c.rect(178, 120, 1, 2, s.jeansShade); // the fold behind his knee
+  for (const [dx, y] of [[-3, 135], [-2, 135], [1, 136], [2, 136], [-4, 137]]) c.px(Math.round(shinX(y)) + dx, y, s.jeansShade); // bunched at the ankle
+  // shoes: dark, laced, with pale soles, resting on the footrest, toes towards her
+  c.rect(178, 139, 9, 2, s.himShoes);
+  c.px(177, 140, s.himShoes);
+  c.rect(177, 141, 10, 1, s.himSole);
+  c.px(180, 139, s.himShoesHi);
+  c.px(182, 139, s.himShoesHi);
+
+  // body: open brown jacket over a white shirt (front faces left). It's long:
+  // it falls past his hips, and the back of it rests on the stool behind him.
+  const hem = 121;
+  c.rect(182, top, 13, hem - top, s.jacket);
+  c.rect(195, 112, 1, hem - 112, s.jacket); // flaring out a little at the back
+  c.rect(192, top + 1, 3, hem - top - 1, s.jacketShade); // his back, in shadow
+  c.rect(195, 112, 1, hem - 112, s.jacketShade);
+  c.rect(185, top, 8, 1, s.jacketHi); // light on the shoulders
+  c.clear(194, top);
+  // a rounded chest at the front (not a square corner at the shoulder)
+  c.clear(182, top);
+  c.clear(182, top + 1);
+  c.clear(183, top);
+  // shirt down the front, starting a little below his collar: a narrow V
+  // that widens as it goes down, a button or two
+  c.px(184, top + 1, s.shirt); // collar point
+  c.rect(183, top + 2, 2, 2, s.shirt);
+  c.rect(182, top + 4, 3, 115 - top - 4, s.shirt);
+  c.rect(184, top + 4, 1, 113 - top - 4, s.shirtShade);
+  c.px(182, top + 2, s.jacket);
+  c.px(182, top + 3, s.jacket);
+  for (const by of [top + 8, top + 14, top + 20]) c.px(183, by, s.button);
+  // jacket: collar up behind his neck, lapel, a seam, pocket, hem
+  c.rect(187, top - 1, 3, 2, s.jacketShade);
+  c.line(185, top + 2, 185, top + 13, s.jacketShade); // lapel edge
+  c.line(186, top + 1, 187, top + 6, s.jacketHi); // lapel catching the light
+  c.line(190, top + 4, 190, hem - 2, s.jacketShade); // side seam
+  c.rect(186, 109, 4, 1, s.jacketShade); // pocket flap
+  c.rect(185, 118, 11, 1, s.jacketShade, 0.6); // a soft fold where it bunches on the seat
+  c.rect(185, hem - 1, 11, 1, s.jacketShade); // hem
+  // the open front: belt, then his jeans on his lap below it
+  c.rect(182, 113, 3, 1, s.belt);
+  c.px(182, 113, s.buckle);
+  c.rect(182, 114, 3, hem - 114, s.jeans);
+  c.px(184, 114, s.jeansShade);
+  c.rect(185, 114, 1, hem - 114, s.jacketShade); // the jacket's front edge
   // neck (his hair is short, so it shows)
   c.rect(185, 83 + dy, 4, 6, s.himSkin);
   c.px(188, 85 + dy, s.himSkinShade);
+  c.rect(185, 85 + dy, 3, 1, s.himSkinShade); // shadow under his jaw
   // head: short black hair with a fringe, facing left
   const hx = HIM_X - 1;
   const hy = 78 + dy;
@@ -580,15 +926,24 @@ function drawHim(c, dy, blink) {
   c.rect(hx - 7, hy - 4, 6, 2, s.himHair); // fringe
   c.px(hx - 6, hy - 2, s.himHair);
   c.px(hx - 4, hy - 2, s.himHair);
-  c.px(hx + 1, hy + 1, s.himSkinShade); // ear
+  c.px(hx - 7, hy - 2, s.himHair); // a strand of fringe
+  // his ear, and the hair trimmed short around it
+  c.px(hx + 1, hy + 1, s.himSkinShade);
   c.px(hx + 1, hy + 2, s.himSkinShade);
-  for (const [x, y] of [[hx - 2, hy - 5], [hx + 1, hy - 6], [hx + 3, hy - 4]]) c.px(x, y, s.himHairHi);
+  c.px(hx + 2, hy + 1, s.himSkin);
+  c.px(hx + 2, hy + 2, s.himSkinShade);
+  c.px(hx + 1, hy, s.himHair); // sideburn
+  // texture in his hair
+  for (const [x, y] of [[hx - 2, hy - 5], [hx + 1, hy - 6], [hx + 3, hy - 4], [hx - 4, hy - 6], [hx, hy - 7], [hx + 4, hy - 2], [hx - 5, hy - 4]]) c.px(x, y, s.himHairHi);
+  // eye, blush, jaw
   if (blink) c.px(hx - 5, hy + 1, s.himSkinShade);
   else {
     c.px(hx - 5, hy, s.eye);
     c.px(hx - 5, hy + 1, s.eye);
   }
   c.px(hx - 4, hy + 3, s.himBlush);
+  c.px(hx - 1, hy + 5, s.himSkinShade);
+  c.px(hx, hy + 5, s.himSkinShade);
 }
 
 function drawGlasses(c) {
@@ -630,19 +985,28 @@ function drawUsFrame(herDy, himDy, herBlink, himBlink) {
   drawHer(c, herDy, herBlink);
   drawHim(c, himDy, himBlink);
   drawGlasses(c);
-  // her arm: shoulder -> elbow -> hand around her glass
-  c.rect(133, 95 + herDy, 4, 3, PAL.herDress); // little sleeve
-  thickLine(c, 134, 97 + herDy, 140, 103, 3, PAL.herSkin);
+  // her arm: puff sleeve, shoulder -> elbow -> hand around her glass
+  thickLine(c, 135, 99 + herDy, 140, 103, 3, PAL.herSkin);
   thickLine(c, 140, 103, 146, 88, 3, PAL.herSkin);
+  c.px(140, 104, PAL.herSkinShade); // the crook of her elbow
+  c.px(141, 105, PAL.herSkinShade);
+  c.ellipse(135, 97 + herDy, 2.6, 2, PAL.herDressHi); // puff sleeve...
+  c.rect(133, 99 + herDy, 5, 1, PAL.herDressDeep); // ...gathered underneath
+  c.px(134, 95 + herDy, PAL.herDress);
   c.rect(145, 84, 3, 5, PAL.herSkin);
   c.rect(148, 85, 2, 3, PAL.herSkin); // fingers over the glass
+  c.px(148, 86, PAL.herSkinShade); // between her fingers
   c.px(145, 88, PAL.herSkinShade);
   // his arm: shoulder -> elbow -> hand around his pint
   thickLine(c, 184, 90 + himDy, 178, 101, 3, PAL.jacket);
   thickLine(c, 178, 101, 167, 86, 3, PAL.jacket);
-  c.rect(166, 85, 2, 3, PAL.jacketShade); // cuff
+  c.px(179, 100, PAL.jacketHi); // light on his elbow
+  c.px(176, 96, PAL.jacketHi);
+  c.rect(167, 85, 2, 3, PAL.jacketShade); // jacket cuff...
+  c.rect(166, 84, 1, 3, PAL.shirt); // ...and his shirt cuff peeking out
   c.rect(163, 81, 3, 5, PAL.himSkin);
   c.rect(162, 82, 2, 3, PAL.himSkin); // fingers over the glass
+  c.px(162, 83, PAL.himSkinShade); // between his fingers
   c.px(165, 85, PAL.himSkinShade);
   rimLight(c, PAL.warmLight, 0.28);
   c.outline(PAL.outline);
@@ -890,6 +1254,9 @@ console.log('Drawing the Oxford Scholar…');
 const layers = {
   street: drawStreet(),
   'street-lights': drawStreetLights(),
+  people: drawPeople(),
+  'walkers-left': drawWalkersLeft(),
+  'walkers-right': drawWalkersRight(),
   tram: drawTram(),
   interior: drawInterior(),
   lamps: drawLamps(),

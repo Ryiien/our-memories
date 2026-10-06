@@ -45,6 +45,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.facing = PLAYER_ROWS.includes(facing) ? facing : 'down';
     this.moving = false;
+    this.speedMultiplier = 1; // see setSpeedMultiplier()
     this.setFeet(feetX, feetY);
     this.play(`idle-${this.facing}`);
   }
@@ -75,7 +76,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       x /= len;
       y /= len;
     }
-    this.body.setVelocity(x * PLAYER.speed, y * PLAYER.speed);
+    const speed = PLAYER.speed * this.speedMultiplier;
+    this.body.setVelocity(x * speed, y * speed);
 
     this.moving = len > 0;
     if (this.moving) {
@@ -87,6 +89,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     } else {
       this.play(`idle-${this.facing}`, true);
     }
+  }
+
+  /** Walk faster (or slower); her walk animation speeds up to match. */
+  setSpeedMultiplier(multiplier) {
+    this.speedMultiplier = multiplier;
+    this.anims.timeScale = multiplier;
   }
 
   facingIsHorizontal() {

@@ -9,6 +9,7 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, FONT, PLAYER } from '../config.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
+import LoveLetters from '../systems/LoveLetters.js';
 import { musicKey } from '../systems/Music.js';
 import gameData from '../../data/game.json';
 import finaleData from '../../data/finale.json';
@@ -41,6 +42,7 @@ export default class Boot extends Phaser.Scene {
     this.load.image('momo', 'ui/momo.png');
     this.load.image('momo-hud', 'ui/momo-hud.png');
     this.load.image('momo-glow', 'ui/momo-glow.png');
+    this.load.image('bobber', 'fishing/bobber.png'); // marks the fishing spot (and is the bobber in Fishing)
 
     // Player
     this.load.spritesheet('player', 'sprites/player.png', {
@@ -120,5 +122,11 @@ export default class Boot extends Phaser.Scene {
     check(gameData.herName, 'game.json herName');
     check(gameData.titleLine, 'game.json titleLine');
     check(gameData.subtitle, 'game.json subtitle');
+    check(LoveLetters.settings.title, 'fishing.json title');
+    check(LoveLetters.settings.signature, 'fishing.json signature');
+    for (const l of LoveLetters.all()) {
+      check(l.title, `letter "${l.id}" title`);
+      check(l.text, `letter "${l.id}" text`);
+    }
   }
 }

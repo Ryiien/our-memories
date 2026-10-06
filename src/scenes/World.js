@@ -9,6 +9,8 @@
 //   Triggers       — object layer: rectangles with a "memoryId" property
 //   Spawn          — object layer: a point named "player"
 //   Momos          — object layer (optional): one point per momo to collect
+//   Fishing        — object layer (optional): rectangles where she can fish
+//                    for love letters (see scenes/Fishing.js)
 // Any tile whose tileset property collides = true blocks her, on any of
 // Ground / Decor / Collision.
 // -----------------------------------------------------------------------------
@@ -19,6 +21,7 @@ import TouchControls from '../objects/TouchControls.js';
 import { pixelText } from '../objects/Typewriter.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
+import LoveLetters from '../systems/LoveLetters.js';
 import SaveManager from '../systems/SaveManager.js';
 import Music from '../systems/Music.js';
 import { tilesetKey } from './Boot.js';
@@ -44,6 +47,8 @@ export default class World extends Phaser.Scene {
     this.readTriggers();
     this.createMarkers();
     this.createMomos();
+    this.updateMomoSpeed();
+    this.createFishingSpots();
     this.createPrompt();
 
     // Camera: follow her smoothly, never showing outside the map.
@@ -258,9 +263,36 @@ export default class World extends Phaser.Scene {
         onComplete: () => momo.glow.destroy(),
       });
       this.hud.momoCollected();
+      this.updateMomoSpeed();
       this.checkReveals();
       return; // one per frame is plenty
     }
+  }
+
+  /** With every momo eaten she's full of energy: she walks MOMO.allFoundSpeed times faster. */
+  updateMomoSpeed() {
+    const allEaten = Momos.count > 0 && SaveManager.momoCount() >= Momos.count;
+    this.player.setSpeedMultiplier(allEaten ? MOMO.allFoundSpeed : 1);
+  }
+
+  // ---- Fishing spots ----------------------------------------------------------------------
+  /**
+   * Places on the map's "Fishing" layer where she can fish for love letters.
+   * A little bobber floats in the water just off the sea-side (left) edge of
+   * each one, so she knows to go there.
+   */
+  createFishingSpots() {
+    this.fishingSpots = LoveLetters.spots().map((s) => {
+      const rect = new Phaser.Geom.Rectangle(s.x, s.y, s.width, s.height);
+      const marker = this.add.image(rect.x - 6, rect.centerY - 4, 'bobber').setOrigin(0.5, 0).setDepth(DEPTH.markers);
+      marker.setCrop(0, 0, marker.width, 6); // only the top shows above the water
+      this.tweens.add({ targets: marker, y: '+=1', duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      return rect;
+    });
+  }
+
+  inFishingSpot(feet) {
+    return this.fishingSpots.some((rect) => rect.contains(feet.x, feet.y));
   }
 
   // ---- "Press E" prompt ----------------------------------------------------------------
@@ -322,7 +354,15 @@ export default class World extends Phaser.Scene {
     const entered = zone && zone !== this.currentZone;
     this.currentZone = zone;
 
+    const button = this.touch.visible ? 'Tap ♥' : 'Press E';
+
     if (!zone) {
+      // Not on a memory: maybe at the end of the pier?
+      if (this.inFishingSpot(feet)) {
+        this.showPrompt(`${button} to fish`);
+        if (interact) this.openFishing();
+        return;
+      }
       this.prompt.setVisible(false);
       return;
     }
@@ -336,7 +376,6 @@ export default class World extends Phaser.Scene {
     }
 
     // Revisit, or a memory that needs a button press.
-    const button = this.touch.visible ? 'Tap ♥' : 'Press E';
     this.showPrompt(found ? `${button} to revisit` : `${button} to look closer`);
     if (interact) this.openMemory(memory);
   }
@@ -380,16 +419,30 @@ export default class World extends Phaser.Scene {
     this.prompt.setVisible(false);
     this.savePosition();
     const newlyFound = SaveManager.markFound(memory.id);
+    this.fadeToScene('Memory', { id: memory.id, newlyFound });
+  }
 
+  /** The love-letter fishing minigame (comes back through onResume, like a memory). */
+  openFishing() {
+    if (this.busy) return;
+    this.busy = true;
+    this.player.stop();
+    this.prompt.setVisible(false);
+    this.savePosition();
+    this.fadeToScene('Fishing');
+  }
+
+  /** Fade out, pause the world (and hide the HUD), and open another scene on top. */
+  fadeToScene(key, data) {
     this.cameras.main.fadeOut(TIMING.fadeOut, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.hud.scene.setVisible(false);
       this.scene.pause();
-      this.scene.launch('Memory', { id: memory.id, newlyFound });
+      this.scene.launch(key, data);
     });
   }
 
-  /** Called when the Memory (or Finale) scene hands control back. */
+  /** Called when the Memory (or Finale, or Fishing) scene hands control back. */
   onResume(_sys, data = {}) {
     this.input.keyboard.resetKeys();
     this.touch.release();

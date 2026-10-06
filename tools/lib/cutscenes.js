@@ -24,6 +24,7 @@ export const HER = {
   dress: true, // short dress, so her legs show
   shoes: P.white,
   piercings: true, // eyebrow piercing
+  partyDress: true, // her pink dress in detail (front/back, standing): see PARTY_DRESS below
 };
 export const HIM = {
   hair: 'short', // short black hair with a fringe; neck shows from the back and side
@@ -44,6 +45,52 @@ export const HIM = {
 
 const FIG_W = 24;
 const FIG_H = 48;
+
+// Her dress in detail, matching the walking sprite (tools/lib/sprites.js) and
+// the fishing scene: puff sleeves with a crease under them, a lace scoop
+// neckline, a berry sash (tied in a bow at the back, tails down the skirt),
+// soft pleats and a lace hem with little scallops. 14 wide (arms included),
+// drawn from the top of her body down to just above her legs; figure() puts it
+// on when partyDress is set and she's standing, seen from the front or back.
+const PARTY_DRESS = {
+  front: [
+    '.LLLdcsscdLLL.',
+    'LLLLddddddLLLL',
+    'EEEddddddddEEE',
+    'sSddddddddddSs',
+    'sSdLddddddLdSs',
+    'sSRRRRRRRRRRSs',
+    'sSdDdLddLdDdSs',
+    'sSdDdLddLdDdSs',
+    'ssdDdLddLdDdss',
+    'ssdDdLddLdDdss',
+    '.dDddLddLddDd.',
+    '.dDddLddLddDd.',
+    '.cCcCcCcCcCcC.',
+    '..c.c.c.c.c.c.',
+  ],
+  back: [
+    '.LLLddddddLLL.',
+    'LLLLddddddLLLL',
+    'EEEddddddddEEE',
+    'sSddddddddddSs',
+    'sSddbbddbbddSs',
+    'sSRbrbRRbrbRSs',
+    'sSdDbbRRbbDdSs',
+    'sSdDdLRRLdDdSs',
+    'ssdDdLRdLdDdss',
+    'ssdDdLRdLdDdss',
+    '.dDddLRdLddDd.',
+    '.dDddLdRLddDd.',
+    '.cCcCcCRcCcCC.',
+    '..c.c.c.c.c.c.',
+  ],
+  colors: {
+    d: P.herDress, D: P.herDressShade, L: P.herDressHi, E: P.herDressDeep,
+    c: P.cream, C: P.creamShade, R: P.berry, b: P.roseDark, r: P.rose,
+    s: P.herSkin, S: P.herSkinShade,
+  },
+};
 
 function sameColor(c, x, y, hex) {
   const [r, g, b, a] = c.get(x, y);
@@ -72,6 +119,7 @@ export function figure({
   shoes = P.woodDeep,
   tall = false,
   piercings = false,
+  partyDress = false,
   flip = false,
   dim = 0, // 0..1: blend towards night blue for dark scenes
 } = {}) {
@@ -194,6 +242,13 @@ export function figure({
     }
     c.rect(bx - 2, bodyTop + 8, 2, 2, skin);
     c.rect(bx + bw, bodyTop + 8, 2, 2, skin);
+  }
+
+  // her detailed dress replaces the plain one (and redraws the arms to match)
+  if (partyDress && dress && !sit && !tall && (view === 'front' || view === 'back')) {
+    const rows = PARTY_DRESS[view];
+    for (let y = bodyTop; y < bodyTop + rows.length; y++) for (let x = cx - 7; x < cx + 7; x++) c.clear(x, y);
+    c.map(rows, PARTY_DRESS.colors, cx - 7, bodyTop);
   }
 
   // head

@@ -1,0 +1,123 @@
+{
+  "title": "Fishing for love letters",
+  "music": "audio/waves.wav",
+  "seaweedChance": 0.3,
+  "maxSeaweedInARow": 2,
+  "signature": "Love, Ryan ♥",
+  "scene": {
+    "hand": [97, 104],
+    "rodLength": 44,
+    "waterY": 133,
+    "castX": [165, 212]
+  },
+  "layers": [
+    { "src": "fishing/sky.png" },
+    { "src": "fishing/clouds.png", "anim": "drift", "speed": 0.4 },
+    { "src": "fishing/sea.png", "anim": "slide", "amount": 2, "speed": 0.5 },
+    { "src": "fishing/glints.png", "anim": "twinkle" },
+    { "src": "fishing/pier.png" },
+    { "src": "fishing/her.png", "anim": "frames", "fps": 3 }
+  ],
+  "letters": [
+    {
+      "id": "letter-01",
+      "title": "Three years",
+      "text": "Three years, and I still get butterflies when I see your name pop up on my phone."
+    },
+    {
+      "id": "letter-02",
+      "title": "The bus stop",
+      "text": "I still remember holding your hand on our first date. I never wanted to let go."
+    },
+    {
+      "id": "letter-03",
+      "title": "Your laugh",
+      "text": "Your laugh is my favourite sound in the whole world. I'd happily spend forever making you laugh."
+    },
+    {
+      "id": "letter-04",
+      "title": "Momos",
+      "text": "You can have the last momo. You can always have the last momo."
+    },
+    {
+      "id": "letter-05",
+      "title": "Slow dance",
+      "text": "Our first slow dance at the formal. I'd dance with you a thousand times more."
+    },
+    {
+      "id": "letter-06",
+      "title": "Home",
+      "text": "Home isn't a place anymore. It's wherever you are."
+    },
+    {
+      "id": "letter-07",
+      "title": "Laufey",
+      "text": "Watching you sing along at the Palais, I wasn't looking at the stage much at all."
+    },
+    {
+      "id": "letter-08",
+      "title": "Stars",
+      "text": "That night in Apollo Bay I tried to count the stars. I gave up and just looked at you instead."
+    },
+    {
+      "id": "letter-09",
+      "title": "Thank you",
+      "text": "Thank you for being patient with me, for believing in me, and for making every day softer."
+    },
+    {
+      "id": "letter-10",
+      "title": "Pink hair",
+      "text": "Pink hair, dark roots, whatever colour comes next — you're beautiful in all of them."
+    },
+    {
+      "id": "letter-11",
+      "title": "Little things",
+      "text": "I love the little things most: your sleepy voice, your hand finding mine, the way you steal my fries."
+    },
+    {
+      "id": "letter-12",
+      "title": "Campfire",
+      "text": "Just the two of us, a crackling fire and a sky full of stars. I'd go back there with you any day."
+    },
+    {
+      "id": "letter-13",
+      "title": "High tea",
+      "text": "Tiny cakes and tiny sandwiches, and the biggest smile across the table. Best date ever."
+    },
+    {
+      "id": "letter-14",
+      "title": "Proud of you",
+      "text": "I'm so proud of you. Of everything you do, and everything you're going to do."
+    },
+    {
+      "id": "letter-15",
+      "title": "Bad days",
+      "text": "On your bad days, I'll be here. On your good days, I'll be here too, cheering the loudest."
+    },
+    {
+      "id": "letter-16",
+      "title": "Garden",
+      "text": "Valentine's Day at the botanic garden: a quiet pond, the boardwalk, and you. Perfect."
+    },
+    {
+      "id": "letter-17",
+      "title": "Lucky",
+      "text": "Out of everyone in the whole world, I got you. I'm the luckiest person alive."
+    },
+    {
+      "id": "letter-18",
+      "title": "A promise",
+      "text": "I promise to keep making you laugh, keep holding your hand, and keep choosing you, every day."
+    },
+    {
+      "id": "letter-19",
+      "title": "Our future",
+      "text": "I can't wait for all the places we haven't been yet, and all the memories we haven't made."
+    },
+    {
+      "id": "letter-20",
+      "title": "I love you",
+      "text": "I love you, Suzy. Yesterday, today, and every day after. Happy anniversary."
+    }
+  ]
+}

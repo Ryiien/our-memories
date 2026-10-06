@@ -96,6 +96,13 @@ const PAL = {
   herDress: '#f59ac4',
   herDressShade: '#d877a6',
   herDressHi: '#f8b6d6',
+  herDressDeep: '#b9608f', // the crease under her puff sleeve
+  lace: '#fff3dc', // lace neckline + hem
+  laceShade: '#efdcc0',
+  sash: '#9e4a5c', // her sash...
+  sashDark: '#7e3a4a',
+  sashLoop: '#c46a80', // ...tied in a bow at the back
+  sashLoopHi: '#e58f9e',
   herShoes: '#ffffff',
   piercing: '#e4e8f2',
   // him: short black hair with a fringe, open brown jacket, white shirt, jeans
@@ -110,7 +117,11 @@ const PAL = {
   shirt: '#f4f1ea',
   jeans: '#5b7bb5',
   jeansShade: '#465f94',
+  jeansHi: '#7a96c8',
+  belt: '#2e2220',
   himShoes: '#3b3550',
+  himShoesHi: '#5a5470', // laces
+  himSole: '#e2ddd2',
   // her marshmallow stick (held out over the fire from her armrest)
   stick: '#6b4a36',
   mallow: '#f6efe4',
@@ -653,7 +664,7 @@ function himHead(c, hx, hy, blink) {
 
 const HER_LOOK = {
   tall: 0, chair: PAL.herChair, chairShade: PAL.herChairShade,
-  body: PAL.herDress, bodyShade: PAL.herDressShade, bodyHi: PAL.herDressHi, skirtTo: 7, dress: true,
+  body: PAL.herDress, bodyShade: PAL.herDressShade, bodyHi: PAL.herDressHi, bodyDeep: PAL.herDressDeep, skirtTo: 7, dress: true,
   thigh: PAL.herSkin, thighShade: PAL.herSkinShade, shin: PAL.herSkin, shoes: PAL.herShoes,
   arm: PAL.herSkin, sleeve: PAL.herDress, skin: PAL.herSkin, skinShade: PAL.herSkinShade, head: herHead,
 };
@@ -688,11 +699,31 @@ function seated(c, hx, who, { blink = false, joint = null, marshmallow = false }
   // legs: thigh along the seat, shin down to the ground
   const knee = { x: hx + 10, y: SEAT_Y - 3 };
   thickLine(c, knee.x, knee.y, hx + 12, GROUND_Y - 3, 3, who.shin);
+  c.line(knee.x, knee.y + 2, hx + 12, GROUND_Y - 4, who.thighShade); // the back of the shin, in shadow
   c.rect(hx + 11, GROUND_Y - 2, 5, 2, who.shoes);
+  if (who.dress) {
+    c.rect(hx + 12, GROUND_Y - 3, 3, 1, who.shoes); // ankle strap
+  } else {
+    c.rect(hx + 12, GROUND_Y - 4, 3, 1, PAL.jeansHi); // turned-up cuffs
+    c.rect(hx + 11, GROUND_Y - 1, 5, 1, PAL.himSole);
+    c.px(hx + 13, GROUND_Y - 2, PAL.himShoesHi); // laces
+  }
   for (let x = hx - 4; x <= knee.x + 1; x++) {
     const inDress = who.dress && x <= hx + who.skirtTo;
     c.rect(x, SEAT_Y - 6, 1, 5, inDress ? who.body : who.thigh);
     c.px(x, SEAT_Y - 2, inDress ? who.bodyShade : who.thighShade);
+  }
+  if (who.dress) {
+    // a lace hem with little scallops (the pleats go on after her body, below)
+    for (let y = SEAT_Y - 7; y <= SEAT_Y - 2; y++) {
+      c.px(hx + who.skirtTo, y, y % 2 ? PAL.lace : PAL.laceShade);
+      if (y % 2 === 0) c.px(hx + who.skirtTo + 1, y, PAL.lace);
+    }
+  } else {
+    // jeans: light along the top of his thigh, a seam, his knee
+    for (let x = hx + 4; x <= knee.x; x++) c.px(x, SEAT_Y - 6, PAL.jeansHi);
+    c.line(hx + 4, SEAT_Y - 4, knee.x - 1, SEAT_Y - 4, who.thighShade);
+    c.px(knee.x + 1, SEAT_Y - 5, PAL.jeansHi);
   }
 
   // body, leaning back a little
@@ -704,7 +735,37 @@ function seated(c, hx, who, { blink = false, joint = null, marshmallow = false }
   }
   c.clear(sx - 4, shoulderY);
   c.rect(sx - 3, shoulderY, 6, 1, who.bodyHi);
-  if (who.dress) c.rect(hx - 5, SEAT_Y - 7, 13, 2, who.body); // her dress over her lap
+  if (who.dress) {
+    c.rect(hx - 5, SEAT_Y - 7, 13, 2, who.body); // her dress over her lap
+    // soft pleats along her skirt
+    for (const x of [hx, hx + 3]) {
+      c.rect(x, SEAT_Y - 6, 1, 4, who.bodyShade);
+      c.rect(x + 1, SEAT_Y - 6, 1, 4, who.bodyHi);
+    }
+    // lace along her neckline
+    c.px(sx + 2, shoulderY, PAL.lace);
+    c.px(sx + 3, shoulderY + 1, PAL.lace);
+    // the sash at her waist, tied in a bow at her back
+    const waist = SEAT_Y - 9;
+    for (const y of [waist, waist + 1]) {
+      const x0 = hx - 4 + lean(y);
+      c.rect(x0, y, 8, 1, y === waist ? PAL.sash : PAL.sashDark);
+    }
+    const bx = hx - 4 + lean(waist);
+    c.map(['bb.', 'brK', 'bb.'], { b: PAL.sashLoop, r: PAL.sashLoopHi, K: PAL.sashDark }, bx - 2, waist - 1);
+    c.px(bx - 1, waist + 2, PAL.sash); // a tail
+    c.px(bx - 1, waist + 3, PAL.sashDark);
+  } else {
+    // his jacket: collar up behind his neck, a lapel, a pocket flap, and it
+    // falls over his lap; a belt shows at the open front
+    c.rect(sx - 2, shoulderY - 1, 2, 1, who.bodyShade);
+    c.px(sx + 2, shoulderY, PAL.shirt); // shirt collar point
+    for (let y = shoulderY + 2; y < SEAT_Y - 6; y++) c.px(hx - 4 + lean(y) + 6, y, who.bodyShade); // lapel
+    c.rect(hx - 4 + lean(SEAT_Y - 10) + 2, SEAT_Y - 10, 3, 1, who.bodyShade); // pocket flap
+    c.rect(hx - 4, SEAT_Y - 6, 8, 3, who.body); // over his lap...
+    c.rect(hx - 4, SEAT_Y - 3, 8, 1, who.bodyShade); // ...to its hem
+    c.rect(hx - 4 + lean(SEAT_Y - 6) + 6, SEAT_Y - 6, 2, 1, PAL.belt);
+  }
   // neck + head
   c.rect(sx - 1, shoulderY - 3, 3, 3, who.skin);
   who.head(c, sx + 1, shoulderY - 9, blink);
@@ -721,7 +782,14 @@ function seated(c, hx, who, { blink = false, joint = null, marshmallow = false }
   const pose = joint ? JOINT_POSES[joint] : null;
   const elbow = pose ? { x: hx + pose.elbow[0], y: SEAT_Y + pose.elbow[1] } : { x: hx + 1, y: SEAT_Y - 10 };
   thickLine(c, sx, shoulderY + 1, elbow.x, elbow.y, 3, who.arm);
-  c.rect(sx - 1, shoulderY + 1, 3, 2, who.sleeve);
+  if (who.dress) {
+    // a puff sleeve, light on top, gathered underneath
+    c.ellipse(sx, shoulderY + 2, 2.2, 1.6, who.bodyHi);
+    c.rect(sx - 1, shoulderY + 4, 3, 1, who.bodyDeep);
+  } else {
+    c.rect(sx - 1, shoulderY + 1, 3, 2, who.sleeve);
+    c.px(elbow.x, elbow.y + 1, who.bodyHi); // light on his elbow
+  }
   if (!pose) {
     // forearm resting along the armrest, hand over the end
     thickLine(c, elbow.x, elbow.y, hx + 8, SEAT_Y - 10, 3, who.arm);
@@ -741,6 +809,8 @@ function seated(c, hx, who, { blink = false, joint = null, marshmallow = false }
   thickLine(c, elbow.x, elbow.y, hand.x - 1, hand.y + 1, 3, who.arm);
   const cuff = { x: Math.round(elbow.x + (hand.x - elbow.x) * 0.6), y: Math.round(elbow.y + (hand.y - elbow.y) * 0.6) };
   c.rect(cuff.x, cuff.y, 2, 1, who.sleeve);
+  const shirtCuff = { x: Math.round(elbow.x + (hand.x - elbow.x) * 0.8), y: Math.round(elbow.y + (hand.y - elbow.y) * 0.8) };
+  c.rect(shirtCuff.x, shirtCuff.y, 2, 1, PAL.shirt); // his shirt cuff peeking out
   c.rect(hand.x - 1, hand.y - 1, 3, 3, who.skin);
   c.px(hand.x + 2, hand.y, who.skinShade); // finger + thumb
   const [jx, jy] = pose.joint;

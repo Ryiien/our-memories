@@ -10,6 +10,7 @@ import World from './scenes/World.js';
 import HUD from './scenes/HUD.js';
 import Memory from './scenes/Memory.js';
 import Finale from './scenes/Finale.js';
+import Fishing from './scenes/Fishing.js';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO, // WebGL where possible
@@ -39,7 +40,7 @@ const game = new Phaser.Game({
   input: { activePointers: 3 },
 
   // Scene order = draw order when several run at once (later = on top).
-  scene: [Boot, Title, World, HUD, Memory, Finale],
+  scene: [Boot, Title, World, HUD, Memory, Finale, Fishing],
 });
 
 // -----------------------------------------------------------------------------

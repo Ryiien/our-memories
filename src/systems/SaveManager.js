@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
-// SaveManager — remembers which memories and momos she's found and where she
-// was standing, using the browser's localStorage.
+// SaveManager — remembers which memories, momos and love letters she's found
+// and where she was standing, using the browser's localStorage.
 //
 // Everything is wrapped in try/catch: if storage is unavailable (private
 // browsing, blocked cookies…), the game still works, it just won't remember
@@ -9,11 +9,13 @@
 import { SAVE_KEY } from '../config.js';
 import MemoryRegistry from './MemoryRegistry.js';
 import Momos from './Momos.js';
+import LoveLetters from './LoveLetters.js';
 
 function emptySave() {
   return {
     found: [], // memory ids, in the order she found them
     momos: [], // momo ids she's collected
+    letters: [], // love letter ids she's fished up
     position: null, // { x, y, facing } — her feet, in map pixels
     finaleSeen: false,
   };
@@ -29,6 +31,7 @@ function readStorage() {
       ...parsed,
       found: Array.isArray(parsed.found) ? parsed.found.filter((id) => typeof id === 'string') : [],
       momos: Array.isArray(parsed.momos) ? parsed.momos.filter((id) => typeof id === 'string') : [],
+      letters: Array.isArray(parsed.letters) ? parsed.letters.filter((id) => typeof id === 'string') : [],
     };
   } catch (err) {
     console.warn('[save] Could not read saved progress:', err);
@@ -89,6 +92,23 @@ const SaveManager = {
   collectMomo(id) {
     if (data.momos.includes(id)) return false;
     data.momos.push(id);
+    persist();
+    return true;
+  },
+
+  hasLetter(id) {
+    return data.letters.includes(id);
+  },
+
+  /** Only counts letters that are still in fishing.json. */
+  letterCount() {
+    return data.letters.filter((id) => LoveLetters.has(id)).length;
+  },
+
+  /** Returns true if this letter is new (not one she's caught before). */
+  catchLetter(id) {
+    if (data.letters.includes(id)) return false;
+    data.letters.push(id);
     persist();
     return true;
   },

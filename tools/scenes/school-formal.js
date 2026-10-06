@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { Canvas, rng, bayer } from '../lib/canvas.js';
+import { P } from '../lib/palette.js';
 import { ROOT, makeSaver, ring, thickLine, rimLight, softEllipse, text, textWidth, writePreview, stampBuilding, placeLamp } from '../lib/scene-kit.js';
 
 // ---- Palette: change colours here -----------------------------------------------
@@ -70,8 +71,8 @@ const PAL = {
   necklace: '#eef1f8',
   himSkin: '#f0c8ab',
   himSkinShade: '#d6a585',
-  himHair: '#3a2620', // dark brown curls
-  himHairHi: '#6a4636',
+  himHair: P.himHair, // short black hair with a fringe, as in the other scenes
+  himHairHi: P.himHairHi,
   shirtBlack: '#1e1b24',
   shirtBlackHi: '#3a3442',
   pantsBlack: '#151219',
@@ -366,16 +367,16 @@ function drawUs() {
   const c = new Canvas(W, H);
 
   // ---- him (right, facing left), tall ----
-  // legs + shoes
-  c.rect(166, 124, 4, 16, PAL.pantsBlack);
-  c.rect(170, 124, 4, 16, PAL.pantsBlack);
-  c.rect(170, 124, 1, 16, PAL.shirtBlackHi, 0.4);
-  c.rect(163, 140, 7, 2, PAL.shoes);
-  c.rect(170, 140, 5, 2, PAL.shoes);
-  // black collared shirt
-  c.rect(164, 110, 11, 15, PAL.shirtBlack);
+  // legs + shoes (slim)
+  c.rect(166, 124, 3, 16, PAL.pantsBlack);
+  c.rect(169, 124, 3, 16, PAL.pantsBlack);
+  c.rect(169, 124, 1, 16, PAL.shirtBlackHi, 0.4);
+  c.rect(163, 140, 6, 2, PAL.shoes);
+  c.rect(169, 140, 4, 2, PAL.shoes);
+  // black collared shirt (slim)
+  c.rect(164, 110, 9, 15, PAL.shirtBlack);
   c.rect(165, 110, 2, 13, PAL.shirtBlackHi, 0.6); // light catching the front
-  c.rect(164, 123, 11, 2, PAL.pantsBlack); // belt
+  c.rect(164, 123, 9, 2, PAL.pantsBlack); // belt
   // navy tie (same navy as her dress)
   c.rect(164, 110, 2, 2, PAL.navy);
   c.px(164, 110, PAL.navyLight);
@@ -386,16 +387,25 @@ function drawUs() {
   // neck
   c.rect(167, 105, 3, 5, PAL.himSkin);
   c.px(169, 107, PAL.himSkinShade);
-  // head tilted towards her
-  c.circle(168, 101, 5.6, PAL.himHair);
+  // head tilted towards her. His hair is drawn the same way as in the Oxford
+  // Scholar and Collins scenes: short and black, covering the top of his head
+  // and the back down to his ear, with a fringe across his forehead.
+  const hx = 168;
+  const hy = 101;
+  c.circle(hx, hy, 5.6, PAL.himSkin);
   c.ellipse(165, 103, 3.6, 4, PAL.himSkin);
-  // curly hair: bumps on top and at the back, curls falling on the forehead
-  for (const [x, y, rad] of [[164, 96, 2.2], [168, 94.5, 2.4], [172, 96, 2.2], [174, 99.5, 2], [173, 103, 1.8], [162, 98, 1.8]])
-    c.circle(x, y, rad, PAL.himHair);
-  for (const [x, y] of [[163, 95], [167, 93], [171, 95], [174, 98], [161, 97], [169, 96]]) c.px(x, y, PAL.himHairHi);
-  c.px(162, 100, PAL.himHair);
-  c.px(163, 101, PAL.himHair);
-  c.px(165, 100, PAL.himHair);
+  for (let y = hy - 7; y <= hy + 3; y++)
+    for (let x = hx - 7; x <= hx + 7; x++) {
+      const inHead = (x - hx) ** 2 + (y - hy) ** 2 <= 5.6 * 5.6 + 4;
+      if (!inHead) continue;
+      if (y <= hy - 2 || (x >= hx + 2 && y <= hy + 2)) c.px(x, y, PAL.himHair);
+    }
+  c.rect(hx - 6, hy - 2, 5, 2, PAL.himHair); // fringe
+  c.px(hx - 5, hy, PAL.himHair);
+  c.px(hx - 3, hy, PAL.himHair);
+  c.px(hx + 1, hy + 2, PAL.himSkinShade); // ear
+  c.px(hx + 1, hy + 3, PAL.himSkinShade);
+  for (const [x, y] of [[hx - 2, hy - 4], [hx + 1, hy - 5], [hx + 3, hy - 3]]) c.px(x, y, PAL.himHairHi);
   c.px(163, 104, PAL.eye); // eye (looking down at her)
   c.px(164, 105, PAL.blush, 0.6);
 

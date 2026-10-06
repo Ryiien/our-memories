@@ -10,8 +10,8 @@
  "tiledversion": "1.11.0",
  "type": "map",
  "version": "1.10",
- "nextlayerid": 8,
- "nextobjectid": 44,
+ "nextlayerid": 9,
+ "nextobjectid": 48,
  "layers": [
   {
    "id": 1,
@@ -9836,6 +9836,29 @@
        "value": "collins-coffee-house"
       }
      ]
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "name": "Fishing",
+   "type": "objectgroup",
+   "draworder": "topdown",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "objects": [
+    {
+     "id": 47,
+     "name": "end of the pier",
+     "type": "",
+     "x": 32,
+     "y": 208,
+     "width": 32,
+     "height": 32,
+     "rotation": 0,
+     "visible": true
     }
    ]
   },

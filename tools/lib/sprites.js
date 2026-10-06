@@ -24,6 +24,13 @@ const SPR = {
   p: P.silver, // eyebrow piercing
   d: P.herDress,
   D: P.herDressShade,
+  L: P.herDressHi, // puff sleeves, light on the pleats
+  E: P.herDressDeep, // creases under the sleeves
+  c: P.cream, // lace (neckline and hem)
+  C: P.creamShade,
+  R: P.berry, // the sash (dark enough to stand out from the dress), its knot and tails
+  b: P.roseDark, // the bow's loops...
+  r: P.rose, // ...lit on the inside
   W: P.white, // shoes
 };
 
@@ -31,6 +38,10 @@ const SPR = {
 // Her hair: a grown-out pink bob — dark roots on top, pink lengths ending at
 // her jaw, and a side-swept fringe that's dark at the root and pink at the
 // ends. Eyebrow piercing is one silver pixel.
+// Her dress matches the one in the fishing scene (tools/scenes/fishing.js):
+// puff sleeves with a crease under them, a lace scoop neckline, a rose sash
+// tied in a bow at the back (tails down the skirt), soft pleats, and a lace
+// hem (row 17). Row 18 is the outline under the hem, added per frame.
 const FRONT = [
   '................',
   '.....oooooo.....',
@@ -44,12 +55,12 @@ const FRONT = [
   '..ohhssmmsshho..',
   '..ohhhsssshhho..',
   '..oooossssoooo..',
-  '...oddddddddo...',
+  '..oLLdcsscdLLo..',
+  '..oEddddddddEo..',
   '..osddddddddso..',
-  '..osddddddddso..',
-  '..osDddddddDso..',
-  '..oDddddddddDo..',
-  '..oooooooooooo..',
+  '..osRRRRRRRRso..',
+  '..osDdLddLdDso..',
+  '.ocCcCcCcCcCcCo.',
 ];
 
 // From behind, the bob ends at the nape so a little of her neck shows.
@@ -66,12 +77,12 @@ const BACK = [
   '..ohhhhhhhhhho..',
   '..ohhhhhhhhhho..',
   '...ooossssooo...',
-  '...oddddddddo...',
-  '..osddddddddso..',
-  '..osddddddddso..',
-  '..osDddddddDso..',
-  '..oDddddddddDo..',
-  '..oooooooooooo..',
+  '..oLLddddddLLo..',
+  '..oEddddddddEo..',
+  '..osdbbddbbdso..',
+  '..osRbrRRrbRso..',
+  '..osDbdRRdbDso..',
+  '.ocCcCcRRcCcCco.',
 ];
 
 // Facing right (left is mirrored). The back of the bob sticks out one pixel
@@ -90,12 +101,12 @@ const SIDE = [
   '..ohhhhhhsmso...',
   '..ohhhhhhsso....',
   '..oooooosso.....',
-  '...odddddddo....',
-  '...oddddsddo....',
-  '...oddddsddo....',
-  '...odddDsDdo....',
-  '...odddDdddo....',
-  '...ooooooooo....',
+  '...odddLLLso....',
+  '...oddddEddo....',
+  '..obddddsddo....',
+  '..oRRRRRsRRo....',
+  '..obRdDdsDddo...',
+  '..ocCcCcCcCcCo..',
 ];
 
 // Legs for rows 18–23, per walk frame [stand, stepA, stand, stepB].
@@ -113,11 +124,17 @@ const LEGS_SIDE = [
   ['.......ss.......', '.......ss.......', '.......ss.......', '.......WWW......', '.......ooo......', '................'],
 ];
 
+/** Row 18: an outline under the whole hem, except where a leg comes out. */
+function hemLine(hem, legRow) {
+  return [...hem].map((ch, x) => (ch === '.' || (legRow[x] !== '.' && legRow[x] !== 'o') ? legRow[x] : 'o')).join('');
+}
+
 function frame(upper, legs, bob) {
-  const rows = [...upper, ...legs];
   // "bob" lifts the upper body 1px on step frames for a bouncy walk.
-  if (bob) return [...upper.slice(1), upper[upper.length - 1], ...legs];
-  return rows;
+  // (the skirt row is doubled so the hem stays put and the dress just swishes)
+  const n = upper.length;
+  const body = bob ? [...upper.slice(1, n - 1), upper[n - 2], upper[n - 1]] : upper;
+  return [...body, hemLine(body[body.length - 1], legs[0]), ...legs.slice(1)];
 }
 
 export function buildPlayerSheet() {

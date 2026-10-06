@@ -7,7 +7,8 @@ cutscene (layered images, gently animated) with a title, date and caption, until
 she presses Continue. Some memories are hidden. Finding them all plays a finale.
 Ten little glowing momos (Nepali dumplings) are scattered around the map to
 collect; the secret first-date memory only appears once she has all ten and
-every other memory.
+every other memory. At the end of the pier she can go fishing for 20 love
+letters (a small minigame; seaweed means try again).
 
 **Tone:** cosy, soft, charming — Stardew Valley / Animal Crossing. Gentle motion,
 warm palette, no fail states, nothing stressful. The person who maintains this
@@ -30,7 +31,8 @@ quests, etc.). Obvious extension points are marked with `// TODO` comments.
 - Tools (Node): `pngjs` (placeholder art), `sharp` (photo pixelation).
 - Commands: `npm run dev`, `npm run build`, `npm run preview`,
   `npm run placeholders [-- --force]`, `npm run pixelate -- <photo> [out] [opts]`,
-  `npm run momos` (writes the map's `Momos` layer from the spot list in `tools/place-momos.js`).
+  `npm run momos` (writes the map's `Momos` layer from the spot list in `tools/place-momos.js`),
+  `npm run scene:fishing` (fishing art + the map's `Fishing` spot).
 - In dev, `window.game` is the Phaser game (e.g. `game.scene.getScene('World')`).
 - Data problems are `console.warn`ed with friendly messages; in dev the title
   screen shows "! N data warnings".
@@ -57,6 +59,7 @@ our-memories/
 │   ├── tiles/tileset.png      # 16x16 tiles, 8 columns
 │   ├── sprites/player.png     # 4x4 frames of 16x24
 │   ├── memories/<id>/*.png    # one folder per memory (+ memories/finale/)
+│   ├── fishing/               # the fishing minigame's layers + sprites (bobber, ripple, bubble, envelope, seaweed, paper)
 │   ├── ui/                    # font.png+font.xml, heart, panel, sparkle, touch controls, momo, momo-hud (+ dish of achar), momo-glow
 │   └── audio/                 # music (wav/mp3/ogg)
 ├── maps/world.json            # the Tiled map (JSON, embedded tileset)
@@ -64,6 +67,7 @@ our-memories/
 ├── data/memories.json         # every memory
 ├── data/finale.json           # finale text + layers
 ├── data/game.json             # her name, title text, optional world music
+├── data/fishing.json          # the love letters + fishing settings and background layers
 ├── tools/
 │   ├── make-placeholders.js   # generates all placeholder art/audio/map (never overwrites without --force)
 │   ├── pixelate-photo.js      # photo -> 320x180 limited-palette PNG
@@ -76,9 +80,10 @@ our-memories/
 └── src/
     ├── main.js                # Phaser config + integer zoom fitting
     ├── config.js              # ALL tunable constants (sizes, speeds, timings, colours, depths)
-    ├── scenes/  Boot, Title, World, HUD, Memory, Finale
+    ├── scenes/  Boot, Title, World, HUD, Memory, Finale, Fishing
     ├── objects/ Player, TouchControls, Typewriter (pixel text + typing), ContinueHeart
-    └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades), Momos (reads the Momos layer)
+    └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades), Momos (reads the Momos layer),
+                 LoveLetters (reads data/fishing.json + the map's Fishing layer)
 ```
 
 Additions beyond the original brief, and why: `data/game.json` (title text and
@@ -94,6 +99,8 @@ must survive scene changes), `objects/Typewriter.js` + `ContinueHeart.js`
 walking into a trigger pauses World and launches `Memory` → Continue stops
 Memory and resumes World (`events.on('resume', …, data)`) → after the last
 memory's toast, World launches `Finale` the same way (once; `finaleSeen`).
+Standing in a `Fishing` spot shows "Press E to fish"; that launches `Fishing`
+the same way, and Leave / Esc resumes World.
 
 Memory/Finale load their own layer images and music on open (lazy), so adding
 memories never slows startup.
@@ -151,6 +158,33 @@ returning `{ objects, update(t) }`), add its options to `LAYER_FIELDS` in
 MemoryRegistry.js, and document it here + README. Missing images / unknown
 presets warn and are skipped / shown static — never crash.
 
+## data/fishing.json (the love-letter minigame)
+
+```json
+{
+  "title": "Fishing for love letters",  // fades in at the top for a moment
+  "music": "audio/waves.wav",           // optional
+  "seaweedChance": 0.3,                 // 0..1 chance a catch is seaweed (try again)
+  "maxSeaweedInARow": 2,                // pity rule: never more seaweed than this in a row
+  "signature": "Love, Ryan ♥",          // right-aligned under every letter
+  "scene": { "hand": [97, 104], "rodLength": 44, "waterY": 133, "castX": [165, 212] },
+  "layers": [ ... ],                    // background, same format as memory layers
+  "letters": [ { "id": "letter-01", "title": "...", "text": "..." } ]
+}
+```
+`scene` = where things are in the art (her hand holding the rod, the rod's length,
+the sea surface the bobber floats on, the cast's min/max x) — keep it in sync with
+`tools/scenes/fishing.js`. Feel (timings, rod angles, colours) is `FISHING` in
+config.js. Flow (scenes/Fishing.js): ready → cast (rod swings, bobber arcs out) →
+waiting (random `waitMs`, maybe a fake nibble or two) → bite (bubbles for `biteMs`;
+pressing early does nothing, missing it just waits again — no fail state, and no
+instruction text on screen)
+→ hook → reel → seaweed (dangles, dropped back) or a letter (envelope → letter
+paper, typed out, Continue). Letters: a random unread one; once all are read,
+any except the last one. Letters are not part of the memory count or finale.
+The marker in the world is `bobber.png` (loaded by Boot), floating in the
+water just left of each spot.
+
 ## data/finale.json / data/game.json
 
 - finale: `title`, `lines` (array, typed one after another, centred), `signature`,
@@ -176,11 +210,16 @@ presets warn and are skipped / shown static — never crash.
     `memoryId`. A trigger fires when her **feet** (centre of her 10×6 collision
     box) are inside the rectangle.
   - `Spawn` — object layer with a point named `player` (her feet position).
+  - `Fishing` — object layer (optional) of rectangles where she can fish
+    (`npm run scene:fishing` writes one at the end of the pier, tiles x 2–3, y 13–14;
+    momo-1 also sits there). Hidden if `fishing.json` has no letters.
   - `Momos` — object layer (optional) of points, one per momo, named `momo-1`…
     (the name is the save id). Point = her feet position to collect it (within
     `MOMO.pickupRadius` in config.js). `npm run momos` rewrites this layer from
     `SPOTS` in `tools/place-momos.js`; re-run it after `placeholders --force`.
     The HUD's top-right counter shows found/total; it's hidden if there are none.
+    Once she has every momo she walks `MOMO.allFoundSpeed` (2) times faster
+    (World.updateMomoSpeed → Player.setSpeedMultiplier, walk animation too).
 - Boot cross-checks: every memory needs a trigger and every trigger a memory.
 - **Buildings as their own tileset:** a one-off building can be a separate
   embedded tileset whose image is the whole facade cut into 16×16 tiles (e.g.
@@ -231,7 +270,7 @@ presets warn and are skipped / shown static — never crash.
   additions; re-run the scene scripts (`npm run scene:formal`, `npm run
   scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`,
   `npm run scene:camping`, `npm run scene:collins`, `npm run scene:street`,
-  `npm run scene:venues`, then `npm run momos`) to re-add them
+  `npm run scene:venues`, `npm run scene:fishing`, then `npm run momos`) to re-add them
   (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
@@ -268,8 +307,15 @@ blocker(44)/grass edge.
   jaw; a little neck shows from behind), grown out so the black roots show;
   side-swept fringe that's dark at the root and pink at the ends. Eyebrow
   piercing (one silver pixel). No nose ring. Short **light-pink** dress, white
-  shoes. In side views the back of her hair sticks out 1 px past the dress so
-  head and body don't merge.
+  shoes. The dress (walking sprite + fishing scene): puff sleeves (lighter, with
+  a darker crease under them), a cream lace scoop neckline, a berry/rose sash at
+  the waist tied in a **bow at the back** (tails down the skirt), soft pleats, and
+  a cream **lace hem**. Colours: `herDress`/`herDressShade`/`herDressHi`/
+  `herDressDeep`, sash `berry` + `roseDark`/`rose`, lace `cream`/`creamShade`.
+  In side views the back of her hair sticks out 1 px past the dress so
+  head and body don't merge. The chibi `figure()` draws the same dress
+  (`PARTY_DRESS` in `tools/lib/cutscenes.js`, on via `partyDress` in the `HER`
+  preset) for standing front/back views; side views (fishing) draw it in the scene script.
 - **Him (the partner):** tall, white with a warm (not pale) skin tone, **short**
   black hair with a fringe (neck visible from back and side), open **brown
   jacket** (shoulder highlights, lapels, pockets, cuffs) over a white shirt, jeans.
@@ -296,7 +342,7 @@ blocker(44)/grass edge.
 ## Saves
 
 localStorage key `our-memories-save-v1` (`SAVE_KEY`):
-`{ found: [ids], momos: [ids], position: {x, y, facing}, finaleSeen }`. All access is
+`{ found: [ids], momos: [ids], letters: [ids], position: {x, y, facing}, finaleSeen }`. All access is
 try/catch'd; the game runs without storage. Unknown ids in a save are ignored
 in counts. A saved position inside a wall (map edited) falls back to Spawn.
 
@@ -306,5 +352,6 @@ in counts. A saved position inside a wall (map edited) falls back to Spawn.
 Continue returns to the same spot → revisit prompt works → momos collect and
 the top-right counter ticks up → all 10 momos + every other memory reveals the
 first date ("A hidden memory appeared...") → refresh keeps progress → all found
-plays finale. Test phone landscape (dev server prints a
+plays finale → end of the pier: fish (cast, early press does nothing, hook on
+bubbles, letter + seaweed, missed bite, Leave/Esc) and the letter counter persists. Test phone landscape (dev server prints a
 Network URL). Check the browser console for `[memories.json]` warnings.

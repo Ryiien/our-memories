@@ -48,6 +48,13 @@ const PAL = {
   herDress: '#f59ac4',
   herDressShade: '#d877a6',
   herDressHi: '#f8b6d6',
+  herDressDeep: '#b9608f', // creases under her puff sleeves
+  lace: '#fff3dc', // lace neckline + hem
+  laceShade: '#efdcc0',
+  sash: '#9e4a5c', // her sash...
+  sashDark: '#7e3a4a',
+  sashLoop: '#c46a80', // ...tied in a bow at the back
+  sashLoopHi: '#e58f9e',
   herShoes: '#ffffff',
   // him: short black hair, brown jacket (long, over his jeans), jeans
   himHair: '#231c24',
@@ -59,6 +66,8 @@ const PAL = {
   jacketHi: '#ab7a52',
   jeans: '#5b7bb5',
   jeansShade: '#465f94',
+  jeansHi: '#7a96c8',
+  shirt: '#f4f1ea', // his white shirt (collar + cuffs peeking out of the jacket)
   outline: '#2a1f2a',
   moonlight: '#fff3dc',
 };
@@ -191,13 +200,15 @@ const HER_LOOK = {
   body: PAL.herDress, bodyShade: PAL.herDressShade, bodyHi: PAL.herDressHi,
   knee: PAL.herSkin, kneeShade: PAL.herSkinShade, lap: PAL.herDress, lapShade: PAL.herDressShade,
   arm: PAL.herSkin, armShade: PAL.herSkinShade, sleeve: PAL.herDress,
+  sleeveHi: PAL.herDressHi, sleeveDeep: PAL.herDressDeep, lace: PAL.lace, laceShade: PAL.laceShade,
+  sash: PAL.sash, sashDark: PAL.sashDark, sashLoop: PAL.sashLoop, sashLoopHi: PAL.sashLoopHi,
   skin: PAL.herSkin, head: herHead,
 };
 const HIM_LOOK = {
   shoulders: 8, height: 22, headR: 6.2, knees: 10, lapWidth: 8, jacket: true,
   body: PAL.jacket, bodyShade: PAL.jacketShade, bodyHi: PAL.jacketHi,
   knee: PAL.jeans, kneeShade: PAL.jeansShade, lap: PAL.jacketShade, lapShade: PAL.jacketShade,
-  arm: PAL.jacketShade, armShade: PAL.jacketShade,
+  arm: PAL.jacketShade, armShade: PAL.jacketShade, kneeHi: PAL.jeansHi, shirt: PAL.shirt,
   skin: PAL.himSkin, head: himHead,
 };
 
@@ -209,9 +220,19 @@ function sittingFromBehind(c, cx, who) {
     if (side === who.kneeUp) continue;
     c.ellipse(cx + side * who.knees, FEET - 2, 4, 2.5, who.knee);
     c.rect(cx + side * who.knees - 3, FEET, 7, 1, who.kneeShade);
+    if (who.kneeHi) {
+      c.px(cx + side * who.knees - 1, FEET - 4, who.kneeHi);
+      c.px(cx + side * who.knees, FEET - 4, who.kneeHi);
+    }
   }
   c.ellipse(cx, FEET - 2, who.lapWidth, 2.5, who.lap);
   c.rect(cx - who.lapWidth + 2, FEET, who.lapWidth * 2 - 3, 1, who.lapShade);
+  if (who.lace) {
+    for (let x = cx - who.lapWidth + 2; x <= cx + who.lapWidth - 2; x++) {
+      c.px(x, FEET, x % 2 ? who.lace : who.laceShade);
+      if (x % 2 === 0) c.px(x, FEET + 1, who.lace, 0.8);
+    }
+  }
   // a knee pulled up beside the body: shin up from the foot, rounded knee on top
   const kneeX = cx + (who.kneeUp ?? 0) * (who.kneeUpOut ?? who.knees - 1);
   if (who.kneeUp) {
@@ -234,11 +255,30 @@ function sittingFromBehind(c, cx, who) {
   }
   c.rect(cx - sh + 1, bottom, sh * 2 - 1, 1, who.bodyShade); // hem
   if (who.jacket) {
-    c.rect(cx, top + 4, 1, bottom - top - 5, who.bodyShade); // back seam
+    c.rect(cx, top + 4, 1, bottom - top - 5, who.bodyShade); // back seam...
+    c.px(cx - 1, bottom - 3, who.bodyHi); // ...opening into a vent at the hem
+    c.px(cx + 1, bottom - 3, who.bodyHi);
     c.rect(cx - 3, top - 1, 7, 2, who.bodyShade); // collar
+    c.rect(cx - 2, top - 2, 4, 1, who.shirt); // his shirt collar peeking out above it
     c.rect(cx + 2, top + 1, 3, 1, who.bodyHi); // light on his shoulder
+    c.px(cx - sh + 3, top + 1, who.bodyShade); // shoulder seams
+    c.px(cx + sh - 3, top + 1, who.bodyShade);
+    c.px(cx - 4, bottom - 1, who.bodyHi); // a soft fold where the jacket rests on the blanket
+    c.px(cx + 4, bottom - 1, who.bodyHi);
   } else {
-    c.rect(cx - sh + 2, FEET - 9, sh * 2 - 3, 1, who.bodyShade); // the waist of her dress
+    // her neckline, trimmed with lace
+    c.rect(cx - 3, top, 6, 1, who.lace);
+    // soft pleats down her skirt below the waist
+    for (const px of [cx - 5, cx - 3, cx + 3, cx + 5]) {
+      c.rect(px, FEET - 7, 1, 4, who.bodyShade);
+      c.rect(px + 1, FEET - 7, 1, 4, who.bodyHi);
+    }
+    // the sash at her waist, tied in a bow in the middle of her back, tails hanging down
+    c.rect(cx - sh + 2, FEET - 10, sh * 2 - 3, 1, who.sash);
+    c.rect(cx - sh + 2, FEET - 9, sh * 2 - 3, 1, who.sashDark);
+    c.map(['bb.bb', 'brKrb', 'bb.bb'], { b: who.sashLoop, r: who.sashLoopHi, K: who.sashDark }, cx - 2, FEET - 11);
+    for (const [x, y, col] of [[cx - 1, FEET - 8, who.sash], [cx - 1, FEET - 7, who.sashDark], [cx - 2, FEET - 6, who.sash], [cx + 1, FEET - 8, who.sashDark], [cx + 1, FEET - 7, who.sash], [cx + 2, FEET - 6, who.sashDark]])
+      c.px(x, y, col);
   }
   // arms down our sides, hands resting on our knees
   for (const side of [-1, 1]) {
@@ -255,7 +295,14 @@ function sittingFromBehind(c, cx, who) {
       thickLine(c, sx + side, top + 10, sx + side * 2, FEET - 5, 2, col);
       c.rect(sx + side * 2 - (side < 0 ? 1 : 0), FEET - 5, 2, 2, who.skin); // hand on the knee
     }
-    if (who.sleeve) c.rect(sx - (side < 0 ? 1 : 0), top + 1, 2, 3, who.sleeve);
+    if (who.sleeve) {
+      // a puff sleeve on each shoulder, light on top, gathered underneath
+      c.ellipse(sx, top + 2, 2, 1.6, who.sleeveHi);
+      c.rect(sx - 1, top + 4, 3, 1, who.sleeveDeep);
+    }
+    if (who.shirt && side !== who.kneeUp) {
+      c.rect(sx + side * 2 - (side < 0 ? 1 : 0), FEET - 6, 2, 1, who.shirt); // shirt cuff above his hand
+    }
   }
   // a short neck, then the head
   c.rect(cx - 2, top - 3, 4, 3, who.skin);

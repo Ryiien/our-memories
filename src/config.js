@@ -62,6 +62,30 @@ export const MOMO = {
   bobMs: 1100, // one float up (or down)
   glowMs: 1300, // one glow brighten (or dim)
   glowAlpha: [0.7, 1], // the glow breathes between these
+  allFoundSpeed: 2, // once she has every momo she walks this many times faster
+};
+
+// ---- Fishing (the love-letter minigame off the end of the pier) --------------
+// Letters, the seaweed chance and where things sit in the art are in
+// data/fishing.json; this is just how it feels.
+export const FISHING = {
+  rodRest: -40, // rod angle in degrees (0 = pointing right, -90 = straight up)
+  rodBack: -105, // swung back over her shoulder before a cast
+  rodForward: -22, // flicked forward as she lets go
+  rodReel: -62, // lifted up while reeling in
+  swingBackMs: 240,
+  swingForwardMs: 200,
+  flightMs: 650, // the bobber flying out to the water
+  flightHeight: 34, // how high its arc goes (pixels)
+  waitMs: [1800, 5000], // a bite comes after a random wait between these
+  nibbles: 2, // up to this many little false nibbles while she waits
+  biteMs: 2200, // how long the bubbles last (her window to hook it — generous on purpose)
+  bubbleEveryMs: 70, // a new bubble this often while they last
+  reelMs: 950,
+  seaweedShowMs: 1700, // how long the seaweed dangles before she tosses it back
+  lineColor: 0xfff3dc,
+  rodColor: 0x3e2630,
+  rodHandleColor: 0xc9a27a,
 };
 
 // ---- Audio -----------------------------------------------------------------

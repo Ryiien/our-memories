@@ -46,10 +46,12 @@ Other commands:
 | `npm run scene:collins` | redraws the high tea scene + Collins Coffee House on the map (see §6) |
 | `npm run scene:street` | redraws the street props along Collins Coffee House, the pub and RMIT (see §6) |
 | `npm run scene:venues` | redraws the props in front of the Palais Theatre and San Remo (see §6) |
+| `npm run scene:fishing` | redraws the fishing minigame (pier at sunset, bobber, letter paper…) + the fishing spot on the map (see §6) |
 
 ### Controls
 - **Move:** WASD or arrow keys · phone: put your thumb anywhere on the left half
 - **Interact / Continue:** Space, Enter or E · phone: the ♥ button (or tap the cutscene)
+- **Fishing** (at the end of the pier): E / Space / tap to cast, and again when bubbles appear to hook · Esc or the Leave button to go back
 
 ### Handy for testing
 - **Wipe progress:** on the title screen, hold **R** for 3 seconds (on a phone:
@@ -64,8 +66,36 @@ Other commands:
 - **Her name, title-screen text:** `data/game.json`
 - **The finale message:** `data/finale.json` (`lines` type out one after another)
 - **A memory's title/date/caption:** `data/memories.json`
+- **The love letters she can fish up:** `data/fishing.json` (see below)
 
 Save the file and the dev server reloads the game by itself.
+
+### The love letters (fishing off the pier)
+
+At the end of the pier she can press E to go fishing. She casts, waits, and
+when bubbles appear around the bobber she presses again to hook something:
+either one of the letters in `data/fishing.json` (a random one she hasn't read
+yet — then any of them once she's read them all) or a clump of seaweed to toss
+back. Missing the bubbles is fine; more come along. The top-right counter shows
+how many letters she's found (saved like everything else).
+
+```json
+{
+  "title": "Fishing for love letters",   // shown at the top for a moment
+  "music": "audio/waves.wav",            // optional
+  "seaweedChance": 0.3,                  // 0–1: how often she gets seaweed instead of a letter
+  "maxSeaweedInARow": 2,                 // never more seaweed than this in a row
+  "signature": "Love, Ryan ♥",           // under every letter
+  "letters": [
+    { "id": "letter-01", "title": "Three years", "text": "Three years, and I still..." }
+  ]
+}
+```
+
+Add, remove or rewrite letters freely — keep each `id` unique (her save
+remembers letters by id, so keep a letter's id if you only change its words).
+Keep each one to a few sentences so it fits on the paper. `scene` and
+`layers` describe the background art; leave them alone unless you redraw it.
 
 ---
 
@@ -154,6 +184,7 @@ For `drift`, make the left and right edges of the image match so the loop is sea
 | `Triggers` | rectangles (Insert Rectangle, `R`) with a custom property `memoryId` |
 | `Spawn` | one point (Insert Point) named `player`: where a new game starts |
 | `Momos` | one point per momo to collect, named `momo-1`, `momo-2`… |
+| `Fishing` | rectangles where she can fish for love letters (the end of the pier). A little bobber floats in the water just left of each one |
 
 Water, walls, tree trunks, fences, rocks etc. already block her: their tiles
 have a `collides = true` property in the tileset. To make another tile solid:
@@ -284,11 +315,14 @@ Layers in `public/assets/memories/oxford-scholar/` (back to front):
 |---|---|---|---|
 | `street.png` | 320×180 (opaque) | Swanston St at dusk: towers, plane tree, Building 80 + RMIT sign | none |
 | `street-lights.png` | 320×180 | lit office windows, shopfronts, street lamp | flicker |
-| `tram.png` | **960×180** | one tram, in a wide strip so it only comes past now and then | drift, speed 4 |
+| `people.png` | 320×180 | people standing about on the far footpath: a couple chatting, someone waiting for the tram, students outside RMIT, someone on their phone, a dog walker | none |
+| `walkers-left.png` | 320×180 | people strolling to the left (one couple holding hands) | drift, speed 0.5 |
+| `walkers-right.png` | 320×180 | people strolling to the right | drift, speed -0.4 |
+| `tram.png` | **960×180** | one W-class tram (green and cream, City Circle style: route 35 box, fleet number 946, trolley pole), in a wide strip so it only comes past now and then | drift, speed 4 |
 | `interior.png` | 320×180, window glass see-through | brick walls, timber window, RMIT banner, pub sign, tote bag + books, lamp shades | none |
 | `lamps.png` | 320×180 | glow under the pendant lamps | pulse (subtle) |
 | `table.png` | 320×180 | high table, stools, fries, tomato sauce | none |
-| `us.png` | **2560×180**: 8 frames | the two of you clinking glasses (breathing + blinks) | frames, 3 fps |
+| `us.png` | **2560×180**: 8 frames | the two of you clinking glasses (breathing + blinks). Her in the pink dress (puff sleeve, sash with a bow at the back, pleats, lace hem); him in a long brown jacket (resting on the stool behind him) over a white shirt, loose dark jeans. No mouths, like the Collins scene | frames, 3 fps |
 | `steam.png` | **3840×180**: 12 frames | steam off the fries, bubbles in the pint, the clink sparkle | frames, 4 fps |
 | `vignette.png` | 320×180 | soft dark edges | none |
 
@@ -518,6 +552,24 @@ Layers in `public/assets/memories/laufey-concert/` (back to front):
 | `vignette.png` | 320×180 | dark edges | none |
 
 ---
+
+### The fishing minigame
+
+`npm run scene:fishing` draws everything in `public/assets/fishing/` and
+writes the `Fishing` spot (the end of the pier, tiles x 2–3, y 13–14) into the
+map. The scene is a side view at sunset: `sky.png`, `clouds.png` (drift),
+`sea.png` (slide), `glints.png` (twinkle), `pier.png` (the pier and her
+bucket), all 320×180, and `her.png` (frames: 4 × 320×180) — her standing at the
+end in her pink dress (puff sleeve, rose sash tied in a bow at the back, pleated
+skirt with a lace hem) with the skirt and bow tails moving in the sea breeze.
+Her dress is drawn in `drawDress()` in the script. The rod and fishing line are
+drawn by the game from her hand, so they can swing. Sprites: `bobber.png`
+(7×9), `ripple.png` (3 frames of 17×6), `bubble.png` (2 frames of 5×5),
+`envelope.png` (15×11), `seaweed.png` (13×18) and `paper.png` (16×16
+nine-slice, 4 px corners, the letter paper). If you redraw her or the pier, update
+`scene` in `data/fishing.json`: `hand` (where she holds the rod), `rodLength`,
+`waterY` (the sea's surface where the bobber floats) and `castX` (how far
+she casts, min–max).
 
 ## 7. Put it online (GitHub Pages)
 

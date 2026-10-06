@@ -967,7 +967,7 @@ function drawBuilding() {
   }
   arch(c, 64, 9, 68, 92, s.stoneDark);
   arch(c, 64, 8, 69, 92, s.litWindow);
-  c.rect(63, 78, 2, 15, s.wood[2]); // between the doors
+  c.rect(64, 69, 1, 24, s.wood[2]); // between the doors: 1 px on the arch's centre line, right up to its top
   c.rect(56, 80, 17, 1, s.wood[2]);
   c.px(61, 86, s.wood[0]); // handles
   c.px(67, 86, s.wood[0]);

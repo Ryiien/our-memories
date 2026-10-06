@@ -28,6 +28,8 @@ export const P = {
   herBlush: '#e0877a',
   herDress: '#f59ac4',
   herDressShade: '#d877a6',
+  herDressHi: '#f8b6d6', // puff sleeves, light on the skirt's pleats
+  herDressDeep: '#b9608f', // creases under the sleeves
   silver: '#e4e8f2', // eyebrow piercing
   // him: tall, short black hair with a fringe, open brown jacket over a white shirt, jeans
   himHair: '#231c24',
