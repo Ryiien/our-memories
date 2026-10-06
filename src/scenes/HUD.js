@@ -11,6 +11,7 @@ import { pixelText } from '../objects/Typewriter.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
 import SaveManager from '../systems/SaveManager.js';
+import Sfx from '../systems/Sfx.js';
 
 export default class HUD extends Phaser.Scene {
   constructor() {
@@ -39,7 +40,6 @@ export default class HUD extends Phaser.Scene {
     this.toastShowing = false;
 
     this.refresh();
-    // TODO: a small "found" sound effect could play in toast() (e.g. audio/sfx/found.wav).
   }
 
   refresh() {
@@ -101,5 +101,6 @@ export default class HUD extends Phaser.Scene {
       onComplete: () => this.showNextToast(),
     });
     this.tweens.add({ targets: this.heartIcon, scale: 1.4, duration: 180, yoyo: true, repeat: 2 });
+    Sfx.play(this, 'found');
   }
 }

@@ -23,6 +23,7 @@ import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
 import LoveLetters from '../systems/LoveLetters.js';
 import SaveManager from '../systems/SaveManager.js';
+import Sfx from '../systems/Sfx.js';
 import Music from '../systems/Music.js';
 import { tilesetKey } from './Boot.js';
 import gameData from '../../data/game.json';
@@ -251,6 +252,7 @@ export default class World extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(feet.x, feet.y, momo.x, momo.y) > MOMO.pickupRadius) continue;
       this.momos = this.momos.filter((m) => m !== momo);
       SaveManager.collectMomo(momo.id);
+      Sfx.play(this, 'momo');
 
       // Pop up and fade away.
       this.tweens.killTweensOf([momo.sprite, momo.glow]);

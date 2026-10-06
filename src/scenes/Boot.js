@@ -10,7 +10,8 @@ import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, FONT, PLAYER } from '../co
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
 import LoveLetters from '../systems/LoveLetters.js';
-import { musicKey } from '../systems/Music.js';
+import Music from '../systems/Music.js';
+import Sfx from '../systems/Sfx.js';
 import gameData from '../../data/game.json';
 import finaleData from '../../data/finale.json';
 import worldMap from '../../maps/world.json';
@@ -66,7 +67,8 @@ export default class Boot extends Phaser.Scene {
       this.load.image(tilesetKey(ts.name), `tiles/${file}`);
     }
 
-    if (gameData.worldMusic) this.load.audio(musicKey(gameData.worldMusic), gameData.worldMusic);
+    Music.load(this, gameData.worldMusic);
+    Sfx.preload(this); // sound effects are tiny, so they all load up front
   }
 
   drawProgressBar() {
@@ -97,6 +99,7 @@ export default class Boot extends Phaser.Scene {
     const ids = triggers.map((o) => (o.properties ?? []).find((p) => p.name === 'memoryId')?.value).filter(Boolean);
     if (ids.length < triggers.length) MemoryRegistry.warn('Some trigger zones in the map have no "memoryId" property.');
     MemoryRegistry.checkAgainstMap(ids);
+    Sfx.check();
 
     // Momos are optional, but two with the same name would count as one.
     const momoIds = Momos.all().map((m) => m.id);

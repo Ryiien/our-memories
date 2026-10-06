@@ -133,6 +133,15 @@ function drawTree() {
     const y = 16 + Math.sin(a) * d;
     t.px(x, y, d > 9 ? P.forest : P.grassDark);
   }
+  // pink blossoms dotted through the leaves: little plus-shaped flowers with a
+  // cream middle, plus a few single-pixel buds
+  const FLOWERS = [[9, 6], [20, 7], [25, 14], [6, 15], [15, 12], [21, 21], [10, 22], [16, 26], [26, 23], [4, 21]];
+  for (const [x, y] of FLOWERS) {
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) t.px(x + dx, y + dy, P.rose);
+    t.px(x + 1, y - 1, P.herDressHi); // a lighter petal where the sun catches it
+    t.px(x, y, P.cream);
+  }
+  for (const [x, y] of [[13, 4], [5, 10], [27, 18], [18, 17], [12, 28], [23, 11]]) t.px(x, y, P.herDressHi);
   t.outline(P.forestDark);
   return t;
 }

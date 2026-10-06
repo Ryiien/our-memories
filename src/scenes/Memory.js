@@ -12,9 +12,10 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, TIMING } from '../config.js';
 import LayerAnimator, { queueLayerLoads } from '../systems/LayerAnimator.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
-import Music, { musicKey } from '../systems/Music.js';
+import Music from '../systems/Music.js';
 import Typewriter, { pixelText } from '../objects/Typewriter.js';
 import ContinueHeart from '../objects/ContinueHeart.js';
+import Sfx from '../systems/Sfx.js';
 
 const BOX = { margin: 8, padX: 8, padY: 6 };
 
@@ -38,8 +39,7 @@ export default class Memory extends Phaser.Scene {
     });
     if (!this.memory) return;
     queueLayerLoads(this, this.memory.layers);
-    const music = this.memory.music;
-    if (music && !this.cache.audio.exists(musicKey(music))) this.load.audio(musicKey(music), music);
+    Music.load(this, this.memory.music);
 
     // A tiny pulsing heart while loading (usually too quick to notice).
     const loading = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'heart').setAlpha(0.6);
@@ -63,7 +63,7 @@ export default class Memory extends Phaser.Scene {
     }
 
     // Memories without their own music keep whatever the world is playing.
-    if (m.music) Music.play(this, m.music);
+    if (m.music.length) Music.play(this, m.music);
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 
     // The title + date show on their own first; the caption box comes up after
@@ -173,7 +173,10 @@ export default class Memory extends Phaser.Scene {
       this.typer.finish();
       return;
     }
-    if (this.continueButton.visible) this.close();
+    if (this.continueButton.visible) {
+      Sfx.play(this, 'continue');
+      this.close();
+    }
   }
 
   close() {

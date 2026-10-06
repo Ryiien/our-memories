@@ -95,7 +95,10 @@ const PLACES = [
 ];
 // From the cosy tileset: plane trees (2x3) and benches (2x1) on the grass across the road
 const COSY = { canopy: [33, 34, 35, 36], trunk: [37, 38], bench: [29, 30] }; // gids
-const TREES = [{ x: 24, y: 9 }, { x: 37, y: 9 }]; // top-left of the canopy (mirrored across the path)
+const TREES = [
+  { x: 24, y: 9 }, { x: 37, y: 9 }, // top-left of the canopy (mirrored across the path)
+  { x: 42, y: 2 }, // right of RMIT, just under the bushes
+];
 const BENCHES = [{ x: 22, y: 9 }, { x: 39, y: 9 }]; // just inside the outer lamps (x 21 and x 41)
 
 // ---- The props ----------------------------------------------------------------------

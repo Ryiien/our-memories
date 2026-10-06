@@ -8,6 +8,7 @@
 import rawData from '../../data/memories.json';
 import { PRESETS } from './LayerAnimator.js';
 import Momos from './Momos.js';
+import { musicTracks } from './Music.js';
 
 const MEMORY_FIELDS = [
   'id', 'title', 'date', 'caption', 'hidden', 'requiresAction', 'unlockAfter', 'momosNeeded', 'revealOnUnlock',
@@ -72,7 +73,7 @@ function normalise(raw, index) {
     unlockAll,
     momosNeeded: Number.isFinite(momosNeeded) ? Math.max(0, Math.floor(momosNeeded)) : 0,
     revealOnUnlock: Boolean(raw.revealOnUnlock),
-    music: raw.music ? String(raw.music) : null,
+    music: musicTracks(raw.music), // [] = none; several = layered together
     layers: checkLayers(raw.layers ?? [], where),
   };
 }
@@ -121,7 +122,7 @@ const MemoryRegistry = {
   },
 
   /** Every music file used by memories (so Boot can preload them). */
-  musicFiles: () => [...new Set(list.map((m) => m.music).filter(Boolean))],
+  musicFiles: () => [...new Set(list.flatMap((m) => m.music))],
 
   /**
    * Cross-check against the map's trigger zones: every memory needs a zone

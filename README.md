@@ -34,6 +34,7 @@ Other commands:
 | `npm run build` | makes the finished website in `dist/` |
 | `npm run preview` | serves `dist/` locally so you can check the build |
 | `npm run placeholders` | regenerates any **missing** placeholder art/map |
+| `npm run sfx` | writes any **missing** placeholder sound effects (see §2, Music and sounds) |
 | `npm run pixelate -- photo.jpg out.png` | turns a photo into pixel art (see §5) |
 | `npm run scene:formal` | redraws the school formal scene + ballroom building (see §6) |
 | `npm run scene:pub` | redraws the Oxford Scholar scene + the pub and RMIT buildings (see §6) |
@@ -52,7 +53,7 @@ Other commands:
 ### Controls
 - **Move:** WASD or arrow keys · phone: put your thumb anywhere on the left half
 - **Interact / Continue:** Space, Enter or E · phone: the ♥ button (or tap the cutscene)
-- **Fishing** (at the end of the pier): E / Space / tap to cast, and again when bubbles appear to hook · Esc or the Leave button to go back
+- **Fishing** (at the end of the pier): E / Space / tap to cast, and again when bubbles appear to hook · Esc or the little < arrow (top-left) to go back
 
 ### Handy for testing
 - **Wipe progress:** on the title screen, hold **R** for 3 seconds (on a phone:
@@ -100,6 +101,39 @@ Keep each one to a few sentences so it fits on the paper. `scene` and
 
 ---
 
+### Music and sounds
+
+**Music** (looping, crossfades between places). To add a track, put an `.mp3` (smallest), `.ogg` or `.wav` in
+`public/assets/audio/` and set its path (relative to `public/assets/`):
+
+| plays… | file | field |
+|---|---|---|
+| while walking around | `data/game.json` | `"worldMusic": "audio/our-song.mp3"` (or `null`) |
+| during one memory | `data/memories.json` | `"music": "audio/laufey.mp3"` on that memory, or a list to layer several: `["audio/pub.wav", "audio/tram1.m4a"]` |
+| while fishing | `data/fishing.json` | `"music"` |
+| in the finale | `data/finale.json` | `"music"` |
+
+**Sound effects** (short, played once) are listed in `data/sounds.json`:
+
+```json
+{
+  "momo": "audio/sfx/momo.wav",          // collecting a momo
+  "found": "audio/sfx/found.wav",        // a toast like "Memory found!" sliding in
+  "cast": "audio/sfx/cast.wav",          // casting the fishing rod
+  "splash": "audio/sfx/splash.wav",      // the bobber (or seaweed) hitting the water
+  "letter": "audio/sfx/letter.wav",      // catching a love letter
+  "continue": "audio/sfx/continue.wav"   // pressing Continue (memory, finale, letter)
+}
+```
+
+(JSON can't hold the comments; they're just here to explain.) The ones there
+now are simple synthesised placeholders made by `npm run sfx`. To use your
+own, drop the file in `public/assets/audio/sfx/` and change its path; set one
+to `null` to silence it. Overall loudness: `AUDIO.musicVolume` and
+`AUDIO.sfxVolume` in `src/config.js`. Sound only starts after the first tap
+or key press (browsers block it before that). A wrong path never crashes the
+game; it just stays quiet and warns in the console.
+
 ## 3. Add a memory
 
 Adding a memory never needs code. You need three things:
@@ -141,7 +175,10 @@ covers the bottom and the title covers the top for a few seconds.
 - `revealOnUnlock: true`: for a `hidden` memory. Once it unlocks, its sparkle
   appears and a "A hidden memory appeared..." message pops up. (The first date
   uses `"unlockAfter": "all"`, `"momosNeeded": 10` and this.)
-- `music`: optional, any `.mp3`, `.ogg` or `.wav` in `public/assets/audio/`.
+- `music`: optional, any `.mp3`, `.ogg` or `.wav` in `public/assets/audio/`. For
+  several sounds at once (say pub chatter plus a tram going by), give a list:
+  `"music": ["audio/pub.wav", "audio/tram1.m4a"]`. They all loop together. (Two
+  separate `"music"` lines don't work: only the last one counts.)
 
 **c) A trigger in the map:** see §4. Draw a rectangle on the `Triggers` layer
 and give it a custom property `memoryId` = `first-kiss`.
@@ -254,8 +291,8 @@ existing files** unless you run it with `--force`, so re-running it is safe.
 | `public/assets/ui/sparkle.png` | 64×16: 4 frames of 16×16, the "memory here!" marker |
 | `public/assets/ui/joystick-base.png`, `joystick-knob.png`, `action-button.png` | 40×40, 18×18, 30×30 (phone controls) |
 | `public/assets/ui/font.png` + `font.xml` | a BMFont (XML) bitmap font, white glyphs |
-| `public/assets/audio/*` | music: `.mp3`/`.ogg`/`.wav` |
-| `public/assets/audio/formal.mp3` | **expected, not included yet:** the school formal's slow-dance song. Until it exists, that scene plays silently |
+| `public/assets/audio/*` | music: `.mp3`/`.ogg`/`.wav` (none in use yet; see §2) |
+| `public/assets/audio/sfx/*` | sound effects, listed in `data/sounds.json` (placeholders from `npm run sfx`) |
 | `public/assets/tiles/hall.png` | 160×112: the ballroom building, 10×7 tiles (its own tileset in the map) |
 | `public/assets/tiles/oxford-scholar.png` | 128×96: the pub, 8×6 tiles (its own tileset in the map) |
 | `public/assets/tiles/rmit.png` | 112×96: RMIT's Building 80 next door, 7×6 tiles |

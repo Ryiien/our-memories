@@ -11,7 +11,7 @@
  "type": "map",
  "version": "1.10",
  "nextlayerid": 9,
- "nextobjectid": 49,
+ "nextobjectid": 59,
  "layers": [
   {
    "id": 1,
@@ -2719,8 +2719,8 @@
     580,
     581,
     582,
-    0,
-    0,
+    37,
+    38,
     0,
     0,
     0,
@@ -5012,8 +5012,8 @@
     0,
     0,
     0,
-    0,
-    0,
+    33,
+    34,
     0,
     0,
     0,
@@ -5072,8 +5072,8 @@
     0,
     0,
     0,
-    0,
-    0,
+    35,
+    36,
     0,
     0,
     0,
@@ -9891,7 +9891,7 @@
    "y": 0,
    "objects": [
     {
-     "id": 34,
+     "id": 49,
      "name": "momo-1",
      "type": "",
      "point": true,
@@ -9903,7 +9903,7 @@
      "visible": true
     },
     {
-     "id": 35,
+     "id": 50,
      "name": "momo-2",
      "type": "",
      "point": true,
@@ -9915,7 +9915,7 @@
      "visible": true
     },
     {
-     "id": 36,
+     "id": 51,
      "name": "momo-3",
      "type": "",
      "point": true,
@@ -9927,11 +9927,11 @@
      "visible": true
     },
     {
-     "id": 37,
+     "id": 52,
      "name": "momo-4",
      "type": "",
      "point": true,
-     "x": 680,
+     "x": 712,
      "y": 74,
      "width": 0,
      "height": 0,
@@ -9939,7 +9939,7 @@
      "visible": true
     },
     {
-     "id": 38,
+     "id": 53,
      "name": "momo-5",
      "type": "",
      "point": true,
@@ -9951,7 +9951,7 @@
      "visible": true
     },
     {
-     "id": 39,
+     "id": 54,
      "name": "momo-6",
      "type": "",
      "point": true,
@@ -9963,7 +9963,7 @@
      "visible": true
     },
     {
-     "id": 40,
+     "id": 55,
      "name": "momo-7",
      "type": "",
      "point": true,
@@ -9975,7 +9975,7 @@
      "visible": true
     },
     {
-     "id": 41,
+     "id": 56,
      "name": "momo-8",
      "type": "",
      "point": true,
@@ -9987,7 +9987,7 @@
      "visible": true
     },
     {
-     "id": 42,
+     "id": 57,
      "name": "momo-9",
      "type": "",
      "point": true,
@@ -9999,7 +9999,7 @@
      "visible": true
     },
     {
-     "id": 43,
+     "id": 58,
      "name": "momo-10",
      "type": "",
      "point": true,

@@ -11,6 +11,7 @@
     "placeholders": "node tools/make-placeholders.js",
     "pixelate": "node tools/pixelate-photo.js",
     "momos": "node tools/place-momos.js",
+    "sfx": "node tools/make-sfx.js",
     "scene:formal": "node tools/scenes/school-formal.js",
     "scene:pub": "node tools/scenes/oxford-scholar.js",
     "scene:garden": "node tools/scenes/botanic-garden.js",

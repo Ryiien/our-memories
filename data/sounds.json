@@ -1,0 +1,8 @@
+{
+  "momo": "audio/sfx/momo.wav",
+  "found": "audio/sfx/found.wav",
+  "cast": "audio/sfx/cast.wav",
+  "splash": "audio/sfx/splash.wav",
+  "letter": "audio/sfx/letter.wav",
+  "continue": "audio/sfx/continue.wav"
+}

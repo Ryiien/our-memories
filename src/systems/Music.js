@@ -1,8 +1,11 @@
 // -----------------------------------------------------------------------------
-// Music — plays one looping music track at a time and crossfades between them.
+// Music — plays looping music (one track, or several layered together, like a
+// pub's chatter plus a passing tram) and crossfades between places.
 //
-// Music.play(scene, 'audio/waves.wav')  -> fades the old track out, new one in
-// Music.play(scene, null)               -> fades to silence
+// Music.play(scene, 'audio/waves.wav')                   -> fades the old music out, this in
+// Music.play(scene, ['audio/pub.wav', 'audio/tram.mp3']) -> both at once, faded in together
+// Music.play(scene, null)                                -> fades to silence
+// Music.load(scene, music)                               -> queues any files not loaded yet (call in preload)
 //
 // Fades are driven by the game clock (not a scene), so they finish properly
 // even if the scene that started them has closed.
@@ -13,7 +16,10 @@ import { AUDIO } from '../config.js';
 /** Cache key for a music file path (same path = same sound). */
 export const musicKey = (path) => `music:${path}`;
 
-let current = null; // { path, sound }
+/** A "music" value from the data (a path, a list of paths, or nothing) as a list of paths. */
+export const musicTracks = (music) => (Array.isArray(music) ? music : [music]).filter(Boolean).map(String);
+
+let current = null; // { id, sounds }
 const fades = new Set(); // { sound, from, to, duration, elapsed, destroyAfter }
 let hooked = false;
 
@@ -39,28 +45,36 @@ function fade(sound, to, duration, destroyAfter = false) {
 }
 
 const Music = {
-  /** The path of the track playing now (or null). */
-  get currentPath() {
-    return current?.path ?? null;
+  /** Queue the music's files for loading, skipping any already loaded. */
+  load(scene, music) {
+    for (const path of musicTracks(music)) {
+      if (!scene.cache.audio.exists(musicKey(path))) scene.load.audio(musicKey(path), path);
+    }
   },
 
-  play(scene, path, { volume = AUDIO.musicVolume, duration = AUDIO.crossfade } = {}) {
+  play(scene, music, { volume = AUDIO.musicVolume, duration = AUDIO.crossfade } = {}) {
     hook(scene.game);
-    if ((current?.path ?? null) === (path ?? null)) return;
+    const paths = musicTracks(music);
+    const id = paths.join('|');
+    if ((current?.id ?? '') === id) return; // already playing exactly this
 
-    if (current) fade(current.sound, 0, duration, true);
+    for (const sound of current?.sounds ?? []) fade(sound, 0, duration, true);
     current = null;
-    if (!path) return;
+    if (!paths.length) return;
 
-    const key = musicKey(path);
-    if (!scene.cache.audio.exists(key)) {
-      console.warn(`[music] "${path}" isn't loaded (missing file at public/assets/${path}?) — no music.`);
-      return;
+    const sounds = [];
+    for (const path of paths) {
+      const key = musicKey(path);
+      if (!scene.cache.audio.exists(key)) {
+        console.warn(`[music] "${path}" isn't loaded (missing file at public/assets/${path}?) — skipped.`);
+        continue;
+      }
+      const sound = scene.sound.add(key, { loop: true, volume: 0 });
+      sound.play();
+      fade(sound, volume, duration);
+      sounds.push(sound);
     }
-    const sound = scene.sound.add(key, { loop: true, volume: 0 });
-    sound.play();
-    fade(sound, volume, duration);
-    current = { path, sound };
+    current = { id, sounds };
   },
 };
 

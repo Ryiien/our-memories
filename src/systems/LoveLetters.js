@@ -8,6 +8,7 @@
 import rawData from '../../data/fishing.json';
 import worldMap from '../../maps/world.json';
 import MemoryRegistry, { checkLayers } from './MemoryRegistry.js';
+import { musicTracks } from './Music.js';
 
 const FIELDS = ['title', 'music', 'seaweedChance', 'maxSeaweedInARow', 'signature', 'scene', 'layers', 'letters'];
 const LETTER_FIELDS = ['id', 'title', 'text'];
@@ -52,7 +53,7 @@ const pair = (value, fallback, name) => {
 
 const settings = {
   title: String(raw.title ?? ''),
-  music: raw.music ? String(raw.music) : null,
+  music: musicTracks(raw.music),
   seaweedChance: Math.min(1, Math.max(0, number(raw.seaweedChance, 0.3, 'seaweedChance'))),
   maxSeaweedInARow: Math.max(0, Math.floor(number(raw.maxSeaweedInARow, 2, 'maxSeaweedInARow'))),
   signature: String(raw.signature ?? ''),

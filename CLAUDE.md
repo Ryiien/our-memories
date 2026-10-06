@@ -32,6 +32,7 @@ quests, etc.). Obvious extension points are marked with `// TODO` comments.
 - Commands: `npm run dev`, `npm run build`, `npm run preview`,
   `npm run placeholders [-- --force]`, `npm run pixelate -- <photo> [out] [opts]`,
   `npm run momos` (writes the map's `Momos` layer from the spot list in `tools/place-momos.js`),
+  `npm run sfx [-- --force]` (placeholder sound effects),
   `npm run scene:fishing` (fishing art + the map's `Fishing` spot),
   `npm run scene:<name>` for each hand-drawn memory (see the README table).
 - In dev, `window.game` is the Phaser game (e.g. `game.scene.getScene('World')`).
@@ -62,15 +63,17 @@ our-memories/
 │   ├── memories/<id>/*.png    # one folder per memory (+ memories/finale/)
 │   ├── fishing/               # the fishing minigame's layers + sprites (bobber, ripple, bubble, envelope, seaweed, paper)
 │   ├── ui/                    # font.png+font.xml, heart, panel, sparkle, touch controls, momo, momo-hud (+ dish of achar), momo-glow
-│   └── audio/                 # music (wav/mp3/ogg)
+│   └── audio/                 # music (wav/mp3/ogg) + sfx/ (sound effects)
 ├── maps/world.json            # the Tiled map (JSON, embedded tileset)
 ├── maps/cosy.tsx              # same tileset as a Tiled file, for starting new maps
 ├── data/memories.json         # every memory
 ├── data/finale.json           # finale text + layers
 ├── data/game.json             # her name, title text, optional world music
 ├── data/fishing.json          # the love letters + fishing settings and background layers
+├── data/sounds.json           # sound effect name -> file (or null)
 ├── tools/
 │   ├── make-placeholders.js   # generates all placeholder art/audio/map (never overwrites without --force)
+│   ├── make-sfx.js            # placeholder sound effects -> audio/sfx/ (never overwrites without --force)
 │   ├── pixelate-photo.js      # photo -> 320x180 limited-palette PNG
 │   ├── place-momos.js         # writes the map's "Momos" layer (spot list at the top)
 │   ├── lib/                   # generator pieces: canvas, palette, font, tileset, test-map, sprites, cutscenes, audio
@@ -84,7 +87,7 @@ our-memories/
     ├── scenes/  Boot, Title, World, HUD, Memory, Finale, Fishing
     ├── objects/ Player, TouchControls, Typewriter (pixel text + typing), ContinueHeart
     └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades), Momos (reads the Momos layer),
-                 LoveLetters (reads data/fishing.json + the map's Fishing layer)
+                 LoveLetters (reads data/fishing.json + the map's Fishing layer), Sfx (data/sounds.json)
 ```
 
 Additions beyond the original brief, and why: `data/game.json` (title text and
@@ -101,7 +104,7 @@ walking into a trigger pauses World and launches `Memory` → Continue stops
 Memory and resumes World (`events.on('resume', …, data)`) → after the last
 memory's toast, World launches `Finale` the same way (once; `finaleSeen`).
 Standing in a `Fishing` spot shows "Press E to fish"; that launches `Fishing`
-the same way, and Leave / Esc resumes World.
+the same way, and the < arrow (top-left) / Esc resumes World.
 
 Memory/Finale load their own layer images and music on open (lazy), so adding
 memories never slows startup.
@@ -121,7 +124,8 @@ memories never slows startup.
       "unlockAfter": 0,                // stays inactive until N other memories are found ("all" = every other one)
       "momosNeeded": 0,                // ...and until she's collected this many momos
       "revealOnUnlock": false,         // hidden + this = its sparkle appears (with a toast) once it unlocks
-      "music": "audio/waves.wav",      // optional; crossfades in, back out on Continue
+      "music": "audio/waves.wav",      // optional; crossfades in, back out on Continue.
+                                       // A list ["a.wav", "b.mp3"] layers several, looping together
       "layers": [ { "src": "memories/apollo-bay/sky.png" }, ... ]   // back to front
     }
   ]
@@ -185,6 +189,22 @@ paper, typed out, Continue). Letters: a random unread one; once all are read,
 any except the last one. Letters are not part of the memory count or finale.
 The marker in the world is `bobber.png` (loaded by Boot), floating in the
 water just left of each spot.
+
+## data/sounds.json (sound effects) and music
+
+`{ "<name>": "audio/sfx/<file>" | null }`. The names are fixed by `SFX_NAMES`
+in `src/systems/Sfx.js` (momo, found, cast, splash, letter, continue; unknown
+names warn). Boot loads them all; `Sfx.play(scene, name)` plays one once at
+`AUDIO.sfxVolume`, silently doing nothing if it's null or failed to load.
+Every `music` value (memories, fishing, finale, worldMusic) may be a path or a
+list of paths played together (`musicTracks()` / `Music.load` / `Music.play` in
+Music.js); MemoryRegistry and LoveLetters normalise it to an array.
+Hooks: World.checkMomos (momo), HUD.showNextToast (found, every toast),
+Fishing.cast / splash / caughtLetter / closeLetter (cast, splash, letter,
+continue), Memory.advance + Finale.close (continue). New effect = a name in
+`SFX_NAMES` + a `Sfx.play` call + an entry in sounds.json (+ a synth in
+`tools/lib/audio.js` / `make-sfx.js` for a placeholder).
+Music tracks are chosen by the user in the data files (worldMusic is null for now).
 
 ## data/finale.json / data/game.json
 
@@ -263,7 +283,9 @@ water just left of each spot.
   pavement (y 6) a chalkboard (x 19), bay trees (x 21, 24), a bistro table
   (x 25–26), a barrel table (x 27), a pub chalkboard (x 32), bikes (x 35–36) and
   a bin (x 41) — door tiles x 22–23, 30–31, 38 kept clear; across the road two
-  plane trees (cosy tree tiles, canopy x 24–25 / 37–38, y 9–10, trunks y 11) and
+  plane trees (cosy tree tiles, canopy x 24–25 / 37–38, y 9–10, trunks y 11)
+  plus one right of RMIT under the bushes (canopy x 42–43, y 2–3, trunk y 4; momo-4
+  sits just right of its trunk at x 44, y 4) and
   benches at x 22–23 and 39–40, y 9, just inside the outer lamps (x 21, x 41).
   The fronts of the Palais and San Remo (`venue-props`, placed tile by tile by
   `tools/scenes/venue-fronts.js`, all on y 19): flower urns (x 19, 28) and pink /
@@ -365,5 +387,5 @@ Continue returns to the same spot → revisit prompt works → momos collect and
 the top-right counter ticks up → all 10 momos + every other memory reveals the
 first date ("A hidden memory appeared...") → refresh keeps progress → all found
 plays finale → end of the pier: fish (cast, early press does nothing, hook on
-bubbles, letter + seaweed, missed bite, Leave/Esc) and the letter counter persists. Test phone landscape (dev server prints a
+bubbles, letter + seaweed, missed bite, the < arrow / Esc) and the letter counter persists. Test phone landscape (dev server prints a
 Network URL). Check the browser console for `[memories.json]` warnings.

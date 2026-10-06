@@ -5,7 +5,7 @@
 // bubbles appear around it: press again while they're bubbling to hook
 // something. It's either a love letter (a random one she hasn't read yet,
 // then any of them once she has them all) or a clump of seaweed to toss back.
-// Missing the bubbles is fine — more come along. Esc / the Leave button goes
+// Missing the bubbles is fine — more come along. Esc / the little < arrow goes
 // back to the world. There are no instructions on screen: the bubbles, the
 // catch and the letter counter's hop say it all.
 //
@@ -18,9 +18,10 @@ import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, TIMING, FISHING } from '..
 import LayerAnimator, { queueLayerLoads } from '../systems/LayerAnimator.js';
 import LoveLetters from '../systems/LoveLetters.js';
 import SaveManager from '../systems/SaveManager.js';
-import Music, { musicKey } from '../systems/Music.js';
+import Music from '../systems/Music.js';
 import Typewriter, { pixelText } from '../objects/Typewriter.js';
 import ContinueHeart from '../objects/ContinueHeart.js';
+import Sfx from '../systems/Sfx.js';
 
 const S = LoveLetters.settings;
 const ACTION_KEYS = ['Space', 'Enter', 'NumpadEnter', 'KeyE'];
@@ -65,14 +66,14 @@ export default class Fishing extends Phaser.Scene {
     image('fishing-seaweed', 'fishing/seaweed.png');
     image('fishing-paper', 'fishing/paper.png');
     // (fishing/bobber.png is loaded by Boot: it also marks the spot in the world)
-    if (S.music && !this.cache.audio.exists(musicKey(S.music))) this.load.audio(musicKey(S.music), S.music);
+    Music.load(this, S.music);
   }
 
   create() {
     if (new LayerAnimator(this, 'fishing').addLayers(S.layers) === 0) {
       this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night).setOrigin(0).setDepth(-1);
     }
-    if (S.music) Music.play(this, S.music);
+    if (S.music.length) Music.play(this, S.music);
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 
     if (!this.anims.exists('fishing-ripple')) {
@@ -97,10 +98,11 @@ export default class Fishing extends Phaser.Scene {
 
   // ---- On-screen bits: Leave button, letter counter, title ------------------------------------
   buildHud() {
-    // Leave (top-left)
-    const leaveText = pixelText(this, 10, 7, '< Leave', { color: COLORS.ink });
-    const w = leaveText.getTextBounds(false).local.width;
-    this.leaveBg = this.add.nineslice(4, 4, 'panel', null, w + 12, 15, 4, 4, 4, 4).setOrigin(0).setAlpha(0.92);
+    // Leave (top-left): just a small arrow in a box, the same height as the counter.
+    // The font's "<" is 4x7 pixels, so a 16x15 box centres it exactly
+    // (inside the panel's 1 px border: 5 px either side, 3 above and below).
+    const leaveText = pixelText(this, 4 + 6, 4 + 4, '<', { color: COLORS.ink });
+    this.leaveBg = this.add.nineslice(4, 4, 'panel', null, 16, 15, 4, 4, 4, 4).setOrigin(0).setAlpha(0.92);
     this.leaveBg.setInteractive({ useHandCursor: true });
     this.children.bringToTop(leaveText);
 
@@ -162,6 +164,7 @@ export default class Fishing extends Phaser.Scene {
   // ---- Casting --------------------------------------------------------------------------------------
   cast() {
     this.state = 'casting';
+    Sfx.play(this, 'cast');
     const id = ++this.castId;
     this.tweens.chain({
       targets: this.rod,
@@ -321,6 +324,7 @@ export default class Fishing extends Phaser.Scene {
 
   caughtLetter(letter) {
     const isNew = SaveManager.catchLetter(letter.id);
+    Sfx.play(this, 'letter');
     const { image } = this.item;
     this.sparkles(image.x, image.y + 5);
     this.time.delayedCall(800, () => {
@@ -425,6 +429,7 @@ export default class Fishing extends Phaser.Scene {
 
   closeLetter() {
     this.state = 'closing';
+    Sfx.play(this, 'continue');
     const { parts } = this.letterView;
     this.tweens.killTweensOf(parts);
     this.tweens.add({
@@ -450,6 +455,7 @@ export default class Fishing extends Phaser.Scene {
 
   /** A ripple plus a few droplets hopping up. */
   splash(x, y) {
+    Sfx.play(this, 'splash');
     this.ripple(x, y);
     for (let i = 0; i < 4; i++) {
       const drop = this.add.image(x + Phaser.Math.Between(-5, 5), y - 2, 'fishing-bubble', 0);

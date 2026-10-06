@@ -91,6 +91,7 @@ export const FISHING = {
 // ---- Audio -----------------------------------------------------------------
 export const AUDIO = {
   musicVolume: 0.6, // 0..1
+  sfxVolume: 0.7, // 0..1, sound effects (data/sounds.json)
   crossfade: 1200, // ms to fade music in/out
 };
 

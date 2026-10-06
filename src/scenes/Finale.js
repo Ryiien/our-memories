@@ -10,9 +10,10 @@ import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, TIMING } from '../config.j
 import LayerAnimator, { queueLayerLoads } from '../systems/LayerAnimator.js';
 import { checkLayers } from '../systems/MemoryRegistry.js';
 import SaveManager from '../systems/SaveManager.js';
-import Music, { musicKey } from '../systems/Music.js';
+import Music, { musicTracks } from '../systems/Music.js';
 import Typewriter, { pixelText } from '../objects/Typewriter.js';
 import ContinueHeart from '../objects/ContinueHeart.js';
+import Sfx from '../systems/Sfx.js';
 import finaleData from '../../data/finale.json';
 
 const LINE_GAP = 4; // extra pixels between finale lines
@@ -35,8 +36,7 @@ export default class Finale extends Phaser.Scene {
       console.warn(`[finale] Couldn't load ${file.url} — it will be skipped.`);
     });
     queueLayerLoads(this, this.layers);
-    const music = finaleData.music;
-    if (music && !this.cache.audio.exists(musicKey(music))) this.load.audio(musicKey(music), music);
+    Music.load(this, finaleData.music);
   }
 
   create() {
@@ -45,7 +45,7 @@ export default class Finale extends Phaser.Scene {
     if (animator.addLayers(this.layers) === 0) {
       this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night).setOrigin(0).setDepth(-1);
     }
-    if (finaleData.music) Music.play(this, finaleData.music);
+    if (musicTracks(finaleData.music).length) Music.play(this, finaleData.music);
     this.cameras.main.fadeIn(TIMING.fadeIn * 2, 0, 0, 0);
 
     // Title
@@ -112,6 +112,7 @@ export default class Finale extends Phaser.Scene {
 
   close() {
     this.leaving = true;
+    Sfx.play(this, 'continue');
     this.cameras.main.fadeOut(TIMING.fadeOut * 2, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.stop();

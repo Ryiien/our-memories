@@ -6,7 +6,6 @@
     "Here's to many more years of memories."
   ],
   "signature": "Love, Ryan ♥",
-  "music": "audio/music-box.wav",
   "layers": [
     { "src": "memories/finale/sky.png" },
     { "src": "memories/finale/stars.png", "anim": "twinkle" },
