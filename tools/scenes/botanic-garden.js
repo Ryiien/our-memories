@@ -336,20 +336,24 @@ function drawHim(dy, blink) {
   c.px(hx - 6, hy + 1, s.himSkinShade); // ears
   c.px(hx + 6, hy + 1, s.himSkinShade);
   // cap: dome, sunglasses pushed up on top, brim facing forward
-  c.ellipse(hx, hy - 5, 6.6, 4.4, s.cap);
-  c.rect(hx - 6, hy - 5, 13, 3, s.cap);
-  c.rect(hx + 1, hy - 9, 4, 1, s.capHi);
-  c.rect(hx - 5, hy - 8, 4, 2, s.shades); // sunglasses
-  c.rect(hx + 1, hy - 8, 4, 2, s.shades);
-  c.rect(hx - 1, hy - 8, 2, 1, s.shades);
-  c.px(hx + 3, hy - 8, s.shadesHi);
-  c.px(hx - 3, hy - 8, s.shadesHi);
+  c.ellipse(hx, hy - 4, 5.8, 3.6, s.cap);
+  c.rect(hx - 5, hy - 4, 11, 2, s.cap);
+  c.rect(hx - 2, hy - 7, 5, 1, s.capHi);
+  // big sunglasses: two round-cornered lenses and a bridge, a glint on each
+  for (const lx of [hx - 6, hx + 1]) {
+    c.rect(lx, hy - 6, 5, 3, s.shades);
+    c.px(lx + 1, hy - 5, s.shadesHi);
+    c.px(lx + 2, hy - 6, s.shadesHi);
+  }
+  c.clear(hx - 6, hy - 4); // the lenses' outer bottom corners rounded off
+  c.px(hx + 5, hy - 4, s.cap);
+  c.rect(hx - 1, hy - 6, 2, 1, s.shades);
   // the brim: sticks out past the cap, lit on top, dark underneath
-  c.rect(hx - 8, hy - 3, 17, 1, s.capHi);
-  c.rect(hx - 8, hy - 2, 17, 1, s.cap);
-  c.rect(hx - 7, hy - 1, 15, 1, s.capDark);
-  c.clear(hx - 8, hy - 3);
-  c.clear(hx + 8, hy - 3);
+  c.rect(hx - 7, hy - 3, 15, 1, s.capHi);
+  c.rect(hx - 7, hy - 2, 15, 1, s.cap);
+  c.rect(hx - 6, hy - 1, 13, 1, s.capDark);
+  c.clear(hx - 7, hy - 3);
+  c.clear(hx + 7, hy - 3);
   // face: eyes (in the brim's shadow), a small smile
   if (blink) {
     c.rect(hx - 3, hy + 2, 2, 1, s.himSkinShade);

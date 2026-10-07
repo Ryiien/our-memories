@@ -265,7 +265,7 @@ Music tracks are chosen by the user in the data files (worldMusic is null for no
   path from San Remo at x 19–28, y 12–18 (doors facing the main path, trigger
   `palais doors` at x 23–24, y 19).
   The campsite (`campsite`, 5×3, for `camping`) is at x 25–29, y 34–36, just
-  right of the momo under the tree (x 22, y 35): tent (x 25–26, y 34–35), her
+  right of the momo beside the tree (x 21, y 35): tent (x 25–26, y 34–35), her
   chair / firepit / his chair along y 35 (solid), the rest walkable; its fire
   tiles flicker (3 frames). Trigger `campfire` = x 27–29, y 36 (in front of the fire).
   Collins Coffee House (`collins`, 8×6, for `collins-coffee-house`) — the sandstone
@@ -351,8 +351,11 @@ blocker(44)/grass edge.
 - **Looks change with the date of the memory.** In October 2024
   (`all-nations-park`) she was **blonde** (long, past her shoulders) in a black
   jacket and a pink-and-white floral scarf, and he had a **buzzcut** and an
-  olive-brown jacket over a purple checked shirt. Those colours live in that
-  script's `PAL`; don't "fix" them to match the looks above.
+  olive-brown jacket over a purple checked shirt. In September 2024
+  (`laufey-concert`, seen from behind) she had **strawberry-blonde**
+  shoulder-length wavy hair, half up with a big black bow, a white ribbed
+  jumper (he wears his usual brown jacket over a white shirt). Those colours live
+  in each script's `PAL`; don't "fix" them to match the looks above.
 - Colours live in `tools/lib/palette.js` (`her*`, `him*`, `jeans`, `silver`).
   Walking sprite: `tools/lib/sprites.js`. Cutscene figures: `HER` / `HIM` presets
   plus `figure()` in `tools/lib/cutscenes.js` (`dim` darkens them for night scenes).

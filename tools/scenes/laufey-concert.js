@@ -16,7 +16,8 @@
 // Reference (photos from the night): the view from the balcony — a gilded,
 // patterned proscenium arch, red velvet curtain, a lighting truss with four
 // warm lamps, speakers hanging each side; the two of us in matching paper
-// crowns (hers pink, his blue); and the Palais at night — cream art-deco
+// crowns (hers pink, his blue) — her in a white ribbed jumper, strawberry-blonde
+// hair half up with a black bow; and the Palais at night — cream art-deco
 // towers, red "PALAIS THEATRE" lettering, three glowing purple arches.
 // -----------------------------------------------------------------------------
 import fs from 'node:fs';
@@ -76,23 +77,31 @@ const PAL = {
   seatHi: '#c43a44',
   seatShade: '#6a1220',
   seatGap: '#1a0a0e',
-  // her (from behind): pink bob, black leather jacket, pink paper crown
-  herHair: '#d6417f',
-  herHairHi: '#ef6fa3',
-  herHairShade: '#a82f63',
+  // her (from behind), as she was that night (September 2024, from a photo):
+  // shoulder-length strawberry-blonde hair, half up with a big black bow,
+  // a white ribbed jumper, pink paper crown
+  herHair: '#d18e58',
+  herHairHi: '#ebb57a',
+  herHairShade: '#a2653c',
   herSkin: '#d9a47c',
-  leather: '#241e2a',
-  leatherHi: '#4e4458',
-  leatherShine: '#7a7088',
+  bow: '#1e1a22',
+  bowHi: '#4a4252',
+  bowDot: '#e8e4ee', // tiny pale dots on the bow
+  herTop: '#f2eee6',
+  herTopShade: '#d4cdc0',
+  herTopHi: '#ffffff',
   crownPink: '#f7a8cf',
   crownPinkShade: '#e07fb0',
-  // him (from behind): short dark hair, dark navy jacket, blue paper crown
+  crownPinkInside: '#d6417f', // the inside of the crown's back, seen between its points
+  // him (from behind): short dark hair, brown jacket over a white shirt, blue paper crown
   himHair: '#231c24',
   himHairHi: '#4a3d4a',
   himSkin: '#ecbf9f',
   himSkinShade: '#d6a585',
-  himJacket: '#1c2230',
-  himJacketHi: '#3a4256',
+  himJacket: '#8a5a3c',
+  himJacketShade: '#64402c',
+  himJacketHi: '#ab7a52',
+  himShirt: '#f4f1ea',
   crownBlue: '#9fd8ee',
   crownBlueShade: '#6fb8d6',
   crownWhite: '#ffffff',
@@ -363,24 +372,56 @@ function crown(c, cx, top, w, base, shade, decos) {
 function herFromBehind(c, dx) {
   const s = PAL;
   const { x, y, r } = US_HER;
-  // leather jacket shoulders, with shine
-  c.ellipse(x, y + 26, 16, 11, s.leather);
-  c.rect(x - 16, y + 26, 33, H - y - 26, s.leather);
-  c.line(x - 11, y + 18, x - 6, y + 40, s.leatherHi);
-  c.line(x + 11, y + 18, x + 8, y + 40, s.leatherHi);
-  c.px(x - 10, y + 18, s.leatherShine);
-  c.px(x + 10, y + 18, s.leatherShine);
-  c.rect(x - 5, y + 14, 11, 3, s.leatherHi); // collar
-  // a little neck under the bob
+  // her white ribbed jumper: rounded dropped shoulders, long sleeves, the rib running down
+  c.ellipse(x, y + 26, 15, 11, s.herTop);
+  c.rect(x - 15, y + 26, 31, H - y - 26, s.herTop);
+  for (let rx = x - 12; rx <= x + 12; rx += 2) c.line(rx, y + 18, rx, H, s.herTopShade);
+  for (const side of [-1, 1]) {
+    const sx = x + side * 12; // where the sleeve drops off the shoulder
+    c.line(sx, y + 20, sx + side, H, s.herTopShade);
+    c.rect(side < 0 ? x - 15 : x + 14, y + 24, 2, H - y - 24, s.herTopShade); // the sleeves' far sides
+    c.px(sx - side * 3, y + 18, s.herTopHi); // light across the shoulder
+    c.px(sx - side * 5, y + 17, s.herTopHi);
+  }
+  // her neck (mostly hidden now her hair is longer)
   const hx = x + dx;
   c.rect(hx - 2, y + 8, 5, 8, s.herSkin);
-  // the bob from behind: round on top, full to the jaw, curving under
+  // shoulder-length hair from behind: round on top, falling in soft waves onto her shoulders
   c.circle(hx, y, r, s.herHair);
-  c.ellipse(hx, y + 3, r, r - 2, s.herHair);
-  c.rect(hx - 7, y + r - 1, 15, 1, s.herHairShade);
-  for (const [px, py] of [[-5, -2], [-3, 1], [4, -1], [6, 3], [-7, 5]]) c.px(hx + px, y + py, s.herHairHi);
-  for (const i of [-4, 3]) c.line(hx + i, y + 3, hx + i + 1, y + r - 2, s.herHairShade); // a couple of strands
-  // her pink paper crown
+  c.ellipse(hx, y + 7, r + 1, 12, s.herHair);
+  for (const [wx, len] of [[-10, 1], [-8, 2], [-5, 1], [-2, 2], [1, 1], [4, 2], [7, 1], [9, 2]])
+    c.rect(hx + wx, y + 18, 2, len, s.herHair); // wavy ends
+  // the top section swept back towards the bow (a few strands curving in), and light on the crown of her head
+  for (const side of [-1, 1]) {
+    c.line(hx + side * 8, y - 5, hx + side * 3, y + 1, s.herHairShade);
+    c.line(hx + side * 9, y + 6, hx + side * 9, y + 16, s.herHairShade); // long strands at the sides
+  }
+  for (const [px, py] of [[-5, -6], [-2, -7], [3, -6], [6, -4], [-7, -1], [8, 0], [-9, 9], [9, 12], [-6, 15], [6, 16]]) c.px(hx + px, y + py, s.herHairHi);
+  // half up: gathered at the back of her head with a big black bow, a little tail of hair below it
+  const by = y + 3; // the bow's knot
+  c.rect(hx - 1, by + 2, 3, 7, s.herHair);
+  c.line(hx + 1, by + 2, hx + 1, by + 8, s.herHairShade);
+  c.px(hx, by + 9, s.herHairShade);
+  for (const side of [-1, 1]) {
+    // a loop either side, pinched at the knot and fanning out, tipped up a little
+    for (let i = 0; i < 5; i++) {
+      const half = i < 1 ? 1 : i < 3 ? 2 : 3;
+      c.rect(hx + side * (2 + i), by - half - (i >> 1), 1, half * 2 + 1, s.bow);
+    }
+    for (let i = 1; i < 5; i++) c.px(hx + side * (2 + i), by - (i < 3 ? 2 : 3) - (i >> 1), s.bowHi); // sheen on top
+    // the ribbon tails hanging down over her hair
+    c.line(hx + side, by + 1, hx + side * 3, by + 7, s.bow);
+    c.line(hx + side * 2, by + 1, hx + side * 4, by + 7, s.bow);
+  }
+  c.rect(hx - 1, by - 1, 3, 3, s.bow); // the knot
+  c.px(hx, by - 1, s.bowHi);
+  c.px(hx - 5, by - 2, s.bowDot); // a couple of tiny pale dots in the fabric
+  c.px(hx + 4, by - 1, s.bowDot);
+  // her pink paper crown, with the inside of its back showing between the points
+  const crownW = 2 * Math.ceil(r) + 1;
+  const crownTop = y - r - 3;
+  for (let cy = Math.floor(crownTop); cy < crownTop + 6; cy++)
+    for (let cx = Math.round(hx - crownW / 2); cx < hx + crownW / 2; cx++) if (c.get(cx, cy)[3]) c.px(cx, cy, s.crownPinkInside);
   crown(c, hx, y - r - 3, 2 * Math.ceil(r) + 1, s.crownPink, s.crownPinkShade,
     [[3, 6, s.crownWhite], [8, 7, s.crownWhite], [13, 7, s.crownWhite], [18, 6, s.crownWhite], [5, 3, s.crownWhite], [15, 3, s.crownDeco], [10, 4, s.crownDeco]]);
 }
@@ -388,16 +429,23 @@ function herFromBehind(c, dx) {
 function himFromBehind(c, dx) {
   const s = PAL;
   const { x, y, r } = US_HIM;
-  // dark jacket shoulders
+  // brown jacket shoulders: highlights on top, sleeve seams, a seam down the back
   c.ellipse(x, y + 27, 18, 12, s.himJacket);
   c.rect(x - 18, y + 27, 37, H - y - 27, s.himJacket);
-  c.line(x - 13, y + 19, x - 8, y + 42, s.himJacketHi);
-  c.line(x + 13, y + 19, x + 9, y + 42, s.himJacketHi);
-  c.rect(x - 6, y + 14, 13, 3, s.himJacketHi); // collar
+  c.ellipse(x - 10, y + 18, 5, 1, s.himJacketHi);
+  c.ellipse(x + 10, y + 18, 5, 1, s.himJacketHi);
+  c.line(x - 13, y + 19, x - 8, y + 42, s.himJacketShade);
+  c.line(x + 13, y + 19, x + 9, y + 42, s.himJacketShade);
+  c.line(x, y + 19, x, H, s.himJacketShade);
   // neck (his hair is short, so it shows)
   const hx = x + dx;
   c.rect(hx - 3, y + 6, 7, 10, s.himSkin);
   c.rect(hx - 3, y + 13, 7, 1, s.himSkinShade);
+  // the white shirt collar peeking over the jacket's collar
+  c.rect(x - 5, y + 14, 11, 2, s.himShirt);
+  c.rect(x - 6, y + 16, 13, 2, s.himJacketShade); // jacket collar
+  c.px(x - 7, y + 17, s.himJacketShade);
+  c.px(x + 7, y + 17, s.himJacketShade);
   // head from behind: short dark hair, ears either side
   c.circle(hx, y, r, s.himHair);
   c.rect(hx - r - 1, y - 1, 2, 5, s.himSkin);

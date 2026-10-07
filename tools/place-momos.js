@@ -25,7 +25,7 @@ const SPOTS = [
   { x: 17, y: 15, note: 'beside the Palais' },
   { x: 55, y: 11, note: 'where the forest path to the secret bench begins' },
   { x: 58, y: 17, note: 'the far east edge' },
-  { x: 22, y: 35, note: 'peeking out from under a tree' },
+  { x: 21, y: 35, note: 'peeking out from beside a tree' },
   { x: 40, y: 31, note: 'the open meadow' },
   { x: 59, y: 38, note: 'the bottom corner by the garden flowers' },
 ];

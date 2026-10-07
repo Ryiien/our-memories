@@ -11,7 +11,7 @@
  "type": "map",
  "version": "1.10",
  "nextlayerid": 9,
- "nextobjectid": 59,
+ "nextobjectid": 69,
  "layers": [
   {
    "id": 1,
@@ -9891,7 +9891,7 @@
    "y": 0,
    "objects": [
     {
-     "id": 49,
+     "id": 59,
      "name": "momo-1",
      "type": "",
      "point": true,
@@ -9903,7 +9903,7 @@
      "visible": true
     },
     {
-     "id": 50,
+     "id": 60,
      "name": "momo-2",
      "type": "",
      "point": true,
@@ -9915,7 +9915,7 @@
      "visible": true
     },
     {
-     "id": 51,
+     "id": 61,
      "name": "momo-3",
      "type": "",
      "point": true,
@@ -9927,7 +9927,7 @@
      "visible": true
     },
     {
-     "id": 52,
+     "id": 62,
      "name": "momo-4",
      "type": "",
      "point": true,
@@ -9939,7 +9939,7 @@
      "visible": true
     },
     {
-     "id": 53,
+     "id": 63,
      "name": "momo-5",
      "type": "",
      "point": true,
@@ -9951,7 +9951,7 @@
      "visible": true
     },
     {
-     "id": 54,
+     "id": 64,
      "name": "momo-6",
      "type": "",
      "point": true,
@@ -9963,7 +9963,7 @@
      "visible": true
     },
     {
-     "id": 55,
+     "id": 65,
      "name": "momo-7",
      "type": "",
      "point": true,
@@ -9975,11 +9975,11 @@
      "visible": true
     },
     {
-     "id": 56,
+     "id": 66,
      "name": "momo-8",
      "type": "",
      "point": true,
-     "x": 360,
+     "x": 344,
      "y": 570,
      "width": 0,
      "height": 0,
@@ -9987,7 +9987,7 @@
      "visible": true
     },
     {
-     "id": 57,
+     "id": 67,
      "name": "momo-9",
      "type": "",
      "point": true,
@@ -9999,7 +9999,7 @@
      "visible": true
     },
     {
-     "id": 58,
+     "id": 68,
      "name": "momo-10",
      "type": "",
      "point": true,
