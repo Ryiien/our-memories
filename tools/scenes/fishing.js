@@ -377,10 +377,34 @@ function drawDress(breeze) {
   return d;
 }
 
+// Her grown-out roots, drawn the same way as on her walking sprite
+// (SIDE in tools/lib/sprites.js) instead of figure()'s even checkerboard: a
+// solid dark crown, then a row that's dark with a pink pixel every third
+// column, then a pink row with a few dark pixels tucked in between those.
+// One string per row of the figure (k = dark, . = left pink); the fringe's tips stay pink.
+const ROOTS = {
+  7: 'kkkkkkkkkkkkkkkkkkkkkkkk',
+  8: 'kkkkkkkkkkkkkkkkkkkkkkkk',
+  9: 'kkkkkkkkkkkkkkkkkkkkkkkk',
+  10: 'kkkkkkkk.kk.kk.kkkkkkkkk',
+  11: '.......k..k..k..........',
+};
+
+function darkenRoots(her) {
+  for (const [row, pattern] of Object.entries(ROOTS))
+    [...pattern].forEach((ch, x) => {
+      const y = Number(row);
+      const [rr, g, b, a] = her.get(x, y);
+      const hex = `#${[rr, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+      if (ch === 'k' && a && (hex === HER.hairColor || hex === HER.hairHi)) her.px(x, y, HER.hairRoot);
+    });
+}
+
 function drawHer() {
   const sheet = new Canvas(W * BREEZE.length, H);
   BREEZE.forEach((breeze, f) => {
-    const her = figure({ ...HER, view: 'side' });
+    const her = figure({ ...HER, view: 'side', hairRoot: null });
+    darkenRoots(her);
     // take away the plain dress and arm (rows 20–37); keep her head, hair and legs
     for (let y = 20; y <= 37; y++) for (let x = 0; x < FIG.w; x++) her.clear(x, y);
     her.blit(drawDress(breeze), 0, 0);

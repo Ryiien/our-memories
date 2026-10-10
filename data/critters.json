@@ -1,0 +1,15 @@
+{
+  "critters": [
+    {
+      "id": "spoonkettle",
+      "name": "Spoonkettle",
+      "sprite": "sprites/spoonkettle.png",
+      "frameWidth": 18,
+      "frameHeight": 18,
+      "fps": 3,
+      "idle": [0, 0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 3, 0, 0, 1, 0],
+      "sayFrame": 4,
+      "says": "Meow!"
+    }
+  ]
+}

@@ -7,7 +7,8 @@
 //   x: 18..42   town: houses, café, street, lamps   (pub memory: npm run scene:pub
 //               turns the café into the Oxford Scholar)
 //   x: 43..59   park with trees + picnic            (picnic memory)
-//   top-right   a dense grove hiding a bench        (hidden memory)
+//   top-right   a dense grove hiding a bench        (hidden memory; npm run scene:grove
+//               replaces it with a winding trail up to a hedged nook)
 // -----------------------------------------------------------------------------
 import { T, TS, COLUMNS, TILE_COUNT, tiledTileData } from './tileset.js';
 import { rng } from './canvas.js';

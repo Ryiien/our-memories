@@ -238,9 +238,10 @@ export function placeLamp(map, x, y) {
 /**
  * Adds an image (cols x rows tiles) as its own embedded tileset, without
  * placing any of it. Returns the tileset's first gid: tile id n is gid
- * firstgid + n. Options as for stampBuilding.
+ * firstgid + n. Options as for stampBuilding, plus `noFade` (tile ids that
+ * stay fully opaque in the Above layer when she walks behind them).
  */
-export function addTileset(map, { name, image, cols, rows, walkable = [], frames = 1, animated = [], frameMs = 500 }) {
+export function addTileset(map, { name, image, cols, rows, walkable = [], noFade = [], frames = 1, animated = [], frameMs = 500 }) {
   const firstgid = Math.max(...map.tilesets.map((t) => t.firstgid + t.tilecount));
   const sheetCols = cols * frames;
   const tiles = [];
@@ -249,7 +250,10 @@ export function addTileset(map, { name, image, cols, rows, walkable = [], frames
       const local = ty * cols + tx; // id within one copy of the picture
       const id = ty * sheetCols + tx; // id in the whole tileset image
       const entry = { id };
-      if (!walkable.includes(local)) entry.properties = [{ name: 'collides', type: 'bool', value: true }];
+      const properties = [];
+      if (!walkable.includes(local)) properties.push({ name: 'collides', type: 'bool', value: true });
+      if (noFade.includes(local)) properties.push({ name: 'noFade', type: 'bool', value: true });
+      if (properties.length) entry.properties = properties;
       if (frames > 1 && animated.includes(local))
         entry.animation = Array.from({ length: frames }, (_, f) => ({ tileid: id + f * cols, duration: frameMs }));
       if (entry.properties || entry.animation) tiles.push(entry);

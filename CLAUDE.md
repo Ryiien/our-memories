@@ -23,6 +23,8 @@ instead (and document it here and in the README).
 
 Do not add features that weren't asked for (no combat, inventory, NPC dialogue,
 quests, etc.). Obvious extension points are marked with `// TODO` comments.
+(The one exception, asked for: critters — animals that say a line when she
+presses E next to them, from `data/critters.json`. Keep them to that.)
 
 ## Tech
 
@@ -71,6 +73,7 @@ our-memories/
 ├── data/game.json             # her name, title text, optional world music
 ├── data/fishing.json          # the love letters + fishing settings and background layers
 ├── data/sounds.json           # sound effect name -> file (or null)
+├── data/critters.json         # animals sitting around the map (Spoonkettle the cat) and what they say
 ├── tools/
 │   ├── make-placeholders.js   # generates all placeholder art/audio/map (never overwrites without --force)
 │   ├── make-sfx.js            # placeholder sound effects -> audio/sfx/ (never overwrites without --force)
@@ -85,9 +88,11 @@ our-memories/
     ├── main.js                # Phaser config + integer zoom fitting
     ├── config.js              # ALL tunable constants (sizes, speeds, timings, colours, depths)
     ├── scenes/  Boot, Title, World, HUD, Memory, Finale, Fishing
-    ├── objects/ Player, TouchControls, Typewriter (pixel text + typing), ContinueHeart
+    ├── objects/ Player, TouchControls, Typewriter (pixel text + typing), ContinueHeart,
+    │            GoldCounter (a complete counter turns gold: Boot makes 'panel-gold' from panel.png)
     └── systems/ MemoryRegistry, SaveManager, LayerAnimator, Music (crossfades), Momos (reads the Momos layer),
-                 LoveLetters (reads data/fishing.json + the map's Fishing layer), Sfx (data/sounds.json)
+                 LoveLetters (reads data/fishing.json + the map's Fishing layer), Sfx (data/sounds.json),
+                 Critters (reads data/critters.json + the map's Critters layer)
 ```
 
 Additions beyond the original brief, and why: `data/game.json` (title text and
@@ -206,6 +211,37 @@ continue), Memory.advance + Finale.close (continue). New effect = a name in
 `tools/lib/audio.js` / `make-sfx.js` for a placeholder).
 Music tracks are chosen by the user in the data files (worldMusic is null for now).
 
+## data/critters.json (animals that say hi)
+
+```json
+{
+  "critters": [
+    {
+      "id": "spoonkettle",            // required, unique; the map's Critters layer needs a point with this name
+      "name": "Spoonkettle",          // its name (checked against the font; not shown in game yet)
+      "sprite": "sprites/spoonkettle.png",
+      "frameWidth": 18, "frameHeight": 18,   // one frame of the sheet (frames left to right)
+      "fps": 3,                       // idle animation speed
+      "idle": [0, 0, 2, 0, 1],        // frames to loop while it sits there (default [0])
+      "sayFrame": 4,                  // frame shown while its speech bubble is up (optional)
+      "says": "Meow!",                // a line, or a list (one picked at random each time)
+      "faces": "left"                 // which way the drawing looks (default "left"); it turns to face her when it talks
+    }
+  ]
+}
+```
+Boot loads each sheet (`critter:<id>`) and checks the font has every character.
+In World: drawn feet-first on its point, sorted in front of / behind her by feet y,
+with a solid `CRITTER.body` box round its feet. No prompt is shown (asked for:
+it's a surprise); within `CRITTER.talkRadius`, E pops a speech bubble (`panel` +
+text, `CRITTER.sayMs`), shows `sayFrame`, and turns it to face her. The point's
+y is the bottom of the sheet. Feel is `CRITTER` in config.js. Spoonkettle is a
+spotted tabby, all greys (silver with dark spots, pale grey cheeks/chest/legs,
+yellow eyes, blue collar with a gold tag), 5 frames of 18×18 drawn by `tools/scenes/spoonkettle.js`:
+0 sit, 1 tail flick, 2 blink, 3 ear twitch, 4 meow. Each is a 16×16 drawing plus a
+margin for his soft shadow and grass tufts in front of his paws (`GRASS` / `TUFTS`),
+so he sits in the grass; his outline is a softer `#46414e`.
+
 ## data/finale.json / data/game.json
 
 - finale: `title`, `lines` (array, typed one after another, centred), `signature`,
@@ -222,7 +258,9 @@ Music tracks are chosen by the user in the data files (worldMusic is null for no
 - Layers (names are case-sensitive):
   - `Ground`, `Decor` — tile layers under her.
   - `Above` — tile layer drawn over her (treetops, lamp tops). Tiles near her
-    fade to 40% when she's underneath so she's never lost.
+    fade to 40% when she's underneath so she's never lost — except tiles whose
+    tileset property `noFade` (bool) is true (World.fadeCanopy), e.g. the glass
+    bus shelter, which she shows through by itself.
   - `Collision` — tile layer, hidden in game. Paint the red-X blocker tile (id 44).
   - **Collision rule:** any tile whose tileset property `collides` (bool) is true
     blocks her on `Ground`, `Decor` or `Collision`. Water, walls, trunks etc.
@@ -241,6 +279,10 @@ Music tracks are chosen by the user in the data files (worldMusic is null for no
     The HUD's top-right counter shows found/total; it's hidden if there are none.
     Once she has every momo she walks `MOMO.allFoundSpeed` (2) times faster
     (World.updateMomoSpeed → Player.setSpeedMultiplier, walk animation too).
+  - `Critters` — object layer (optional) of points, one per critter in
+    `data/critters.json`, named by its id; the point is where its feet go.
+    `npm run scene:spoonkettle` writes Spoonkettle's (tile x 51, y 4, in the
+    secret grove: the grass between the All Nations bench and the tree at x 52–53).
 - Boot cross-checks: every memory needs a trigger and every trigger a memory.
 - **Buildings as their own tileset:** a one-off building can be a separate
   embedded tileset whose image is the whole facade cut into 16×16 tiles (e.g.
@@ -287,19 +329,48 @@ Music tracks are chosen by the user in the data files (worldMusic is null for no
   plus one right of RMIT under the bushes (canopy x 42–43, y 2–3, trunk y 4; momo-4
   sits just right of its trunk at x 44, y 4) and
   benches at x 22–23 and 39–40, y 9, just inside the outer lamps (x 21, x 41).
+  Round bushes (cosy HEDGE, `BUSHES` in the same script) close off both ends of the
+  street, mirrored: east end x 42–43, y 5 (under that plane tree), x 43, y 6 and y 8
+  (past the pavement and cobbles, leaving y 7 open into the clearing), x 42–43, y 9
+  (right of the lamp); west end the same at x 17–18 (y 7 left open onto the beach).
+  Bushes on the grass edge (x 17) use `bush` (`tiles/bush.png`, 1 tile, solid): the
+  HEDGE bush cut out with no grass square behind it, so the sandy edge shows through.
   The fronts of the Palais and San Remo (`venue-props`, placed tile by tile by
   `tools/scenes/venue-fronts.js`, all on y 19): flower urns (x 19, 28) and pink /
   blue poster easels (x 20, 27) outside the Palais's lamps; a red carpet on San
   Remo's trigger tiles (x 37–38, walkable), rope posts either side (x 36, 39) and
   spiral topiaries (x 34, 41).
-- `stampBuilding` options: `walkable` (tile ids that don't collide; default all
-  solid) and `frames`/`animated`/`frameMs` (the image holds N copies side by
+  The secret grove (`grove`, 16×20, for the hidden `first-date` bench) replaced
+  the placeholder's solid block of trees in the top-right corner, x 50–59,
+  y 0–19 (`tools/scenes/secret-grove.js` clears only that region's Decor/Above/
+  Collision first). Only the ground is its own tileset, in the **Ground** layer, x 44–59
+  (reaching under the All Nations hilltop, which keeps its Decor)
+  (all walkable, drawn over the grass that was there, so it only runs once): a
+  trail of stepping stones that leaves the main path at x 55–56, swings left (x 52, y 15), right
+  (x 56–57, y 10) and enters
+  a hedged nook between two trees (trunks x 52–53 and 58–59) through the gap at
+  x 54–55, y 5; a crazy-paving patio with a pink heart (x 55–59, y 2–4). A branch of
+  stones (`BRANCH`) leaves the trail at x 54, y 7 and runs west to the All Nations
+  hilltop bench's gravel pad (ends x 47, y 3). Cosy
+  tiles on top: 6 trees, HEDGE bushes (`TREES` / `BUSHES` in the script), bench
+  x 56–57, y 1, lamp x 55, pot x 58; trigger `secret bench` x 56–57, y 2–3.
+  The same script adds the `bus-stop` tileset (4×3, the first-date scene's
+  shelter + PT sign, no route numbers) at x 50–53, y 17–19, just left of where
+  the stones meet the main path, and runs the main path (y 20–21) on to the east
+  edge (x 58–59). The stop's top two rows (roof, glass, bench, sign) are in
+  **Above**, walkable and `noFade`, so she can walk behind it and shows through
+  the semi-transparent glass while the roof hides her head; its bottom row (pad,
+  posts, base of the glass, pole) is solid, in Decor. momo-6 is behind the glass
+  (x 52, y 18).
+- `stampBuilding` / `addTileset` options: `walkable` (tile ids that don't collide; default all
+  solid), `noFade` (tile ids that stay opaque in Above when she's behind them) and `frames`/`animated`/`frameMs` (the image holds N copies side by
   side; listed tiles cycle through them as a Tiled tile animation).
 - `npm run placeholders -- --force` regenerates `world.json` *without* such
   additions; re-run the scene scripts (`npm run scene:formal`, `npm run
   scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`,
   `npm run scene:camping`, `npm run scene:collins`, `npm run scene:street`,
-  `npm run scene:venues`, `npm run scene:fishing`, `npm run scene:all-nations`, then `npm run momos`) to re-add them
+  `npm run scene:venues`, `npm run scene:fishing`, `npm run scene:all-nations`, `npm run scene:grove`,
+  `npm run scene:spoonkettle`, then `npm run momos`) to re-add them
   (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,
@@ -345,6 +416,10 @@ blocker(44)/grass edge.
   head and body don't merge. The chibi `figure()` draws the same dress
   (`PARTY_DRESS` in `tools/lib/cutscenes.js`, on via `partyDress` in the `HER`
   preset) for standing front/back views; side views (fishing) draw it in the scene script.
+  The fishing scene draws her roots itself (`ROOTS` in `tools/scenes/fishing.js`) to match
+  the walking sprite's SIDE frames — solid dark crown, a dark row with a pink pixel every
+  third column, then a pink row with a few dark ones between — instead of `figure()`'s
+  even checkerboard.
 - **Him (the partner):** tall, white with a warm (not pale) skin tone, **short**
   black hair with a fringe (neck visible from back and side), open **brown
   jacket** (shoulder highlights, lapels, pockets, cuffs) over a white shirt, jeans.

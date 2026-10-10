@@ -65,6 +65,13 @@ export const MOMO = {
   allFoundSpeed: 2, // once she has every momo she walks this many times faster
 };
 
+// ---- Critters (animals from data/critters.json, on the map's "Critters" layer) ----
+export const CRITTER = {
+  talkRadius: 20, // pressing E makes it talk when her feet are this close (pixels; no prompt is shown)
+  body: { width: 10, height: 5 }, // the solid bit around its feet she can't walk through
+  sayMs: 1600, // how long the speech bubble stays up
+};
+
 // ---- Fishing (the love-letter minigame off the end of the pier) --------------
 // Letters, the seaweed chance and where things sit in the art are in
 // data/fishing.json; this is just how it feels.
@@ -109,6 +116,8 @@ export const COLORS = {
   butter: 0xf6d983,
   peach: 0xf2c6a0,
   lavender: 0xb8a6d9,
+  gold: 0xd9a521, // outline of a finished counter (all memories / momos / letters)
+  goldText: 0xb07d12, // its numbers: a deeper gold so they read on the cream panel
   white: 0xffffff,
   black: 0x000000,
 };

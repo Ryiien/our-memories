@@ -10,6 +10,7 @@ import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, FONT, PLAYER } from '../co
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
 import LoveLetters from '../systems/LoveLetters.js';
+import Critters from '../systems/Critters.js';
 import Music from '../systems/Music.js';
 import Sfx from '../systems/Sfx.js';
 import gameData from '../../data/game.json';
@@ -51,6 +52,11 @@ export default class Boot extends Phaser.Scene {
       frameHeight: PLAYER.frameHeight,
     });
 
+    // Critters (data/critters.json): one sprite sheet each
+    for (const c of Critters.all()) {
+      this.load.spritesheet(Critters.key(c), c.sprite, { frameWidth: c.frameWidth, frameHeight: c.frameHeight });
+    }
+
     // Map (imported as data) + every tileset image it uses. The tileset's
     // image path in Tiled only matters for Tiled; here we take the file name
     // and look for it in public/assets/tiles/.
@@ -85,8 +91,37 @@ export default class Boot extends Phaser.Scene {
   }
 
   create() {
+    this.makeGoldPanel();
     this.checkData();
     this.scene.start('Title');
+  }
+
+  /**
+   * 'panel-gold': a copy of ui/panel.png with its outline (every pixel at the
+   * edge of the shape) painted gold. Counters switch to it once they're complete.
+   */
+  makeGoldPanel() {
+    const src = this.textures.get('panel').getSourceImage();
+    const { width: w, height: h } = src;
+    const tex = this.textures.createCanvas('panel-gold', w, h);
+    const ctx = tex.getContext();
+    ctx.drawImage(src, 0, 0);
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const solid = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3] > 0;
+    const edge = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (solid(x, y) && !(solid(x - 1, y) && solid(x + 1, y) && solid(x, y - 1) && solid(x, y + 1))) edge.push((y * w + x) * 4);
+      }
+    }
+    for (const i of edge) {
+      d[i] = (COLORS.gold >> 16) & 0xff;
+      d[i + 1] = (COLORS.gold >> 8) & 0xff;
+      d[i + 2] = COLORS.gold & 0xff;
+    }
+    ctx.putImageData(img, 0, 0);
+    tex.refresh();
   }
 
   /** Friendly warnings for common mistakes (shown in the browser console). */
@@ -130,6 +165,10 @@ export default class Boot extends Phaser.Scene {
     for (const l of LoveLetters.all()) {
       check(l.title, `letter "${l.id}" title`);
       check(l.text, `letter "${l.id}" text`);
+    }
+    for (const c of Critters.all()) {
+      check(c.name, `critter "${c.id}" name`);
+      c.says.forEach((s) => check(s, `critter "${c.id}" says`));
     }
   }
 }

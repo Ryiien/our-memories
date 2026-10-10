@@ -23,7 +23,7 @@ const SPOTS = [
   { x: 17, y: 1, note: 'top-left corner, past the red house' },
   { x: 44, y: 4, note: 'beside the tree under the bushes, right of RMIT' },
   { x: 17, y: 15, note: 'beside the Palais' },
-  { x: 55, y: 11, note: 'where the forest path to the secret bench begins' },
+  { x: 52, y: 18, note: 'behind the bus stop, seen through the glass' },
   { x: 58, y: 17, note: 'the far east edge' },
   { x: 21, y: 35, note: 'peeking out from beside a tree' },
   { x: 40, y: 31, note: 'the open meadow' },

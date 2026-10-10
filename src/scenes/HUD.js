@@ -8,6 +8,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, COLORS, TIMING } from '../config.js';
 import { pixelText } from '../objects/Typewriter.js';
+import { setGold } from '../objects/GoldCounter.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
 import SaveManager from '../systems/SaveManager.js';
@@ -43,15 +44,17 @@ export default class HUD extends Phaser.Scene {
   }
 
   refresh() {
-    const text = `${SaveManager.foundCount()}/${MemoryRegistry.count}`;
-    this.counter.setText(text);
+    // Each counter turns gold (outline + numbers) once it's complete.
+    const found = SaveManager.foundCount();
+    this.counter.setText(`${found}/${MemoryRegistry.count}`);
+    setGold(this.counterBg, this.counter, found >= MemoryRegistry.count);
     const w = this.counter.getTextBounds(false).local.width;
     this.counterBg.setSize(w + 21, 15);
 
-    // Momo counter: [momo] 3/10, right-aligned. Turns rose once she has them all.
+    // Momo counter: [momo] 3/10, right-aligned.
     const momos = SaveManager.momoCount();
     this.momoCounter.setText(`${momos}/${Momos.count}`);
-    this.momoCounter.setTint(momos >= Momos.count ? COLORS.roseDark : COLORS.ink);
+    setGold(this.momoBg, this.momoCounter, momos >= Momos.count);
     const mw = this.momoCounter.getTextBounds(false).local.width;
     this.momoBg.setSize(mw + 27, 15); // 4 padding + 17 icon + 2 gap + text + 4 padding
     this.momoIcon.setX(GAME_WIDTH - 4 - (mw + 27) + 4 + 8.5);

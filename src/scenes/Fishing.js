@@ -21,6 +21,7 @@ import SaveManager from '../systems/SaveManager.js';
 import Music from '../systems/Music.js';
 import Typewriter, { pixelText } from '../objects/Typewriter.js';
 import ContinueHeart from '../objects/ContinueHeart.js';
+import { setGold } from '../objects/GoldCounter.js';
 import Sfx from '../systems/Sfx.js';
 
 const S = LoveLetters.settings;
@@ -116,7 +117,7 @@ export default class Fishing extends Phaser.Scene {
   refreshCounter() {
     const found = SaveManager.letterCount();
     this.counterText.setText(`${found}/${LoveLetters.count}`);
-    this.counterText.setTint(found >= LoveLetters.count ? COLORS.roseDark : COLORS.ink);
+    setGold(this.counterBg, this.counterText, found >= LoveLetters.count); // gold once every letter is found
     const w = this.counterText.getTextBounds(false).local.width;
     const boxW = w + 26; // 4 padding + 15 icon + 3 gap + text + 4 padding
     this.counterBg.setSize(boxW, 15);

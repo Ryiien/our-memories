@@ -48,6 +48,8 @@ Other commands:
 | `npm run scene:street` | redraws the street props along Collins Coffee House, the pub and RMIT (see §6) |
 | `npm run scene:venues` | redraws the props in front of the Palais Theatre and San Remo (see §6) |
 | `npm run scene:all-nations` | redraws the All Nations Park scene + the hilltop bench on the map (see §6) |
+| `npm run scene:spoonkettle` | redraws Spoonkettle the cat + puts him on the map in the secret grove (see §2) |
+| `npm run scene:grove` | puts the secret grove (a winding trail of stepping stones, the hidden bench's nook) in the map's top-right corner (see §6) |
 | `npm run scene:fishing` | redraws the fishing minigame (pier at sunset, bobber, letter paper…) + the fishing spot on the map (see §6) |
 
 ### Controls
@@ -98,6 +100,23 @@ Add, remove or rewrite letters freely — keep each `id` unique (her save
 remembers letters by id, so keep a letter's id if you only change its words).
 Keep each one to a few sentences so it fits on the paper. `scene` and
 `layers` describe the background art; leave them alone unless you redraw it.
+
+### Spoonkettle (and any other animals)
+
+Spoonkettle the cat sits in the secret grove, on the grass between the All Nations bench and the tree beside the nook. There's no
+prompt, so he's a little surprise: pressing E next to him makes him say "Meow!"
+in a speech bubble. What he says, his name and his animation
+are in `data/critters.json`:
+
+```json
+{ "id": "spoonkettle", "name": "Spoonkettle", "says": "Meow!", ... }
+```
+
+`"says"` can also be a list, like `["Meow!", "Mrrp?", "Prrrr..."]` (he picks one each
+time). To add another animal: draw a sprite sheet (frames side by side), add an
+entry with a new `id`, and add a point with that name to the map's `Critters`
+layer in Tiled. His art is drawn by `tools/scenes/spoonkettle.js` (`PAL` at the
+top; `npm run scene:spoonkettle`), preview in `tools/previews/spoonkettle.png`.
 
 ---
 
@@ -299,6 +318,8 @@ existing files** unless you run it with `--force`, so re-running it is safe.
 | `public/assets/tiles/palais.png` | 160×112: the Palais Theatre, 10×7 tiles (its own tileset in the map) |
 | `public/assets/tiles/picnic.png` | 64×32: the picnic on the map, 4×2 tiles (bikes on top, solid; blanket below, walkable) |
 | `public/assets/tiles/garden.png` | 320×144: the botanic garden, 10×9 tiles, drawn twice side by side (the second copy is the water's shimmer frame) |
+| `public/assets/tiles/grove.png` | 256×320: the secret grove's ground (grass, stepping stones, patio), 16×20 tiles at x 44–59 in the Ground layer, all walkable |
+| `public/assets/tiles/bus-stop.png` | 64×48: the bus stop by the grove, 4×3 tiles (PT sign + shelter). Top two rows go in the Above layer so she can walk behind it and be seen through the glass; the bottom row is solid |
 
 If the player sprite size changes, update `PLAYER` in `src/config.js`.
 
@@ -524,6 +545,32 @@ breeze), `bench.png` (the backrest, in front of you), `vignette.png`. The
 first run also puts the hilltop bench on the map, at the top of the clearing east of RMIT:
 a bench between two basalt boulders on a gravel pad, with a row of bushes
 behind it and its trigger on the gravel in front (`tools/previews/all-nations-park-map.png`).
+
+### The secret grove (where the first date is hidden)
+
+The top-right corner of the map, where the hidden first-date bench waits. A
+winding trail of stepping stones leaves the end of the main path and curls up
+in an S between blossom trees and clumps of bushes, then slips
+between two trees into a hedged nook: a round crazy-paving patio with a pink
+heart set into it, a bench, a lamp and a pot of flowers. Just below the nook a
+branch of stones splits off west, up to the All Nations hilltop bench. Where the stones meet
+the main path, just left of them, is the bus stop from the first-date scene
+(the glass shelter with its orange roof edge and bench, and the PT sign — no
+route numbers). She can walk behind the shelter and be seen through its glass,
+and there's a momo hiding back there. The main path now runs on to the east
+edge of the map. The
+trees, bushes, bench, lamp and pot are the usual tiles; the ground and the bus
+stop are drawn by `tools/scenes/secret-grove.js` (`PAL` at the top; the trail's
+curve is `TRAIL` and the branch's is `BRANCH`, where each tree and bush goes is in `TREES` / `BUSHES`, and the
+bus stop is `BUS_STOP`):
+
+```
+npm run scene:grove       # draws the ground + bus stop and puts the grove on the map (first time only)
+```
+
+It only changes the map the first time (the ground is drawn over the grass that
+was there), so to move things around: `npm run placeholders -- --force`, re-run
+the scene scripts, then this one. Preview: `tools/previews/secret-grove-map.png`.
 
 ### The Collins Coffee House scene
 

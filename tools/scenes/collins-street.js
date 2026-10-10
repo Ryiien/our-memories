@@ -11,10 +11,12 @@
 // Run it after scene:collins and scene:pub (it decorates their pavement).
 // Tweak colours in PAL below and re-run. Outputs:
 //   public/assets/tiles/street-props.png   the props (one row of 16x16 tiles)
+//   public/assets/tiles/bush.png           a see-through bush, for the grass edge by the beach
 //   tools/previews/collins-street.png      the props on a strip of pavement (3x size)
 // -----------------------------------------------------------------------------
 import fs from 'node:fs';
 import path from 'node:path';
+import { PNG } from 'pngjs';
 
 import { Canvas } from '../lib/canvas.js';
 import { ROOT, makeSaver, ring, softEllipse, writePreview, addTileset } from '../lib/scene-kit.js';
@@ -94,12 +96,20 @@ const PLACES = [
   { prop: 'bin', x: 41, y: 6 },
 ];
 // From the cosy tileset: plane trees (2x3) and benches (2x1) on the grass across the road
-const COSY = { canopy: [33, 34, 35, 36], trunk: [37, 38], bench: [29, 30] }; // gids
+const COSY = { canopy: [33, 34, 35, 36], trunk: [37, 38], bench: [29, 30], bush: 8 }; // gids
+const HEDGE_ID = 7; // the bush's tile id in the cosy tileset (gid 8)
+const GRASS_EDGE_GID = 46; // the grass-to-sand edge tile by the beach
 const TREES = [
   { x: 24, y: 9 }, { x: 37, y: 9 }, // top-left of the canopy (mirrored across the path)
   { x: 42, y: 2 }, // right of RMIT, just under the bushes
 ];
 const BENCHES = [{ x: 22, y: 9 }, { x: 39, y: 9 }]; // just inside the outer lamps (x 21 and x 41)
+// Round bushes (cosy HEDGE) closing off both ends of the street, mirrored: at the
+// east end under the plane tree right of RMIT, past the ends of the pavement and the
+// cobbles, and right of the last lamp; the same shape at the west end by Collins
+// Coffee House. A gap at y 7 is left open at each end (to the clearing / the beach).
+const EAST_BUSHES = [{ x: 42, y: 5 }, { x: 43, y: 5 }, { x: 43, y: 6 }, { x: 43, y: 8 }, { x: 42, y: 9 }, { x: 43, y: 9 }];
+const BUSHES = [...EAST_BUSHES, ...EAST_BUSHES.map(({ x, y }) => ({ x: 60 - x, y }))]; // the street runs x 18–42
 
 // ---- The props ----------------------------------------------------------------------
 const shadow = (c, cx, rx) => softEllipse(c, cx, 14, rx, 1.5, PAL.shadow, 0.5);
@@ -237,12 +247,47 @@ function drawProps() {
   return c;
 }
 
+// ---- A see-through bush: bush.png (1 tile) ------------------------------------------------
+// The cosy HEDGE tile has its own square of grass behind the bush, which looks
+// wrong on the grass edge by the beach (it hides the sandy strip). This is the
+// same bush cut out of the tileset with nothing behind it, so the ground shows.
+function drawSeeThroughBush() {
+  const png = PNG.sync.read(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'tiles', 'tileset.png')));
+  const shape = new Canvas(T, T);
+  shape.ellipse(8, 9, 7, 6, '#000000'); // the bush's outline in tools/lib/tileset.js
+  const bush = new Canvas(T, T);
+  const cols = png.width / T;
+  const sx = (HEDGE_ID % cols) * T;
+  const sy = Math.floor(HEDGE_ID / cols) * T;
+  for (let y = 0; y < T; y++)
+    for (let x = 0; x < T; x++) {
+      if (!shape.get(x, y)[3]) continue;
+      const i = ((sy + y) * png.width + sx + x) * 4;
+      bush.px(x, y, [png.data[i], png.data[i + 1], png.data[i + 2]], png.data[i + 3] / 255);
+    }
+  return bush;
+}
+
+/** Bushes standing on the grass edge get the see-through bush (adds its tileset once). */
+function useSeeThroughBushes(map) {
+  const layer = (name) => map.layers.find((l) => l.name === name).data;
+  const onEdge = BUSHES.filter(({ x, y }) => layer('Ground')[y * map.width + x] === GRASS_EDGE_GID);
+  if (!onEdge.length) return 0;
+  let ts = map.tilesets.find((t) => t.name === 'bush');
+  const gid = ts ? ts.firstgid : addTileset(map, { name: 'bush', image: '../public/assets/tiles/bush.png', cols: 1, rows: 1 });
+  for (const { x, y } of onEdge) layer('Decor')[y * map.width + x] = gid;
+  return onEdge.length;
+}
+
 // ---- Put them on the map (first time only) ------------------------------------------------
 function addToMap() {
   const file = path.join(ROOT, 'maps', 'world.json');
   const map = JSON.parse(fs.readFileSync(file, 'utf8'));
   if (map.tilesets.some((t) => t.name === 'street-props')) {
-    console.log('  map      already has the street props — left untouched');
+    // (the see-through bushes came later, so they're added to an existing street too)
+    const n = useSeeThroughBushes(map);
+    if (n) fs.writeFileSync(file, JSON.stringify(map, null, 1));
+    console.log(`  map      already has the street props — left untouched${n ? ` (${n} bushes on the grass edge made see-through)` : ''}`);
     return;
   }
   const layer = (name) => map.layers.find((l) => l.name === name).data;
@@ -264,14 +309,17 @@ function addToMap() {
     layer('Decor')[at(x, y)] = COSY.bench[0];
     layer('Decor')[at(x + 1, y)] = COSY.bench[1];
   }
+  for (const { x, y } of BUSHES) layer('Decor')[at(x, y)] = COSY.bush;
+  useSeeThroughBushes(map);
   fs.writeFileSync(file, JSON.stringify(map, null, 1));
-  console.log(`  map      put ${PLACES.length} props on the pavement, ${TREES.length} plane trees and ${BENCHES.length} benches across the road`);
+  console.log(`  map      put ${PLACES.length} props on the pavement, ${TREES.length} plane trees, ${BENCHES.length} benches and ${BUSHES.length} bushes`);
 }
 
 // ---- Run --------------------------------------------------------------------------------------
 console.log('Decorating Collins Street…');
 const props = drawProps();
 save(path.join(ROOT, 'public', 'assets', 'tiles', 'street-props.png'), props);
+save(path.join(ROOT, 'public', 'assets', 'tiles', 'bush.png'), drawSeeThroughBush());
 addToMap();
 
 const preview = new Canvas(SHEET_COLS * T + 2 * T, 2 * T);

@@ -24,7 +24,9 @@
     "scene:street": "node tools/scenes/collins-street.js",
     "scene:venues": "node tools/scenes/venue-fronts.js",
     "scene:fishing": "node tools/scenes/fishing.js",
-    "scene:all-nations": "node tools/scenes/all-nations-park.js"
+    "scene:all-nations": "node tools/scenes/all-nations-park.js",
+    "scene:grove": "node tools/scenes/secret-grove.js",
+    "scene:spoonkettle": "node tools/scenes/spoonkettle.js"
   },
   "dependencies": {
     "phaser": "^4.2.1"

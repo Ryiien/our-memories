@@ -11,17 +11,20 @@
 //   Momos          — object layer (optional): one point per momo to collect
 //   Fishing        — object layer (optional): rectangles where she can fish
 //                    for love letters (see scenes/Fishing.js)
+//   Critters       — object layer (optional): a point per animal in
+//                    data/critters.json (named by its id) where it sits
 // Any tile whose tileset property collides = true blocks her, on any of
 // Ground / Decor / Collision.
 // -----------------------------------------------------------------------------
 import Phaser from 'phaser';
-import { DEPTH, CAMERA_LERP, TIMING, COLORS, TILE_SIZE, MOMO } from '../config.js';
+import { DEPTH, CAMERA_LERP, TIMING, COLORS, TILE_SIZE, MOMO, CRITTER } from '../config.js';
 import Player from '../objects/Player.js';
 import TouchControls from '../objects/TouchControls.js';
 import { pixelText } from '../objects/Typewriter.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import Momos from '../systems/Momos.js';
 import LoveLetters from '../systems/LoveLetters.js';
+import Critters from '../systems/Critters.js';
 import SaveManager from '../systems/SaveManager.js';
 import Sfx from '../systems/Sfx.js';
 import Music from '../systems/Music.js';
@@ -50,6 +53,7 @@ export default class World extends Phaser.Scene {
     this.createMomos();
     this.updateMomoSpeed();
     this.createFishingSpots();
+    this.createCritters();
     this.createPrompt();
 
     // Camera: follow her smoothly, never showing outside the map.
@@ -297,6 +301,77 @@ export default class World extends Phaser.Scene {
     return this.fishingSpots.some((rect) => rect.contains(feet.x, feet.y));
   }
 
+  // ---- Critters ---------------------------------------------------------------------------
+  /**
+   * The animals from data/critters.json, each sitting on its point of the
+   * "Critters" layer, playing its idle frames. A little solid box round its
+   * feet stops her walking through it.
+   */
+  createCritters() {
+    this.critters = Critters.all().map((c) => {
+      const key = Critters.key(c);
+      if (!this.textures.exists(key)) return null; // (Boot already warned)
+      const animKey = `${key}:idle`;
+      if (!this.anims.exists(animKey)) {
+        this.anims.create({ key: animKey, frames: c.idle.map((frame) => ({ key, frame })), frameRate: c.fps, repeat: -1 });
+      }
+      const sprite = this.add.sprite(c.x, c.y, key).setOrigin(0.5, 1).play(animKey);
+      const feet = this.add.zone(c.x, c.y - CRITTER.body.height / 2, CRITTER.body.width, CRITTER.body.height);
+      this.physics.add.existing(feet, true);
+      this.physics.add.collider(this.player, feet);
+      return { ...c, sprite, animKey, bubble: null };
+    }).filter(Boolean);
+    this.sortCritters();
+  }
+
+  /** In front of her when it's lower on the screen, behind her when it's higher. */
+  sortCritters() {
+    const feet = this.player.getFeet();
+    for (const c of this.critters) c.sprite.setDepth(c.y > feet.y ? DEPTH.player + 1 : DEPTH.player - 1);
+  }
+
+  /** The critter her feet are close enough to say hi to, if any. */
+  nearestCritter(feet) {
+    let best = null;
+    let bestD = CRITTER.talkRadius;
+    for (const c of this.critters) {
+      const d = Phaser.Math.Distance.Between(feet.x, feet.y, c.x, c.y);
+      if (d <= bestD) {
+        best = c;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  /** A speech bubble over the critter for a moment; it shows its "sayFrame" while it talks. */
+  critterSays(c) {
+    c.bubble?.destroy();
+    const line = Phaser.Utils.Array.GetRandom(c.says);
+    const text = pixelText(this, 0, 0, line, { color: COLORS.ink });
+    const w = text.getTextBounds(false).local.width;
+    const bg = this.add.nineslice(0, 0, 'panel', null, w + 10, 15, 4, 4, 4, 4).setOrigin(0.5, 1);
+    text.setPosition(-Math.round(w / 2), -12);
+    const bubble = this.add.container(Math.round(c.x), Math.round(c.y - c.frameHeight - 1), [bg, text]).setDepth(DEPTH.prompt);
+    c.bubble = bubble;
+    // a little pop in, then float up and fade
+    bubble.setScale(0.6);
+    this.tweens.add({ targets: bubble, scale: 1, duration: 140, ease: 'Back.easeOut' });
+    this.tweens.add({
+      targets: bubble, alpha: 0, y: bubble.y - 4, delay: CRITTER.sayMs, duration: 300,
+      onComplete: () => {
+        bubble.destroy();
+        if (c.bubble === bubble) c.bubble = null;
+      },
+    });
+    // face her, and open its mouth while the bubble is up
+    c.sprite.setFlipX(this.player.x > c.x === (c.faces === 'left'));
+    if (c.sayFrame !== null) {
+      c.sprite.stop().setFrame(c.sayFrame);
+      this.time.delayedCall(CRITTER.sayMs, () => c.sprite.play(c.animKey));
+    }
+  }
+
   // ---- "Press E" prompt ----------------------------------------------------------------
   createPrompt() {
     this.prompt = this.add.container(0, 0).setDepth(DEPTH.prompt).setVisible(false);
@@ -343,6 +418,7 @@ export default class World extends Phaser.Scene {
 
     this.checkTriggers(interact);
     this.fadeCanopy();
+    this.sortCritters();
 
     if (this.player.moving && time - this.lastSaveAt > TIMING.savePositionEvery) {
       this.lastSaveAt = time;
@@ -365,6 +441,9 @@ export default class World extends Phaser.Scene {
         if (interact) this.openFishing();
         return;
       }
+      // ...or next to a critter? (no prompt — pressing E just makes it talk)
+      const critter = this.nearestCritter(feet);
+      if (critter && interact) this.critterSays(critter);
       this.prompt.setVisible(false);
       return;
     }
@@ -384,17 +463,20 @@ export default class World extends Phaser.Scene {
 
   /**
    * Treetops (the Above layer) turn see-through when she walks behind them,
-   * so she never gets lost under the leaves.
+   * so she never gets lost under the leaves. Tiles whose tileset property
+   * `noFade` is true stay as they are (e.g. a glass bus shelter: she shows
+   * through the glass by itself, and the roof should still hide her).
    */
   fadeCanopy() {
     const above = this.layers.Above;
     if (!above) return;
     const b = this.player.getBounds();
-    const overlapping = above.getTilesWithinWorldXY(b.x, b.y, b.width, b.height, { isNotEmpty: true });
+    const fadeable = (tile) => !tile.properties?.noFade;
+    const overlapping = above.getTilesWithinWorldXY(b.x, b.y, b.width, b.height, { isNotEmpty: true }).filter(fadeable);
     const near = new Set();
     if (overlapping.length) {
       for (const tile of above.getTilesWithinWorldXY(b.x - 20, b.y - 20, b.width + 40, b.height + 40, { isNotEmpty: true }))
-        near.add(tile);
+        if (fadeable(tile)) near.add(tile);
     }
     for (const tile of near) if (!this.fadedTiles.has(tile)) this.fadedTiles.set(tile, tile.alpha);
     for (const [tile] of this.fadedTiles) {
