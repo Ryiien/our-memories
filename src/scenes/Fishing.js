@@ -74,7 +74,7 @@ export default class Fishing extends Phaser.Scene {
     if (new LayerAnimator(this, 'fishing').addLayers(S.layers) === 0) {
       this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night).setOrigin(0).setDepth(-1);
     }
-    if (S.music.length) Music.play(this, S.music);
+    Music.play(this, S.music); // (nothing = quiet; the world's music has faded out)
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 
     if (!this.anims.exists('fishing-ripple')) {
@@ -441,7 +441,11 @@ export default class Fishing extends Phaser.Scene {
         parts.forEach((p) => p.destroy());
         this.letterView = null;
         this.state = 'ready';
-        if (this.letterIsNew) this.bumpCounter();
+        if (this.letterIsNew) {
+          this.bumpCounter();
+          // That was the last unread letter: the counter turns gold with a fanfare.
+          if (SaveManager.letterCount() >= LoveLetters.count) Sfx.play(this, 'allLetters');
+        }
       },
     });
   }

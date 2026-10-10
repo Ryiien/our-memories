@@ -257,6 +257,8 @@ export default class World extends Phaser.Scene {
       this.momos = this.momos.filter((m) => m !== momo);
       SaveManager.collectMomo(momo.id);
       Sfx.play(this, 'momo');
+      // That was the last one: a power-up once the pop has finished.
+      if (SaveManager.momoCount() >= Momos.count) this.time.delayedCall(TIMING.completeSfxDelay, () => Sfx.play(this, 'allMomos'));
 
       // Pop up and fade away.
       this.tweens.killTweensOf([momo.sprite, momo.glow]);
@@ -518,6 +520,7 @@ export default class World extends Phaser.Scene {
 
   /** Fade out, pause the world (and hide the HUD), and open another scene on top. */
   fadeToScene(key, data) {
+    Music.play(this, null); // the world's music fades out with the screen (back in on resume)
     this.cameras.main.fadeOut(TIMING.fadeOut, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.hud.scene.setVisible(false);
@@ -556,6 +559,7 @@ export default class World extends Phaser.Scene {
 
   openFinale() {
     this.player.stop();
+    Music.play(this, null); // the world's music fades out
     this.cameras.main.fadeOut(TIMING.fadeOut * 2, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.hud.scene.setVisible(false);

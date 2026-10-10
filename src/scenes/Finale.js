@@ -10,7 +10,7 @@ import { GAME_WIDTH, GAME_HEIGHT, ASSET_ROOT, COLORS, TIMING } from '../config.j
 import LayerAnimator, { queueLayerLoads } from '../systems/LayerAnimator.js';
 import { checkLayers } from '../systems/MemoryRegistry.js';
 import SaveManager from '../systems/SaveManager.js';
-import Music, { musicTracks } from '../systems/Music.js';
+import Music from '../systems/Music.js';
 import Typewriter, { pixelText } from '../objects/Typewriter.js';
 import ContinueHeart from '../objects/ContinueHeart.js';
 import Sfx from '../systems/Sfx.js';
@@ -45,7 +45,7 @@ export default class Finale extends Phaser.Scene {
     if (animator.addLayers(this.layers) === 0) {
       this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night).setOrigin(0).setDepth(-1);
     }
-    if (musicTracks(finaleData.music).length) Music.play(this, finaleData.music);
+    Music.play(this, finaleData.music ?? null); // (nothing = quiet; the world's music has faded out)
     this.cameras.main.fadeIn(TIMING.fadeIn * 2, 0, 0, 0);
 
     // Title

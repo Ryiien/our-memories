@@ -14,13 +14,16 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { ROOT } from './lib/scene-kit.js';
-import { sfxMomo, sfxFound, sfxCast, sfxSplash, sfxLetter, sfxContinue } from './lib/audio.js';
+import { sfxFound, sfxCast, sfxSplash, sfxLetter, sfxContinue } from './lib/audio.js';
 
 const { values: args } = parseArgs({ options: { force: { type: 'boolean', default: false } } });
 const OUT = path.join(ROOT, 'public', 'assets', 'audio', 'sfx');
 
+// momo (minecraft-pop.mp3), step (walking.mp3), allMomos (powerup.wav) and
+// allLetters (momo.wav) are real sounds now, so they're left out here: --force
+// must never overwrite them.
+// (sfxMomo in lib/audio.js is the old synthesised pop, kept in case it's wanted again.)
 const SOUNDS = {
-  'momo.wav': sfxMomo,
   'found.wav': sfxFound,
   'cast.wav': sfxCast,
   'splash.wav': sfxSplash,

@@ -1,5 +1,8 @@
 {
-  "momo": "audio/sfx/momo.wav",
+  "momo": "audio/sfx/minecraft-pop.mp3",
+  "allMomos": "audio/sfx/powerup.wav",
+  "allLetters": "audio/sfx/momo.wav",
+  "step": "audio/sfx/walking.mp3",
   "found": "audio/sfx/found.wav",
   "cast": "audio/sfx/cast.wav",
   "splash": "audio/sfx/splash.wav",

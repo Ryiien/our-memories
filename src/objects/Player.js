@@ -6,7 +6,8 @@
 // config.js and "Sprite sheet layout" in CLAUDE.md.
 // -----------------------------------------------------------------------------
 import Phaser from 'phaser';
-import { PLAYER, PLAYER_ROWS, PLAYER_FRAMES_PER_ROW, DEPTH } from '../config.js';
+import { PLAYER, PLAYER_ROWS, PLAYER_FRAMES_PER_ROW, DEPTH, AUDIO } from '../config.js';
+import Sfx from '../systems/Sfx.js';
 
 // Where her feet are relative to the sprite's centre (the collision box
 // sits at her feet, and positions in saves/maps are feet positions).
@@ -48,6 +49,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.speedMultiplier = 1; // see setSpeedMultiplier()
     this.setFeet(feetX, feetY);
     this.play(`idle-${this.facing}`);
+
+    // A footstep each time a foot lands in the walk cycle. The animation speeds
+    // up with setSpeedMultiplier, so the steps do too.
+    this.stepSound = Sfx.add(scene, 'step');
+    this.once(Phaser.GameObjects.Events.DESTROY, () => this.stepSound?.destroy());
+    this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (anim, frame) => {
+      if (anim.key.startsWith('walk-') && PLAYER.stepFrames.includes(frame.index)) this.footstep();
+    });
+  }
+
+  footstep() {
+    this.stepSound?.play({ rate: PLAYER.stepRate, volume: AUDIO.sfxVolume * PLAYER.stepVolume });
   }
 
   /** Put her feet at (x, y) in map pixels. */

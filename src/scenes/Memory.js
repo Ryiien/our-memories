@@ -62,8 +62,8 @@ export default class Memory extends Phaser.Scene {
       this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night).setOrigin(0).setDepth(-1);
     }
 
-    // Memories without their own music keep whatever the world is playing.
-    if (m.music.length) Music.play(this, m.music);
+    // The world's music has faded out; memories without their own music are quiet.
+    Music.play(this, m.music);
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 
     // The title + date show on their own first; the caption box comes up after

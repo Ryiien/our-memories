@@ -198,18 +198,25 @@ water just left of each spot.
 ## data/sounds.json (sound effects) and music
 
 `{ "<name>": "audio/sfx/<file>" | null }`. The names are fixed by `SFX_NAMES`
-in `src/systems/Sfx.js` (momo, found, cast, splash, letter, continue; unknown
+in `src/systems/Sfx.js` (momo, allMomos, allLetters, found, cast, splash, letter, continue; unknown
 names warn). Boot loads them all; `Sfx.play(scene, name)` plays one once at
 `AUDIO.sfxVolume`, silently doing nothing if it's null or failed to load.
 Every `music` value (memories, fishing, finale, worldMusic) may be a path or a
 list of paths played together (`musicTracks()` / `Music.load` / `Music.play` in
 Music.js); MemoryRegistry and LoveLetters normalise it to an array.
-Hooks: World.checkMomos (momo), HUD.showNextToast (found, every toast),
+Hooks: Player (step, on walk frames `PLAYER.stepFrames`, one reused sound via `Sfx.add`,
+at `PLAYER.stepRate`; doubles up with her 2x speed), World.checkMomos (momo; + allMomos after `TIMING.completeSfxDelay` for the last one),
+Fishing.closeLetter (allLetters, when the last unread letter bumps the counter to full),
+HUD.showNextToast (found, every toast),
 Fishing.cast / splash / caughtLetter / closeLetter (cast, splash, letter,
 continue), Memory.advance + Finale.close (continue). New effect = a name in
 `SFX_NAMES` + a `Sfx.play` call + an entry in sounds.json (+ a synth in
-`tools/lib/audio.js` / `make-sfx.js` for a placeholder).
-Music tracks are chosen by the user in the data files (worldMusic is null for now).
+`tools/lib/audio.js` / `make-sfx.js` for a placeholder). `momo` (`minecraft-pop.mp3`),
+`step` (`walking.mp3`), `allMomos` (`powerup.wav`) and `allLetters` (`momo.wav`) are real sounds, deliberately not in `make-sfx.js` so `--force` can't overwrite them.
+Music tracks are chosen by the user in the data files (worldMusic is `audio/sfx/playingloop.mp3`).
+World music fades in on the world, and out (World.fadeToScene / openFinale) when a memory,
+Fishing or the Finale opens; those play their own `music` or stay quiet, and the world's
+fades back in on resume (`AUDIO.crossfade`).
 
 ## data/critters.json (animals that say hi)
 
@@ -246,7 +253,7 @@ so he sits in the grass; his outline is a softer `#46414e`.
 
 - finale: `title`, `lines` (array, typed one after another, centred), `signature`,
   `music` (optional), `layers` (same format as memory layers).
-- game: `herName`, `titleLine` ("Happy 3 years,"), `subtitle`, `worldMusic` (path or null).
+- game: `herName`, `titleLine` ("Happy 3 years,"), `subtitle`, `worldMusic` (path or null; fades out while a memory / fishing / the finale is open).
 
 ## Map conventions (Tiled, maps/world.json)
 

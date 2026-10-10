@@ -15,6 +15,9 @@ import sounds from '../../data/sounds.json';
 /** Every effect the game plays, and when. Keys in sounds.json must be one of these. */
 export const SFX_NAMES = {
   momo: 'collecting a momo',
+  allMomos: 'collecting the last momo (she walks faster from now on)',
+  allLetters: 'reading the last new love letter (the letter counter turns gold)',
+  step: 'each footstep while she walks (PLAYER.step* in config.js)',
   found: 'a toast like "Memory found!" sliding in',
   cast: 'casting the fishing rod',
   splash: 'the bobber (or seaweed) hitting the water',
@@ -40,6 +43,18 @@ const Sfx = {
         MemoryRegistry.warn(`sounds.json has "${name}", which the game never plays (typo?). The names are: ${Object.keys(SFX_NAMES).join(', ')}.`);
       }
     }
+  },
+
+  /**
+   * One reusable sound for an effect that repeats quickly (footsteps):
+   * calling .play() again restarts it instead of piling up copies.
+   * Returns null if it's silenced or failed to load.
+   */
+  add(scene, name) {
+    if (!sounds[name]) return null;
+    const key = sfxKey(name);
+    if (!scene.cache.audio.exists(key)) return null;
+    return scene.sound.add(key);
   },
 
   /** Play one effect once. */

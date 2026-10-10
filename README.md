@@ -127,7 +127,7 @@ top; `npm run scene:spoonkettle`), preview in `tools/previews/spoonkettle.png`.
 
 | plays… | file | field |
 |---|---|---|
-| while walking around | `data/game.json` | `"worldMusic": "audio/our-song.mp3"` (or `null`) |
+| while walking around (fades out while a memory, fishing or the finale is open, back in after) | `data/game.json` | `"worldMusic": "audio/sfx/playingloop.mp3"` (or `null`) |
 | during one memory | `data/memories.json` | `"music": "audio/laufey.mp3"` on that memory, or a list to layer several: `["audio/pub.wav", "audio/tram1.m4a"]` |
 | while fishing | `data/fishing.json` | `"music"` |
 | in the finale | `data/finale.json` | `"music"` |
@@ -136,7 +136,10 @@ top; `npm run scene:spoonkettle`), preview in `tools/previews/spoonkettle.png`.
 
 ```json
 {
-  "momo": "audio/sfx/momo.wav",          // collecting a momo
+  "momo": "audio/sfx/minecraft-pop.mp3", // collecting a momo
+  "allMomos": "audio/sfx/powerup.wav",  // collecting the 10th momo
+  "allLetters": "audio/sfx/momo.wav",    // reading the 20th love letter
+  "step": "audio/sfx/walking.mp3",       // each footstep (speed/volume: PLAYER.stepRate / stepVolume in src/config.js)
   "found": "audio/sfx/found.wav",        // a toast like "Memory found!" sliding in
   "cast": "audio/sfx/cast.wav",          // casting the fishing rod
   "splash": "audio/sfx/splash.wav",      // the bobber (or seaweed) hitting the water
@@ -145,8 +148,8 @@ top; `npm run scene:spoonkettle`), preview in `tools/previews/spoonkettle.png`.
 }
 ```
 
-(JSON can't hold the comments; they're just here to explain.) The ones there
-now are simple synthesised placeholders made by `npm run sfx`. To use your
+(JSON can't hold the comments; they're just here to explain.) Apart from `momo`, `step`,
+`allMomos` and `allLetters`, the ones there now are simple synthesised placeholders made by `npm run sfx`. To use your
 own, drop the file in `public/assets/audio/sfx/` and change its path; set one
 to `null` to silence it. Overall loudness: `AUDIO.musicVolume` and
 `AUDIO.sfxVolume` in `src/config.js`. Sound only starts after the first tap
