@@ -112,6 +112,7 @@ export function figure({
   topShade = P.roseDark,
   topHi = null, // highlight colour for the top (jacket shoulders)
   jacket = false, // open jacket: shows `inner` down the middle
+  jacketDrop = 0, // standing: how many pixels the jacket hangs down over the waistband
   inner = P.white,
   bottom = P.blueDark,
   bottomShade = null,
@@ -191,6 +192,14 @@ export function figure({
   } else if (!dress) {
     c.rect(bx, bodyBottom - 2, bw, 2, bottom); // jeans waistband
   }
+  // a longer jacket hangs down over the waistband (from the front it still
+  // shows in the open middle)
+  const drop = jacket && !sit ? jacketDrop : 0;
+  if (drop) {
+    c.rect(bx, bodyBottom - 3, bw, drop, top);
+    c.rect(bx, bodyBottom - 3 + drop, bw, 1, topShade);
+    if (view === 'front') c.rect(cx - 1, bodyBottom - 2, 2, drop, bottom);
+  }
 
   // open jacket details: shirt down the middle, lapels, shoulders, pockets
   if (jacket) {
@@ -198,25 +207,25 @@ export function figure({
     const len = bodyBottom - 2 - bodyTop; // down to the waistband
     if (view === 'front') {
       c.rect(cx - 1, bodyTop, 2, len, inner);
-      c.rect(cx - 2, bodyTop + 2, 1, len - 2, topShade); // jacket front edges
-      c.rect(cx + 1, bodyTop + 2, 1, len - 2, topShade);
+      c.rect(cx - 2, bodyTop + 2, 1, len - 2 + drop, topShade); // jacket front edges
+      c.rect(cx + 1, bodyTop + 2, 1, len - 2 + drop, topShade);
       c.px(cx - 2, bodyTop, inner); // shirt collar points
       c.px(cx + 1, bodyTop, inner);
       c.px(cx - 3, bodyTop + 1, topShade); // lapels
       c.px(cx + 2, bodyTop + 1, topShade);
       c.rect(bx + 1, bodyTop, 2, 1, hi);
       c.rect(bx + bw - 3, bodyTop, 2, 1, hi);
-      c.rect(bx + 1, bodyBottom - 5, 2, 1, topShade); // pockets
-      c.rect(bx + bw - 3, bodyBottom - 5, 2, 1, topShade);
+      c.rect(bx + 1, bodyBottom - 5 + drop, 2, 1, topShade); // pockets
+      c.rect(bx + bw - 3, bodyBottom - 5 + drop, 2, 1, topShade);
     } else if (view === 'side') {
       c.rect(bx + bw - 1, bodyTop + 1, 1, len - 1, inner);
-      c.rect(bx + bw - 2, bodyTop + 1, 1, len - 1, topShade);
+      c.rect(bx + bw - 2, bodyTop + 1, 1, len - 1 + drop, topShade);
       c.rect(bx + 1, bodyTop, 3, 1, hi);
     } else {
       c.rect(cx - 3, bodyTop, 6, 1, topShade); // collar
       c.rect(bx + 1, bodyTop + 1, 2, 1, hi);
       c.rect(bx + bw - 3, bodyTop + 1, 2, 1, hi);
-      c.rect(cx - 1, bodyTop + 3, 1, Math.max(1, len - 4), topShade); // back seam
+      c.rect(cx - 1, bodyTop + 3, 1, Math.max(1, len - 4 + drop), topShade); // back seam
     }
   }
 
@@ -264,9 +273,23 @@ export function figure({
     c.px(cx - 3, headY - 3, hairHi);
   } else {
     const fx = view === 'side' ? cx + 2 : cx;
-    c.circle(cx, headY - 1, 5.5, hairColor);
-    c.ellipse(fx, headY + 1.5, view === 'side' ? 3.5 : 4, 3.5, skin);
-    c.rect(fx - 4, headY - 3, 8, 2, hairColor); // fringe
+    if (hair === 'short' && view === 'front') {
+      // short hair hugging the head, as in the hand-drawn scenes: a close cap
+      // over the top, a fringe swept to one side, little sideburns at the ears
+      c.ellipse(fx, headY + 1.5, 4, 3.5, skin);
+      for (let y = headY - 6; y <= headY - 2; y++)
+        for (let x = cx - 6; x <= cx + 6; x++)
+          if ((x - cx) ** 2 + (y - headY + 1) ** 2 <= 4.8 * 4.8) c.px(x, y, hairColor);
+      c.rect(cx - 4, headY - 2, 4, 1, hairColor); // fringe, swept to his right...
+      c.px(cx - 4, headY - 1, hairColor); // ...with a couple of tips
+      c.px(cx - 2, headY - 1, hairColor);
+      c.rect(cx - 5, headY - 1, 1, 2, hairColor); // sideburns
+      c.rect(cx + 4, headY - 1, 1, 2, hairColor);
+    } else {
+      c.circle(cx, headY - 1, 5.5, hairColor);
+      c.ellipse(fx, headY + 1.5, view === 'side' ? 3.5 : 4, 3.5, skin);
+      c.rect(fx - 4, headY - 3, 8, 2, hairColor); // fringe
+    }
     if (hair === 'bob' && view === 'front') {
       // hair framing the face down to the jaw
       c.rect(cx - 6, headY - 1, 2, 6, hairColor);

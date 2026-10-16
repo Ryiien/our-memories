@@ -209,7 +209,7 @@ at `PLAYER.stepRate`; doubles up with her 2x speed), World.checkMomos (momo; + a
 Fishing.closeLetter (allLetters, when the last unread letter bumps the counter to full),
 HUD.showNextToast (found, every toast),
 Fishing.cast / splash / caughtLetter / closeLetter (cast, splash, letter,
-continue), Memory.advance + Finale.close (continue). New effect = a name in
+continue), Memory.advance + Finale.close + Title.choose (continue). New effect = a name in
 `SFX_NAMES` + a `Sfx.play` call + an entry in sounds.json (+ a synth in
 `tools/lib/audio.js` / `make-sfx.js` for a placeholder). `momo` (`minecraft-pop.mp3`),
 `step` (`walking.mp3`), `allMomos` (`powerup.wav`) and `allLetters` (`momo.wav`) are real sounds, deliberately not in `make-sfx.js` so `--force` can't overwrite them.
@@ -232,12 +232,13 @@ fades back in on resume (`AUDIO.crossfade`).
       "idle": [0, 0, 2, 0, 1],        // frames to loop while it sits there (default [0])
       "sayFrame": 4,                  // frame shown while its speech bubble is up (optional)
       "says": "Meow!",                // a line, or a list (one picked at random each time)
+      "sound": "audio/sfx/meow.mp3",  // played each time it talks, at AUDIO.sfxVolume (optional)
       "faces": "left"                 // which way the drawing looks (default "left"); it turns to face her when it talks
     }
   ]
 }
 ```
-Boot loads each sheet (`critter:<id>`) and checks the font has every character.
+Boot loads each sheet (`critter:<id>`) and `sound` (`critter-sound:<id>`) and checks the font has every character.
 In World: drawn feet-first on its point, sorted in front of / behind her by feet y,
 with a solid `CRITTER.body` box round its feet. No prompt is shown (asked for:
 it's a surprise); within `CRITTER.talkRadius`, E pops a speech bubble (`panel` +
@@ -248,6 +249,16 @@ yellow eyes, blue collar with a gold tag), 5 frames of 18×18 drawn by `tools/sc
 0 sit, 1 tail flick, 2 blink, 3 ear twitch, 4 meow. Each is a 16×16 drawing plus a
 margin for his soft shadow and grass tufts in front of his paws (`GRASS` / `TUFTS`),
 so he sits in the grass; his outline is a softer `#46414e`.
+Snoopy (`snoopy`) is the second critter: 3 frames of 19×26 (a 17×24 drawing from
+the user's reference pixel art + shadow) by `tools/scenes/snoopy.js`: 0 stand,
+1 blink, 2 eye shut (`sayFrame`; no hop, as asked). Shut eye = a 2px line. The same script draws his kennel
+(`kennel` tileset, 2×2, `tiles/kennel.png`), side-on like the Peanuts pixel art
+(big red roof with dashed board lines and dark eaves over narrower white walls,
+black outline). (Woodstock was on the ridge once; removed, as asked.)
+It sits near the bottom of the clearing west of the garden, between the trees at
+x 38 and x 46, at x 42–43, y 37–38 (`KENNEL`): roof row in Above (walkable,
+fades), walls row in Decor (solid). Each run lifts the kennel from wherever it
+was and re-places it at `KENNEL`. Snoopy's point is just left of it (feet on row 38).
 
 ## data/finale.json / data/game.json
 
@@ -377,7 +388,7 @@ so he sits in the grass; his outline is a softer `#46414e`.
   scene:pub`, `npm run scene:garden`, `npm run scene:picnic`, `npm run scene:laufey`,
   `npm run scene:camping`, `npm run scene:collins`, `npm run scene:street`,
   `npm run scene:venues`, `npm run scene:fishing`, `npm run scene:all-nations`, `npm run scene:grove`,
-  `npm run scene:spoonkettle`, then `npm run momos`) to re-add them
+  `npm run scene:spoonkettle`, `npm run scene:snoopy`, then `npm run momos`) to re-add them
   (`npm run scene:first-date` only draws its cutscene; it doesn't touch the map).
 - Scene scripts live in `tools/scenes/` and share helpers from
   `tools/lib/scene-kit.js` (saving with `--keep`, glow/rim-light/text helpers,

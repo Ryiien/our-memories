@@ -13,7 +13,7 @@ import rawData from '../../data/critters.json';
 import worldMap from '../../maps/world.json';
 import MemoryRegistry from './MemoryRegistry.js';
 
-const FIELDS = ['id', 'name', 'sprite', 'frameWidth', 'frameHeight', 'fps', 'idle', 'sayFrame', 'says', 'faces'];
+const FIELDS = ['id', 'name', 'sprite', 'frameWidth', 'frameHeight', 'fps', 'idle', 'sayFrame', 'says', 'sound', 'faces'];
 
 function warn(message) {
   MemoryRegistry.warnings.push(message); // so the title screen's "N data warnings" counts these too
@@ -52,6 +52,7 @@ const list = [];
     sayFrame: Number.isInteger(c.sayFrame) ? c.sayFrame : null,
     faces: c.faces === 'right' ? 'right' : 'left', // which way the drawing looks (it turns to face her when it talks)
     says,
+    sound: typeof c.sound === 'string' && c.sound.trim() ? c.sound.trim() : null, // played each time it talks (optional)
     x: point.x,
     y: point.y,
   });
@@ -65,6 +66,8 @@ const Critters = {
   all: () => list,
   /** Texture key for a critter's sprite sheet. */
   key: (critter) => `critter:${critter.id}`,
+  /** Audio key for the sound it makes when it talks. */
+  soundKey: (critter) => `critter-sound:${critter.id}`,
 };
 
 export default Critters;

@@ -31,7 +31,7 @@ export const PLAYER = {
   stepFrames: [2, 4], // walk-animation frames (1-4) where a foot lands: two steps per cycle,
   //                     so at 2x speed (every momo eaten) she makes twice as many
   stepRate: 1.5, // playback speed of the step sound (1 = as recorded; higher = quicker + higher pitch)
-  stepVolume: 0.5, // footsteps relative to AUDIO.sfxVolume
+  stepVolume: 0.25, // footsteps relative to AUDIO.sfxVolume
   // The collision box is just her feet, so she can walk "in front of" things.
   // Measured in pixels from the top-left of a 16x24 frame.
   body: { width: 10, height: 6, offsetX: 3, offsetY: 17 },

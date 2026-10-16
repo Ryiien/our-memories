@@ -26,7 +26,8 @@
     "scene:fishing": "node tools/scenes/fishing.js",
     "scene:all-nations": "node tools/scenes/all-nations-park.js",
     "scene:grove": "node tools/scenes/secret-grove.js",
-    "scene:spoonkettle": "node tools/scenes/spoonkettle.js"
+    "scene:spoonkettle": "node tools/scenes/spoonkettle.js",
+    "scene:snoopy": "node tools/scenes/snoopy.js"
   },
   "dependencies": {
     "phaser": "^4.2.1"

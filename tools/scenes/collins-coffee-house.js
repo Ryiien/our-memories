@@ -564,12 +564,9 @@ function herHead(c, hx, hy, blink) {
 
 function drawHer(c, dy, blink) {
   const s = PAL;
-  // legs (still). Her calves and ankles below the hem of her dress...
-  for (let y = SEAT + 12; y <= FEET - 4; y++) {
-    const calf = y < SEAT + 18 ? 1 : 0; // a little fuller up top, slimmer at the ankle
-    c.rect(124 - calf, y, 3 + calf, 1, s.herSkin);
-    c.px(124 - calf, y, s.herSkinShade);
-  }
+  // legs (still). Her calves and ankles below the hem of her dress, straight down...
+  c.rect(123, SEAT + 12, 4, FEET - 4 - SEAT - 11, s.herSkin);
+  c.rect(123, SEAT + 12, 1, FEET - 4 - SEAT - 11, s.herSkinShade);
   // ...her white shoes, with a strap over the foot
   c.rect(123, FEET - 3, 7, 2, s.herShoes);
   c.px(130, FEET - 2, s.herShoes);

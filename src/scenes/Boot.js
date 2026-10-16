@@ -52,9 +52,10 @@ export default class Boot extends Phaser.Scene {
       frameHeight: PLAYER.frameHeight,
     });
 
-    // Critters (data/critters.json): one sprite sheet each
+    // Critters (data/critters.json): one sprite sheet each, plus its "sound" if it has one
     for (const c of Critters.all()) {
       this.load.spritesheet(Critters.key(c), c.sprite, { frameWidth: c.frameWidth, frameHeight: c.frameHeight });
+      if (c.sound) this.load.audio(Critters.soundKey(c), c.sound);
     }
 
     // Map (imported as data) + every tileset image it uses. The tileset's

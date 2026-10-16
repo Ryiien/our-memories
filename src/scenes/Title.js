@@ -9,6 +9,7 @@ import { GAME_WIDTH, GAME_HEIGHT, COLORS, TIMING } from '../config.js';
 import { pixelText } from '../objects/Typewriter.js';
 import MemoryRegistry from '../systems/MemoryRegistry.js';
 import SaveManager from '../systems/SaveManager.js';
+import Sfx from '../systems/Sfx.js';
 import gameData from '../../data/game.json';
 
 // Night-sky colours for the dithered background
@@ -100,10 +101,7 @@ export default class Title extends Phaser.Scene {
       this.centre(text);
       text.setInteractive({ useHandCursor: true });
       text.on('pointerover', () => this.select(i));
-      text.on('pointerdown', () => {
-        this.select(i);
-        opt.action();
-      });
+      text.on('pointerdown', () => this.choose(i));
       return { ...opt, text };
     });
     this.cursorHeart = this.add.image(0, 0, 'heart');
@@ -115,7 +113,7 @@ export default class Title extends Phaser.Scene {
         if (this.leaving) return;
         if (['ArrowUp', 'KeyW'].includes(e.code)) this.select(this.selected - 1);
         if (['ArrowDown', 'KeyS'].includes(e.code)) this.select(this.selected + 1);
-        if (['Space', 'Enter', 'NumpadEnter', 'KeyE'].includes(e.code)) this.menuItems[this.selected].action();
+        if (['Space', 'Enter', 'NumpadEnter', 'KeyE'].includes(e.code)) this.choose(this.selected);
       });
     }
   }
@@ -126,6 +124,14 @@ export default class Title extends Phaser.Scene {
     this.menuItems.forEach((item, j) => item.text.setTint(j === this.selected ? COLORS.butter : COLORS.cream));
     const t = this.menuItems[this.selected].text;
     this.cursorHeart.setPosition(t.x - 8, t.y + 4);
+  }
+
+  /** Press a menu button (click, tap or Enter): play the click sound, then do it. */
+  choose(i) {
+    if (this.leaving) return;
+    this.select(i);
+    Sfx.play(this, 'continue');
+    this.menuItems[this.selected].action();
   }
 
   startNew() {

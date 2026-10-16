@@ -8,6 +8,7 @@
 //
 // A missing or silenced sound just plays nothing; never a crash.
 // -----------------------------------------------------------------------------
+import Phaser from 'phaser';
 import { AUDIO } from '../config.js';
 import MemoryRegistry from './MemoryRegistry.js';
 import sounds from '../../data/sounds.json';
@@ -22,7 +23,7 @@ export const SFX_NAMES = {
   cast: 'casting the fishing rod',
   splash: 'the bobber (or seaweed) hitting the water',
   letter: 'catching a love letter',
-  continue: 'pressing Continue in a memory, the finale or a letter',
+  continue: 'pressing Continue in a memory, the finale or a letter, and every title-menu button',
 };
 
 const sfxKey = (name) => `sfx:${name}`;
@@ -62,7 +63,15 @@ const Sfx = {
     if (!sounds[name]) return; // left out or null: silence
     const key = sfxKey(name);
     if (!scene.cache.audio.exists(key)) return; // failed to load (Boot already warned)
-    scene.sound.play(key, { volume });
+    const sound = scene.sound;
+    // Browsers keep audio locked until the first click or key press, and Phaser
+    // unlocks it a moment after that click, so a sound played by the very first
+    // click (Start on the title screen) would be lost. Play it once it unlocks.
+    if (sound.locked) {
+      sound.once(Phaser.Sound.Events.UNLOCKED, () => sound.play(key, { volume }));
+      return;
+    }
+    sound.play(key, { volume });
   },
 };
 

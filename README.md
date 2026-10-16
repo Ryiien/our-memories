@@ -49,6 +49,7 @@ Other commands:
 | `npm run scene:venues` | redraws the props in front of the Palais Theatre and San Remo (see §6) |
 | `npm run scene:all-nations` | redraws the All Nations Park scene + the hilltop bench on the map (see §6) |
 | `npm run scene:spoonkettle` | redraws Spoonkettle the cat + puts him on the map in the secret grove (see §2) |
+| `npm run scene:snoopy` | redraws Snoopy + his kennel and puts them on the map west of the botanic garden (see §2) |
 | `npm run scene:grove` | puts the secret grove (a winding trail of stepping stones, the hidden bench's nook) in the map's top-right corner (see §6) |
 | `npm run scene:fishing` | redraws the fishing minigame (pier at sunset, bobber, letter paper…) + the fishing spot on the map (see §6) |
 
@@ -105,11 +106,11 @@ Keep each one to a few sentences so it fits on the paper. `scene` and
 
 Spoonkettle the cat sits in the secret grove, on the grass between the All Nations bench and the tree beside the nook. There's no
 prompt, so he's a little surprise: pressing E next to him makes him say "Meow!"
-in a speech bubble. What he says, his name and his animation
+in a speech bubble (and play `audio/sfx/meow.mp3`). What he says, his sound, his name and his animation
 are in `data/critters.json`:
 
 ```json
-{ "id": "spoonkettle", "name": "Spoonkettle", "says": "Meow!", ... }
+{ "id": "spoonkettle", "name": "Spoonkettle", "says": "Meow!", "sound": "audio/sfx/meow.mp3", ... }
 ```
 
 `"says"` can also be a list, like `["Meow!", "Mrrp?", "Prrrr..."]` (he picks one each
@@ -117,6 +118,13 @@ time). To add another animal: draw a sprite sheet (frames side by side), add an
 entry with a new `id`, and add a point with that name to the map's `Critters`
 layer in Tiled. His art is drawn by `tools/scenes/spoonkettle.js` (`PAL` at the
 top; `npm run scene:spoonkettle`), preview in `tools/previews/spoonkettle.png`.
+
+Snoopy stands beside his kennel (red roof, white walls, like the Peanuts pixel
+art) near the bottom of the clearing west of the botanic garden. To move them,
+change `KENNEL` in the script and re-run it. Like Spoonkettle, pressing E next to
+him makes him talk (`"Waaa!"` and `audio/sfx/snoopywa.mp3`, in `data/critters.json`).
+Both are drawn by `tools/scenes/snoopy.js`
+(`npm run scene:snoopy`), preview in `tools/previews/snoopy.png`.
 
 ---
 
@@ -144,7 +152,7 @@ top; `npm run scene:spoonkettle`), preview in `tools/previews/spoonkettle.png`.
   "cast": "audio/sfx/cast.wav",          // casting the fishing rod
   "splash": "audio/sfx/splash.wav",      // the bobber (or seaweed) hitting the water
   "letter": "audio/sfx/letter.wav",      // catching a love letter
-  "continue": "audio/sfx/continue.wav"   // pressing Continue (memory, finale, letter)
+  "continue": "audio/sfx/continue.wav"   // pressing Continue (memory, finale, letter) + title menu buttons
 }
 ```
 
@@ -475,7 +483,13 @@ npm run scene:first-date -- --keep us,street   # keep layers you've redrawn your
 
 Preview: `tools/previews/first-date.png`. Layers in
 `public/assets/memories/first-date/` (back to front): `sky.png`, `stars.png`
-(twinkle), `street.png`, `windows.png` (flicker), `bus-stop.png`, `glow.png`
+(twinkle), `shooting-stars.png` (frames: a sprite sheet of 320×60 frames where a
+few tiny shooting stars streak across now and then; their timing and places are
+`SHOOTING_STARS` in the script), `railway.png` (masts + overhead wires),
+`train.png` (drift: a 3-car Metro train, 1280 wide, gliding right to left along
+the elevated line like the tram at the Oxford Scholar; `TRAIN` in the script),
+`viaduct.png` (the parapet, deck and pink pillars, in front of the train's
+wheels; `RAIL` in the script), `street.png`, `windows.png` (flicker), `bus-stop.png`, `glow.png`
 (pulse), `us.png` (sway). Like the picnic, it's no longer touched by
 `npm run placeholders`.
 

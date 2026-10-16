@@ -9,7 +9,20 @@
       "fps": 3,
       "idle": [0, 0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 3, 0, 0, 1, 0],
       "sayFrame": 4,
-      "says": "Meow!"
+      "says": "Meow!",
+      "sound": "audio/sfx/meow.mp3"
+    },
+    {
+      "id": "snoopy",
+      "name": "Snoopy",
+      "sprite": "sprites/snoopy.png",
+      "frameWidth": 19,
+      "frameHeight": 26,
+      "fps": 3,
+      "idle": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+      "sayFrame": 2,
+      "says": "Waaa!",
+      "sound": "audio/sfx/snoopywa.mp3"
     }
   ]
 }

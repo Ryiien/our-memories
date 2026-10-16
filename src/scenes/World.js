@@ -17,7 +17,7 @@
 // Ground / Decor / Collision.
 // -----------------------------------------------------------------------------
 import Phaser from 'phaser';
-import { DEPTH, CAMERA_LERP, TIMING, COLORS, TILE_SIZE, MOMO, CRITTER } from '../config.js';
+import { DEPTH, CAMERA_LERP, TIMING, COLORS, TILE_SIZE, MOMO, CRITTER, AUDIO } from '../config.js';
 import Player from '../objects/Player.js';
 import TouchControls from '../objects/TouchControls.js';
 import { pixelText } from '../objects/Typewriter.js';
@@ -366,6 +366,10 @@ export default class World extends Phaser.Scene {
         if (c.bubble === bubble) c.bubble = null;
       },
     });
+    // its "sound" (if it has one and it loaded), at sound-effect volume
+    if (c.sound && this.cache.audio.exists(Critters.soundKey(c))) {
+      this.sound.play(Critters.soundKey(c), { volume: AUDIO.sfxVolume });
+    }
     // face her, and open its mouth while the bubble is up
     c.sprite.setFlipX(this.player.x > c.x === (c.faces === 'left'));
     if (c.sayFrame !== null) {

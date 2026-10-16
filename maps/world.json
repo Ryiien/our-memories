@@ -11,7 +11,7 @@
  "type": "map",
  "version": "1.10",
  "nextlayerid": 10,
- "nextobjectid": 87,
+ "nextobjectid": 92,
  "layers": [
   {
    "id": 1,
@@ -4759,8 +4759,8 @@
     0,
     0,
     0,
-    0,
-    0,
+    949,
+    950,
     0,
     0,
     37,
@@ -7112,8 +7112,8 @@
     0,
     0,
     0,
-    0,
-    0,
+    947,
+    948,
     0,
     0,
     35,
@@ -10031,6 +10031,18 @@
      "rotation": 0,
      "x": 824,
      "y": 79,
+     "width": 0,
+     "height": 0
+    },
+    {
+     "id": 91,
+     "name": "snoopy",
+     "type": "",
+     "point": true,
+     "visible": true,
+     "rotation": 0,
+     "x": 663,
+     "y": 622,
      "width": 0,
      "height": 0
     }
@@ -14485,6 +14497,41 @@
     },
     {
      "id": 11,
+     "properties": [
+      {
+       "name": "collides",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "firstgid": 947,
+   "name": "kennel",
+   "image": "../public/assets/tiles/kennel.png",
+   "imagewidth": 32,
+   "imageheight": 32,
+   "tilewidth": 16,
+   "tileheight": 16,
+   "columns": 2,
+   "tilecount": 4,
+   "margin": 0,
+   "spacing": 0,
+   "tiles": [
+    {
+     "id": 2,
+     "properties": [
+      {
+       "name": "collides",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 3,
      "properties": [
       {
        "name": "collides",
