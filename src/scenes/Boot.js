@@ -51,6 +51,11 @@ export default class Boot extends Phaser.Scene {
       frameWidth: PLAYER.frameWidth,
       frameHeight: PLAYER.frameHeight,
     });
+    // ...and the same sheet wearing her tiara (won by fishing up every letter)
+    this.load.spritesheet('player-tiara', 'sprites/player-tiara.png', {
+      frameWidth: PLAYER.frameWidth,
+      frameHeight: PLAYER.frameHeight,
+    });
 
     // Critters (data/critters.json): one sprite sheet each, plus its "sound" if it has one
     for (const c of Critters.all()) {
@@ -163,6 +168,8 @@ export default class Boot extends Phaser.Scene {
     check(gameData.subtitle, 'game.json subtitle');
     check(LoveLetters.settings.title, 'fishing.json title');
     check(LoveLetters.settings.signature, 'fishing.json signature');
+    check(LoveLetters.settings.tiara.title, 'fishing.json tiara title');
+    check(LoveLetters.settings.tiara.text, 'fishing.json tiara text');
     for (const l of LoveLetters.all()) {
       check(l.title, `letter "${l.id}" title`);
       check(l.text, `letter "${l.id}" text`);

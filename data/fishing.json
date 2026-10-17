@@ -4,6 +4,10 @@
   "seaweedChance": 0.3,
   "maxSeaweedInARow": 2,
   "signature": "Love, Ryan ♥",
+  "tiara": {
+    "title": "A tiara for you!",
+    "text": "You found every love letter ♥"
+  },
   "scene": {
     "hand": [97, 104],
     "rodLength": 44,

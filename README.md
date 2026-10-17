@@ -82,7 +82,10 @@ when bubbles appear around the bobber she presses again to hook something:
 either one of the letters in `data/fishing.json` (a random one she hasn't read
 yet — then any of them once she's read them all) or a clump of seaweed to toss
 back. Missing the bubbles is fine; more come along. The top-right counter shows
-how many letters she's found (saved like everything else).
+how many letters she's found (saved like everything else). When she's found all
+of them, a popup gives her a silver tiara. She's wearing it on the pier straight
+away, and in the world from the moment she leaves the pier (but not in the
+memory cutscenes).
 
 ```json
 {
@@ -91,6 +94,10 @@ how many letters she's found (saved like everything else).
   "seaweedChance": 0.3,                  // 0–1: how often she gets seaweed instead of a letter
   "maxSeaweedInARow": 2,                 // never more seaweed than this in a row
   "signature": "Love, Ryan ♥",           // under every letter
+  "tiara": {                             // the popup when she's found every letter
+    "title": "A tiara for you!",
+    "text": "You found every love letter ♥"
+  },
   "letters": [
     { "id": "letter-01", "title": "Three years", "text": "Three years, and I still..." }
   ]
@@ -312,6 +319,7 @@ existing files** unless you run it with `--force`, so re-running it is safe.
 | file | size / layout |
 |---|---|
 | `public/assets/sprites/player.png` | 64×96: 4×4 frames of 16×24. Rows: down, left, right, up. Columns: 4 walk frames; the first is also "standing" |
+| `public/assets/sprites/player-tiara.png` | the same sheet with her silver tiara on (worn once she's found every love letter) |
 | `public/assets/tiles/tileset.png` | 128×96: 8×6 tiles of 16×16. Keep tiles in the same positions, or repaint the map in Tiled |
 | `public/assets/memories/<id>/*.png` | 320×180 each (frames sheets: N×320 wide) |
 | `public/assets/memories/finale/*.png` | 320×180 each, used by `data/finale.json` |

@@ -3,8 +3,10 @@
 // fishing.js — draws the fishing minigame off the end of the pier: a sunset sea,
 // the wooden pier with her standing at the end (the rod and line are drawn by
 // the game, so they can move), plus the little sprites the game animates — the
-// bobber, ripples, bubbles, the envelope she reels in, seaweed, and the letter
-// paper. Also adds the "Fishing" spot (the end of the pier) to maps/world.json.
+// bobber, ripples, bubbles, the envelope she reels in, seaweed, the letter
+// paper, and her silver tiara (on her head, and front-on for the popup she gets
+// for finding every letter). Also adds the "Fishing" spot (the end of the pier)
+// to maps/world.json.
 //
 //   npm run scene:fishing                     # (re)draw everything
 //   npm run scene:fishing -- --keep pier,sky  # don't overwrite layers you've redrawn
@@ -67,6 +69,13 @@ const PAL = {
   sashDark: '#9e4a5c',
   skin: '#d9a47c',
   skinShade: '#bf8862',
+  // her silver tiara (once she's found every letter), with pink gems and pearls
+  tiara: '#e4e8f2',
+  tiaraShade: '#a9b0c8',
+  pearl: '#ffffff',
+  gem: '#ff6fa8',
+  gemHi: '#ffc2dc',
+  gemShade: '#c9407e',
   // sprites
   bobberRed: '#d9465a',
   bobberRedHi: '#f07a84',
@@ -415,6 +424,81 @@ function drawHer() {
   return sheet;
 }
 
+// ---- 7. tiara.png — her tiara, drawn on her head once she's found every letter -------------------
+// The game shows this over her.png after the "A tiara for you!" popup (and on every visit after).
+// Turned a little towards us so the gem shows: a tall centre point over her forehead with a
+// pink teardrop gem and a pearl on top, a shorter point further back and a little one at the
+// front (pearls on both), little arches of filigree, and a band along the top of her head.
+// Her head is the same in every breeze frame, so one image does. Grid x 0 = figure column 7,
+// y 0 = figure row 2 (the band sits on row 8, the top of her head).
+const TIARA_SIDE = [
+  '...........',
+  '.......W...',
+  '......ThT..',
+  '..W...TgT..',
+  '..T...tGt.W',
+  '.T.T.T.t.TT',
+  '.tTTTTTTTTt',
+];
+const TIARA_PAL = { T: PAL.tiara, t: PAL.tiaraShade, W: PAL.pearl, g: PAL.gem, h: PAL.gemHi, G: PAL.gemShade };
+
+function drawTiara() {
+  const t = new Canvas(FIG.w, FIG.h);
+  t.map(TIARA_SIDE, TIARA_PAL, 7, 2);
+  t.outline(PAL.outline);
+  rimLight(t, PAL.sunlight, 0.25); // lit like the rest of her
+  dimTowardsDusk(t, 0.1);
+  const c = new Canvas(W, H);
+  c.blit(t, HER_FEET.x - 12, HER_FEET.y - 47);
+  return c;
+}
+
+// ---- tiara-award.png — the tiara front-on, for the popup (the game shows it at 2x) -----------------
+// Left half only (column 16 is the middle); the right half is its mirror image. A pearl on
+// every tip, a teardrop gem in the tall centre point, round gems in the side points, tiny
+// hearts as the filigree between them, and a band with a row of pearls.
+const TIARA_FRONT_HALF = [
+  '................W',
+  '................T',
+  '................T',
+  '...............TT',
+  '...............Tg', // the teardrop gem starts
+  '........W.....Tgg',
+  '........T.....Tgg',
+  '.......TTT...Tggg',
+  '......TgggT..Tggg', // round gems in the side points
+  '..W...TgggT..Tggg',
+  '..T....TTT....Tgg',
+  '.TTT....T.T.T..Tg', // a little heart either side of the centre...
+  '..T.T.T.T.TTT...T',
+  '..T.TTT.T..T....T', // ...and one further out
+  '.TTTTTTTTTTTTTTTT', // the band
+  '.tWttWttWttWttWtt', // pearls along it
+  '..ttttttttttttttt',
+];
+
+function drawTiaraAward() {
+  const rows = TIARA_FRONT_HALF.map((half) => half + [...half.slice(0, 16)].reverse().join(''));
+  const c = new Canvas(rows[0].length + 2, rows.length + 2); // + room for the outline
+  c.map(rows, TIARA_PAL, 1, 1);
+  // light from the top left: silver edges facing right are in shade
+  const shaded = [];
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < c.width; x++) {
+      const [r, g, b, a] = c.get(x, y);
+      const hex = `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+      if (a && hex === PAL.tiara && !c.get(x + 1, y)[3]) shaded.push([x, y]);
+    }
+  shaded.forEach(([x, y]) => c.px(x, y, PAL.tiaraShade));
+  // the gems: a glint and highlight top-left, shade bottom-right (in grid columns; +1 for the outline)
+  const dots = (points, color) => points.forEach(([x, y]) => c.px(x + 1, y + 1, color));
+  dots([[15, 5], [14, 7], [14, 8], [7, 8], [23, 8]], PAL.gemHi);
+  dots([[15, 6]], PAL.pearl);
+  dots([[18, 8], [18, 9], [17, 10], [16, 11], [9, 9], [25, 9]], PAL.gemShade);
+  c.outline(PAL.outline);
+  return c;
+}
+
 // ---- Sprites ----------------------------------------------------------------------------------
 const SPRITE_PAL = {
   k: PAL.woodDeep, p: PAL.outline, r: PAL.bobberRed, R: PAL.bobberRedHi, w: PAL.bobberWhite, W: PAL.bobberShade,
@@ -546,6 +630,7 @@ const layers = { sky: drawSky(), clouds: drawClouds(), sea: drawSea(), glints: d
 const sprites = {
   bobber: drawBobber(), ripple: drawRipple(), bubble: drawBubble(),
   envelope: drawEnvelope(), seaweed: drawSeaweed(), paper: drawPaper(),
+  tiara: drawTiara(), 'tiara-award': drawTiaraAward(),
 };
 for (const [name, canvas] of Object.entries({ ...layers, ...sprites })) save(path.join(OUT, `${name}.png`), canvas);
 addFishingSpot();

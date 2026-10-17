@@ -3,7 +3,8 @@
 // stands facing the last direction she moved.
 //
 // Spritesheet layout (sprites/player.png): see PLAYER / PLAYER_ROWS in
-// config.js and "Sprite sheet layout" in CLAUDE.md.
+// config.js and "Sprite sheet layout" in CLAUDE.md. Once she's won her tiara
+// she uses sprites/player-tiara.png (same layout) — see setTiara().
 // -----------------------------------------------------------------------------
 import Phaser from 'phaser';
 import { PLAYER, PLAYER_ROWS, PLAYER_FRAMES_PER_ROW, DEPTH, AUDIO } from '../config.js';
@@ -15,22 +16,29 @@ const FEET_DX = PLAYER.body.offsetX + PLAYER.body.width / 2 - PLAYER.frameWidth 
 const FEET_DY = PLAYER.body.offsetY + PLAYER.body.height / 2 - PLAYER.frameHeight / 2;
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
-  /** Creates walk-<dir> and idle-<dir> animations (once per game). */
+  /**
+   * Creates walk-<dir> and idle-<dir> animations (once per game), and
+   * walk-<dir>-tiara / idle-<dir>-tiara from the tiara sheet if it loaded.
+   */
   static createAnimations(scene) {
-    PLAYER_ROWS.forEach((dir, row) => {
-      const first = row * PLAYER_FRAMES_PER_ROW;
-      if (!scene.anims.exists(`walk-${dir}`)) {
-        scene.anims.create({
-          key: `walk-${dir}`,
-          frames: scene.anims.generateFrameNumbers('player', { start: first, end: first + PLAYER_FRAMES_PER_ROW - 1 }),
-          frameRate: PLAYER.walkFps,
-          repeat: -1,
-        });
-      }
-      if (!scene.anims.exists(`idle-${dir}`)) {
-        scene.anims.create({ key: `idle-${dir}`, frames: [{ key: 'player', frame: first }] });
-      }
-    });
+    const looks = [{ texture: 'player', suffix: '' }];
+    if (scene.textures.exists('player-tiara')) looks.push({ texture: 'player-tiara', suffix: '-tiara' });
+    for (const { texture, suffix } of looks) {
+      PLAYER_ROWS.forEach((dir, row) => {
+        const first = row * PLAYER_FRAMES_PER_ROW;
+        if (!scene.anims.exists(`walk-${dir}${suffix}`)) {
+          scene.anims.create({
+            key: `walk-${dir}${suffix}`,
+            frames: scene.anims.generateFrameNumbers(texture, { start: first, end: first + PLAYER_FRAMES_PER_ROW - 1 }),
+            frameRate: PLAYER.walkFps,
+            repeat: -1,
+          });
+        }
+        if (!scene.anims.exists(`idle-${dir}${suffix}`)) {
+          scene.anims.create({ key: `idle-${dir}${suffix}`, frames: [{ key: texture, frame: first }] });
+        }
+      });
+    }
   }
 
   constructor(scene, feetX, feetY, facing = 'down') {
@@ -47,6 +55,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.facing = PLAYER_ROWS.includes(facing) ? facing : 'down';
     this.moving = false;
     this.speedMultiplier = 1; // see setSpeedMultiplier()
+    this.look = ''; // '' or '-tiara': which sheet her animations use (see setTiara)
     this.setFeet(feetX, feetY);
     this.play(`idle-${this.facing}`);
 
@@ -98,10 +107,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       // stops her flipping back and forth when walking near-diagonally.
       const horizontal = Math.abs(x) > Math.abs(y) + (this.facingIsHorizontal() ? -0.1 : 0.1);
       this.facing = horizontal ? (x < 0 ? 'left' : 'right') : y < 0 ? 'up' : 'down';
-      this.play(`walk-${this.facing}`, true);
-    } else {
-      this.play(`idle-${this.facing}`, true);
     }
+    this.play(`${this.moving ? 'walk' : 'idle'}-${this.facing}${this.look}`, true);
+  }
+
+  /** Wear her tiara (or not). Does nothing if sprites/player-tiara.png didn't load. */
+  setTiara(on) {
+    const look = on && this.scene.anims.exists('idle-down-tiara') ? '-tiara' : '';
+    if (look === this.look) return;
+    this.look = look;
+    this.play(`${this.moving ? 'walk' : 'idle'}-${this.facing}${this.look}`, true);
   }
 
   /** Walk faster (or slower); her walk animation speeds up to match. */

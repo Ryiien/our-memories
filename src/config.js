@@ -96,7 +96,7 @@ export const FISHING = {
   bubbleEveryMs: 70, // a new bubble this often while they last
   reelMs: 950,
   seaweedShowMs: 1700, // how long the seaweed dangles before she tosses it back
-  lineColor: 0xfff3dc,
+  awardDelayMs: 700, // after the last letter is put away, the tiara popup comes up this much later  lineColor: 0xfff3dc,
   rodColor: 0x3e2630,
   rodHandleColor: 0xc9a27a,
 };

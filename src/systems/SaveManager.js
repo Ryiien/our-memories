@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------------------
-// SaveManager — remembers which memories, momos and love letters she's found
-// and where she was standing, using the browser's localStorage.
+// SaveManager — remembers which memories, momos and love letters she's found,
+// where she was standing and whether she's won her tiara, using the browser's
+// localStorage.
 //
 // Everything is wrapped in try/catch: if storage is unavailable (private
 // browsing, blocked cookies…), the game still works, it just won't remember
@@ -18,6 +19,7 @@ function emptySave() {
     letters: [], // love letter ids she's fished up
     position: null, // { x, y, facing } — her feet, in map pixels
     finaleSeen: false,
+    tiara: false, // won by fishing up every love letter; she wears it in the world
   };
 }
 
@@ -32,6 +34,7 @@ function readStorage() {
       found: Array.isArray(parsed.found) ? parsed.found.filter((id) => typeof id === 'string') : [],
       momos: Array.isArray(parsed.momos) ? parsed.momos.filter((id) => typeof id === 'string') : [],
       letters: Array.isArray(parsed.letters) ? parsed.letters.filter((id) => typeof id === 'string') : [],
+      tiara: parsed.tiara === true,
     };
   } catch (err) {
     console.warn('[save] Could not read saved progress:', err);
@@ -111,6 +114,15 @@ const SaveManager = {
     data.letters.push(id);
     persist();
     return true;
+  },
+
+  hasTiara() {
+    return data.tiara;
+  },
+
+  awardTiara() {
+    data.tiara = true;
+    persist();
   },
 
   getPosition() {

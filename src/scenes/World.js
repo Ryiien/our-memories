@@ -142,6 +142,7 @@ export default class World extends Phaser.Scene {
     }
 
     this.player = new Player(this, x, y, facing);
+    this.player.setTiara(SaveManager.hasTiara());
     for (const name of COLLIDING_LAYERS) {
       if (this.layers[name]) this.physics.add.collider(this.player, this.layers[name]);
     }
@@ -540,6 +541,7 @@ export default class World extends Phaser.Scene {
     this.hud.scene.setVisible(true);
     this.hud.refresh();
     this.refreshMarkers();
+    this.player.setTiara(SaveManager.hasTiara()); // she comes back from the pier wearing it
     Music.play(this, gameData.worldMusic ?? null);
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 

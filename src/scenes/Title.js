@@ -139,14 +139,12 @@ export default class Title extends Phaser.Scene {
     if (SaveManager.hasSave() && !this.confirmingNew) {
       this.confirmingNew = true;
       const item = this.menuItems.find((m) => m.label === 'Start');
-      item.text.setText('Start over? Press again');
-      this.centre(item.text);
+      this.setLabel(item.text, 'Start over? Press again');
       this.select(this.menuItems.indexOf(item));
       this.time.delayedCall(3000, () => {
         if (!this.leaving && item.text.active) {
           this.confirmingNew = false;
-          item.text.setText('Start');
-          this.centre(item.text);
+          this.setLabel(item.text, 'Start');
           this.select(this.selected);
         }
       });
@@ -154,6 +152,14 @@ export default class Title extends Phaser.Scene {
     }
     SaveManager.reset();
     this.begin(true);
+  }
+
+  /** Change a menu button's words, keeping it centred and clickable along its whole width. */
+  setLabel(text, label) {
+    text.setText(label);
+    this.centre(text);
+    // The click area is sized when setInteractive runs, so stretch it to the new words.
+    text.input.hitArea.setSize(text.width, text.height);
   }
 
   begin(newGame) {

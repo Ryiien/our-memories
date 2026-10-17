@@ -30,7 +30,9 @@ export const P = {
   herDressShade: '#d877a6',
   herDressHi: '#f8b6d6', // puff sleeves, light on the skirt's pleats
   herDressDeep: '#b9608f', // creases under the sleeves
-  silver: '#e4e8f2', // eyebrow piercing
+  silver: '#e4e8f2', // eyebrow piercing, her tiara
+  silverShade: '#a9b0c8', // her tiara, in shade
+  gemPink: '#ff6fa8', // the tiara's pink gem
   // him: tall, short black hair with a fringe, open brown jacket over a white shirt, jeans
   himHair: '#231c24',
   himHairHi: '#4a3d4a',

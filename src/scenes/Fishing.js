@@ -9,6 +9,10 @@
 // back to the world. There are no instructions on screen: the bubbles, the
 // catch and the letter counter's hop say it all.
 //
+// Once every letter is found, a popup awards her a silver tiara (its words are
+// "tiara" in fishing.json). Continue puts it on her head here (fishing/tiara.png
+// over her.png), and from then on she wears it in the world too (World/Player).
+//
 // Letters, the seaweed chance, the background layers and where her hand and
 // the water are in the art all come from data/fishing.json (via
 // systems/LoveLetters.js). Timings and colours are FISHING in config.js.
@@ -37,7 +41,9 @@ export default class Fishing extends Phaser.Scene {
   }
 
   init() {
-    this.state = 'ready'; // ready → casting → waiting ⇄ bite → reeling → (reading → closing) → ready
+    // ready → casting → waiting ⇄ bite → reeling → (reading → closing) → ready
+    // (after the last letter: closing → award → closing → ready)
+    this.state = 'ready';
     this.leaving = false;
     this.castId = 0; // bumped on every cast/hook so old timers know to do nothing
     this.rod = { angle: FISHING.rodRest };
@@ -46,6 +52,7 @@ export default class Fishing extends Phaser.Scene {
     this.item = null; // { image, attached, swing } — what's on the hook
     this.seaweedStreak = 0;
     this.lastLetterId = null;
+    this.awardView = null; // the tiara popup, while it's up
   }
 
   preload() {
@@ -66,6 +73,8 @@ export default class Fishing extends Phaser.Scene {
     image('fishing-envelope', 'fishing/envelope.png');
     image('fishing-seaweed', 'fishing/seaweed.png');
     image('fishing-paper', 'fishing/paper.png');
+    image('fishing-tiara', 'fishing/tiara.png'); // on her head (lines up with her.png)
+    image('fishing-tiara-award', 'fishing/tiara-award.png'); // front-on, for the popup
     // (fishing/bobber.png is loaded by Boot: it also marks the spot in the world)
     Music.load(this, S.music);
   }
@@ -74,6 +83,10 @@ export default class Fishing extends Phaser.Scene {
     if (new LayerAnimator(this, 'fishing').addLayers(S.layers) === 0) {
       this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night).setOrigin(0).setDepth(-1);
     }
+    // Her tiara, once she's won it (drawn over her, under the rod)
+    this.tiara = this.textures.exists('fishing-tiara')
+      ? this.add.image(0, 0, 'fishing-tiara').setOrigin(0).setVisible(SaveManager.hasTiara())
+      : null;
     Music.play(this, S.music); // (nothing = quiet; the world's music has faded out)
     this.cameras.main.fadeIn(TIMING.fadeIn, 0, 0, 0);
 
@@ -89,12 +102,17 @@ export default class Fishing extends Phaser.Scene {
     this.input.keyboard.on('keydown', (e) => {
       if (e.repeat) return;
       if (ACTION_KEYS.includes(e.code)) this.action();
-      else if (LEAVE_KEYS.includes(e.code)) this.state === 'reading' ? this.action() : this.leave();
+      else if (LEAVE_KEYS.includes(e.code)) this.popupOpen() ? this.action() : this.leave();
     });
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (_pointer, over) => {
-      if (over.includes(this.leaveBg) && this.state !== 'reading') this.leave();
+      if (over.includes(this.leaveBg) && !this.popupOpen()) this.leave();
       else this.action();
     });
+  }
+
+  /** A letter or the tiara popup is up: Esc / the < arrow just continue. */
+  popupOpen() {
+    return this.state === 'reading' || this.state === 'award';
   }
 
   // ---- On-screen bits: Leave button, letter counter, title ------------------------------------
@@ -160,6 +178,7 @@ export default class Fishing extends Phaser.Scene {
     if (this.state === 'ready') this.cast();
     else if (this.state === 'bite') this.hook();
     else if (this.state === 'reading') this.advanceLetter();
+    else if (this.state === 'award') this.closeAward();
   }
 
   // ---- Casting --------------------------------------------------------------------------------------
@@ -446,6 +465,97 @@ export default class Fishing extends Phaser.Scene {
           // That was the last unread letter: the counter turns gold with a fanfare.
           if (SaveManager.letterCount() >= LoveLetters.count) Sfx.play(this, 'allLetters');
         }
+        // Every letter found: she wins her tiara (once — this also catches saves
+        // that found them all before there was a tiara).
+        if (LoveLetters.count > 0 && SaveManager.letterCount() >= LoveLetters.count && !SaveManager.hasTiara()) {
+          this.state = 'award'; // (no casting while the popup is on its way)
+          this.time.delayedCall(FISHING.awardDelayMs, () => this.awardTiara());
+        }
+      },
+    });
+  }
+
+  // ---- The tiara: her prize for finding every letter --------------------------------------------
+  /**
+   * A popup in the middle of the screen with the tiara (glowing, with twinkles) and
+   * the words from fishing.json "tiara". Continue puts it on her.
+   */
+  awardTiara() {
+    SaveManager.awardTiara(); // saved straight away, in case the game is closed mid-popup
+    this.state = 'award';
+    const pad = 10;
+    const hasIcon = this.textures.exists('fishing-tiara-award');
+
+    const dim = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.night, 0.45).setOrigin(0);
+    const title = pixelText(this, 0, 0, S.tiara.title, { color: COLORS.roseDark });
+    const body = pixelText(this, 0, 0, S.tiara.text, { color: COLORS.ink }).setCenterAlign();
+    const titleB = title.getTextBounds(false).local;
+    const bodyB = body.getTextBounds(false).local;
+
+    // Size: the tiara (2x), the title, the words, then a row for Continue.
+    const iconH = hasIcon ? this.textures.getFrame('fishing-tiara-award').height * 2 : 0;
+    const width = Math.round(Math.max(150, titleB.width + pad * 2, bodyB.width + pad * 2));
+    const height = 8 + iconH + 6 + 10 + 3 + bodyB.height + 6 + 12 + 4;
+    const left = Math.round((GAME_WIDTH - width) / 2);
+    const top = Math.round((GAME_HEIGHT - height) / 2);
+    const mid = left + Math.round(width / 2);
+
+    const panel = this.add.nineslice(left, top, 'panel', null, width, height, 4, 4, 4, 4).setOrigin(0);
+    const iconY = top + 8;
+    const glow = this.add.image(mid, iconY + iconH / 2, 'momo-glow').setScale(3).setAlpha(0.6);
+    const icon = hasIcon ? this.add.image(mid, iconY, 'fishing-tiara-award').setOrigin(0.5, 0).setScale(2) : null;
+    title.setPosition(mid - Math.round(titleB.width / 2), iconY + iconH + 6);
+    body.setPosition(mid - Math.round(bodyB.width / 2), title.y + 13);
+    const cont = new ContinueHeart(this, left + width - pad, top + height - 7, () => {});
+    // (taps anywhere are handled by the scene, so the button itself needs no callback)
+
+    const parts = [dim, panel, glow, icon, title, body].filter(Boolean);
+    parts.forEach((p) => p.setAlpha(0));
+    for (const o of [title, body, cont.container]) this.children.bringToTop(o); // (made before the panel, to measure them)
+    this.tweens.add({ targets: dim, alpha: 1, duration: 300 });
+    this.tweens.add({ targets: [panel, icon, title, body].filter(Boolean), alpha: 1, duration: 400, delay: 150 });
+    this.tweens.add({ targets: glow, alpha: { from: 0, to: 0.6 }, duration: 400, delay: 150 });
+    this.tweens.add({ targets: glow, scale: 3.4, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    if (icon) {
+      this.tweens.add({ targets: icon, y: { from: iconY - 6, to: iconY }, duration: 500, delay: 150, ease: 'Back.easeOut' });
+    }
+    this.time.delayedCall(550 + TIMING.continueDelay, () => cont.show());
+
+    // Little twinkles popping up around the tiara while the popup is open
+    const twinkle = this.time.addEvent({
+      delay: 380,
+      loop: true,
+      callback: () => {
+        if (!this.anims.exists('sparkle')) return; // (World makes this animation)
+        const x = mid + Phaser.Math.Between(-46, 46);
+        const y = iconY + Phaser.Math.Between(-4, iconH);
+        const s = this.add.sprite(x, y, 'sparkle').play('sparkle').setAlpha(0);
+        this.tweens.add({ targets: s, alpha: 1, duration: 220, yoyo: true, hold: 300, onComplete: () => s.destroy() });
+      },
+    });
+    this.awardView = { parts: [...parts, cont.container], cont, twinkle };
+  }
+
+  /** Continue: the popup fades away and the tiara appears on her head. */
+  closeAward() {
+    if (!this.awardView?.cont.visible) return;
+    this.state = 'closing';
+    Sfx.play(this, 'continue');
+    const { parts, twinkle } = this.awardView;
+    this.awardView = null;
+    twinkle.remove();
+    this.tweens.killTweensOf(parts);
+    this.tweens.add({
+      targets: parts,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => {
+        parts.forEach((p) => p.destroy());
+        this.state = 'ready';
+        if (!this.tiara) return;
+        this.tiara.setVisible(true).setAlpha(0);
+        this.tweens.add({ targets: this.tiara, alpha: 1, duration: 600 });
+        this.sparkles(S.hand[0] - 1, S.hand[1] - 24); // her head is about 24 px above her hand in the art
       },
     });
   }
@@ -560,7 +670,7 @@ export default class Fishing extends Phaser.Scene {
 
   // ---- Leaving ---------------------------------------------------------------------------------------
   leave() {
-    if (this.leaving || this.state === 'reading' || this.state === 'closing') return;
+    if (this.leaving || this.popupOpen() || this.state === 'closing') return;
     this.leaving = true;
     this.cameras.main.fadeOut(TIMING.fadeOut, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

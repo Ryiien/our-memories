@@ -124,6 +124,30 @@ const LEGS_SIDE = [
   ['.......ss.......', '.......ss.......', '.......ss.......', '.......WWW......', '.......ooo......', '................'],
 ];
 
+// Her silver tiara (sprites/player-tiara.png — she wins it by fishing up every
+// love letter). Three rows drawn over the top of her head (rows 1–3 of the
+// standing frame; '.' leaves her hair as it is): a tall centre point over a
+// pink gem, a small point either side, and a band narrower than her head so a
+// little of her dark roots still shows. It moves with her on the bouncy step frames.
+const TIARA = {
+  FRONT: [
+    '.......TT.......',
+    '.....T.gG.T.....',
+    '.....tTTTTt.....',
+  ],
+  SIDE: [
+    '........T.......',
+    '......T.Tg......',
+    '.....tTTTTT.....',
+  ],
+  BACK: [
+    '.......tt.......',
+    '.....t.TT.t.....',
+    '.....tTTTTt.....',
+  ],
+};
+const TIARA_COLORS = { T: P.silver, t: P.silverShade, g: P.gemPink, G: P.white };
+
 /** Row 18: an outline under the whole hem, except where a leg comes out. */
 function hemLine(hem, legRow) {
   return [...hem].map((ch, x) => (ch === '.' || (legRow[x] !== '.' && legRow[x] !== 'o') ? legRow[x] : 'o')).join('');
@@ -137,23 +161,26 @@ function frame(upper, legs, bob) {
   return [...body, hemLine(body[body.length - 1], legs[0]), ...legs.slice(1)];
 }
 
-export function buildPlayerSheet() {
+/** sprites/player.png, or with { tiara: true } sprites/player-tiara.png (same layout). */
+export function buildPlayerSheet({ tiara = false } = {}) {
   const fw = 16;
   const fh = 24;
   const sheet = new Canvas(fw * 4, fh * 4);
   const dirs = [
-    { upper: FRONT, legs: LEGS_FRONT, flip: false }, // down
-    { upper: SIDE, legs: LEGS_SIDE, flip: true }, // left (mirrored right)
-    { upper: SIDE, legs: LEGS_SIDE, flip: false }, // right
-    { upper: BACK, legs: LEGS_FRONT, flip: false }, // up
+    { upper: FRONT, legs: LEGS_FRONT, flip: false, tiara: TIARA.FRONT }, // down
+    { upper: SIDE, legs: LEGS_SIDE, flip: true, tiara: TIARA.SIDE }, // left (mirrored right)
+    { upper: SIDE, legs: LEGS_SIDE, flip: false, tiara: TIARA.SIDE }, // right
+    { upper: BACK, legs: LEGS_FRONT, flip: false, tiara: TIARA.BACK }, // up
   ];
   dirs.forEach((dir, row) => {
     for (let col = 0; col < 4; col++) {
-      const rows = frame(dir.upper, dir.legs[col], col % 2 === 1);
+      const bob = col % 2 === 1;
+      const rows = frame(dir.upper, dir.legs[col], bob);
       rows.forEach((r, i) => {
         if (r.length !== 16) throw new Error(`player sprite row ${i} is ${r.length} wide`);
       });
       sheet.map(rows, SPR, col * fw, row * fh, { flipX: dir.flip });
+      if (tiara) sheet.map(dir.tiara, TIARA_COLORS, col * fw, row * fh + (bob ? 0 : 1), { flipX: dir.flip });
       // soft shadow under her feet
       sheet.ellipse(col * fw + 8, row * fh + 23, 4, 1, P.forestDark, 0.25);
     }

@@ -47,6 +47,7 @@ write(
 
 // ---- Sprites & UI -------------------------------------------------------------------
 write(out('sprites', 'player.png'), buildPlayerSheet());
+write(out('sprites', 'player-tiara.png'), buildPlayerSheet({ tiara: true })); // once she's fished up every letter
 const font = buildFont();
 write(out('ui', 'font.png'), font.png);
 write(out('ui', 'font.xml'), font.xml);

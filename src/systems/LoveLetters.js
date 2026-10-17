@@ -10,8 +10,9 @@ import worldMap from '../../maps/world.json';
 import MemoryRegistry, { checkLayers } from './MemoryRegistry.js';
 import { musicTracks } from './Music.js';
 
-const FIELDS = ['title', 'music', 'seaweedChance', 'maxSeaweedInARow', 'signature', 'scene', 'layers', 'letters'];
+const FIELDS = ['title', 'music', 'seaweedChance', 'maxSeaweedInARow', 'signature', 'tiara', 'scene', 'layers', 'letters'];
 const LETTER_FIELDS = ['id', 'title', 'text'];
+const TIARA_FIELDS = ['title', 'text'];
 
 function warn(message) {
   MemoryRegistry.warnings.push(message); // so the title screen's "N data warnings" counts these too
@@ -43,6 +44,8 @@ const number = (value, fallback, name) => {
   warn(`"${name}" should be a number, not "${value}".`);
   return fallback;
 };
+const tiara = raw.tiara ?? {};
+for (const key of Object.keys(tiara)) if (!TIARA_FIELDS.includes(key)) warn(`tiara: unknown setting "${key}" (typo?).`);
 const scene = raw.scene ?? {};
 const pair = (value, fallback, name) => {
   if (value === undefined) return fallback;
@@ -57,6 +60,11 @@ const settings = {
   seaweedChance: Math.min(1, Math.max(0, number(raw.seaweedChance, 0.3, 'seaweedChance'))),
   maxSeaweedInARow: Math.max(0, Math.floor(number(raw.maxSeaweedInARow, 2, 'maxSeaweedInARow'))),
   signature: String(raw.signature ?? ''),
+  // The popup when she's found every letter, and wins her tiara.
+  tiara: {
+    title: String(tiara.title ?? 'A tiara for you!'),
+    text: String(tiara.text ?? 'You found every love letter ♥'),
+  },
   // Where things are in the background art (see tools/scenes/fishing.js).
   hand: pair(scene.hand, [97, 104], 'hand'), // where her hand holds the rod
   rodLength: number(scene.rodLength, 44, 'scene.rodLength'),

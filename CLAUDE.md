@@ -61,9 +61,9 @@ our-memories/
 ├── .github/workflows/deploy.yml
 ├── public/assets/             # served as-is; every data path is relative to here
 │   ├── tiles/tileset.png      # 16x16 tiles, 8 columns
-│   ├── sprites/player.png     # 4x4 frames of 16x24
+│   ├── sprites/player.png     # 4x4 frames of 16x24 (+ player-tiara.png: the same wearing her tiara)
 │   ├── memories/<id>/*.png    # one folder per memory (+ memories/finale/)
-│   ├── fishing/               # the fishing minigame's layers + sprites (bobber, ripple, bubble, envelope, seaweed, paper)
+│   ├── fishing/               # the fishing minigame's layers + sprites (bobber, ripple, bubble, envelope, seaweed, paper, tiara, tiara-award)
 │   ├── ui/                    # font.png+font.xml, heart, panel, sparkle, touch controls, momo, momo-hud (+ dish of achar), momo-glow
 │   └── audio/                 # music (wav/mp3/ogg) + sfx/ (sound effects)
 ├── maps/world.json            # the Tiled map (JSON, embedded tileset)
@@ -177,6 +177,7 @@ presets warn and are skipped / shown static — never crash.
   "seaweedChance": 0.3,                 // 0..1 chance a catch is seaweed (try again)
   "maxSeaweedInARow": 2,                // pity rule: never more seaweed than this in a row
   "signature": "Love, Ryan ♥",          // right-aligned under every letter
+  "tiara": { "title": "A tiara for you!", "text": "You found every love letter ♥" },  // the award popup
   "scene": { "hand": [97, 104], "rodLength": 44, "waterY": 133, "castX": [165, 212] },
   "layers": [ ... ],                    // background, same format as memory layers
   "letters": [ { "id": "letter-01", "title": "...", "text": "..." } ]
@@ -192,6 +193,16 @@ instruction text on screen)
 → hook → reel → seaweed (dangles, dropped back) or a letter (envelope → letter
 paper, typed out, Continue). Letters: a random unread one; once all are read,
 any except the last one. Letters are not part of the memory count or finale.
+**The tiara (asked for):** after the letter that completes the set is put away
+(also for older saves that already had them all), `FISHING.awardDelayMs` later
+the `award` popup comes up (centred on screen): `tiara-award.png` at 2x with a pulsing `momo-glow` and twinkles, then
+`tiara.title`/`tiara.text`, then Continue. It's saved (`tiara: true`) as the popup
+opens. Continue fades `fishing/tiara.png` (a 320×180 overlay that lines up with
+her.png, drawn over her and under the rod) in on her head; it's shown on every
+later visit. World calls `player.setTiara(SaveManager.hasTiara())` on create and on
+resume, so she wears it (`sprites/player-tiara.png`, `walk-<dir>-tiara` anims) from
+the moment she leaves the pier. Memory/Finale cutscenes don't show it. Esc / the <
+arrow just continue while a letter or the popup is up (`popupOpen()`).
 The marker in the world is `bobber.png` (loaded by Boot), floating in the
 water just left of each spot.
 
@@ -417,6 +428,12 @@ blocker(44)/grass edge.
   the standing pose. Animations: `walk-<dir>` (8 fps), `idle-<dir>`.
 - Feet sit around y = 20–23 of the frame; the collision box is
   `PLAYER.body` = 10×6 at offset (3, 17). Change config if the art changes size.
+- `sprites/player-tiara.png`: the same sheet with her silver tiara (`TIARA` in
+  `tools/lib/sprites.js`: 3 rows over the top of her head, moving with the step
+  bounce), from `buildPlayerSheet({ tiara: true })`. Anims `walk-<dir>-tiara` /
+  `idle-<dir>-tiara`; `Player.setTiara(on)` switches (silently stays plain if the sheet's missing).
+  The fishing scene's side-on and popup tiaras are drawn in `tools/scenes/fishing.js`
+  (`TIARA_SIDE`, `TIARA_FRONT_HALF`). Silver with pink gems and pearls.
 - `sprites/` also has room for a partner sheet — not used yet (TODO: follower).
 
 ## The characters (keep art consistent with these)
@@ -472,7 +489,7 @@ blocker(44)/grass edge.
 ## Saves
 
 localStorage key `our-memories-save-v1` (`SAVE_KEY`):
-`{ found: [ids], momos: [ids], letters: [ids], position: {x, y, facing}, finaleSeen }`. All access is
+`{ found: [ids], momos: [ids], letters: [ids], position: {x, y, facing}, finaleSeen, tiara }`. All access is
 try/catch'd; the game runs without storage. Unknown ids in a save are ignored
 in counts. A saved position inside a wall (map edited) falls back to Spawn.
 
